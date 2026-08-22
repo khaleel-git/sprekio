@@ -1,0 +1,750 @@
+[
+  {
+    "id": "1",
+    "title": "Der erste Tag in Berlin",
+    "titleEn": "The First Day in Berlin",
+    "level": "A1",
+    "topic": "Daily Life",
+    "dialect": null,
+    "duration": 3,
+    "imageEmoji": "🏙️",
+    "color": "from-blue-400 to-blue-600",
+    "description": "Maria kommt aus Spanien und lebt jetzt in Berlin. Heute ist ihr erster Tag in der neuen Stadt.",
+    "descriptionEn": "Maria comes from Spain and now lives in Berlin. Today is her first day in the new city.",
+    "upvotes": 42,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Maria kommt aus Spanien. Sie ist jetzt in Berlin.",
+        "translation": "Maria comes from Spain. She is now in Berlin.",
+        "words": [
+          {"word": "Maria", "translation": "Maria", "type": "noun", "case": null},
+          {"word": "kommt", "translation": "comes", "type": "verb", "base": "kommen"},
+          {"word": "aus", "translation": "from", "type": "preposition"},
+          {"word": "Spanien", "translation": "Spain", "type": "noun", "case": "Dativ"},
+          {"word": "Sie", "translation": "she", "type": "pronoun"},
+          {"word": "ist", "translation": "is", "type": "verb", "base": "sein"},
+          {"word": "jetzt", "translation": "now", "type": "adverb"},
+          {"word": "in", "translation": "in", "type": "preposition"},
+          {"word": "Berlin", "translation": "Berlin", "type": "noun", "case": "Dativ"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Das Wetter ist kalt. Maria trägt eine Jacke.",
+        "translation": "The weather is cold. Maria is wearing a jacket.",
+        "words": [
+          {"word": "Das", "translation": "the", "type": "article", "case": "Nominativ"},
+          {"word": "Wetter", "translation": "weather", "type": "noun", "case": "Nominativ", "gender": "neuter"},
+          {"word": "ist", "translation": "is", "type": "verb", "base": "sein"},
+          {"word": "kalt", "translation": "cold", "type": "adjective"},
+          {"word": "Maria", "translation": "Maria", "type": "noun"},
+          {"word": "trägt", "translation": "wears/carries", "type": "verb", "base": "tragen", "separable": false},
+          {"word": "eine", "translation": "a", "type": "article", "case": "Akkusativ"},
+          {"word": "Jacke", "translation": "jacket", "type": "noun", "case": "Akkusativ", "gender": "feminine"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Sie geht in ein Café. Der Kaffee schmeckt gut.",
+        "translation": "She goes into a café. The coffee tastes good.",
+        "words": [
+          {"word": "Sie", "translation": "she", "type": "pronoun"},
+          {"word": "geht", "translation": "goes", "type": "verb", "base": "gehen"},
+          {"word": "in", "translation": "into", "type": "preposition"},
+          {"word": "ein", "translation": "a", "type": "article", "case": "Akkusativ"},
+          {"word": "Café", "translation": "café", "type": "noun", "case": "Akkusativ", "gender": "neuter"},
+          {"word": "Der", "translation": "the", "type": "article", "case": "Nominativ"},
+          {"word": "Kaffee", "translation": "coffee", "type": "noun", "case": "Nominativ", "gender": "masculine"},
+          {"word": "schmeckt", "translation": "tastes", "type": "verb", "base": "schmecken"},
+          {"word": "gut", "translation": "good/well", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Berlin ist eine große Stadt. Maria ist glücklich hier.",
+        "translation": "Berlin is a big city. Maria is happy here.",
+        "words": [
+          {"word": "Berlin", "translation": "Berlin", "type": "noun"},
+          {"word": "ist", "translation": "is", "type": "verb"},
+          {"word": "eine", "translation": "a", "type": "article"},
+          {"word": "große", "translation": "big/large", "type": "adjective"},
+          {"word": "Stadt", "translation": "city", "type": "noun", "gender": "feminine"},
+          {"word": "Maria", "translation": "Maria", "type": "noun"},
+          {"word": "glücklich", "translation": "happy", "type": "adjective"},
+          {"word": "hier", "translation": "here", "type": "adverb"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "kommen", "translation": "to come", "example": "Ich komme aus Deutschland."},
+      {"word": "das Wetter", "translation": "the weather", "example": "Das Wetter ist schön heute."},
+      {"word": "tragen", "translation": "to wear / to carry", "example": "Sie trägt eine rote Jacke."},
+      {"word": "das Café", "translation": "the café", "example": "Wir sitzen im Café."},
+      {"word": "groß", "translation": "big / large / tall", "example": "Berlin ist eine große Stadt."},
+      {"word": "glücklich", "translation": "happy", "example": "Ich bin sehr glücklich."}
+    ],
+    "grammarFocus": "Present tense (Präsens), Articles (der/die/das), Basic cases",
+    "quiz": [
+      {"question": "Woher kommt Maria?", "options": ["Aus Deutschland", "Aus Spanien", "Aus Berlin", "Aus Frankreich"], "correct": 1},
+      {"question": "Was trägt Maria, weil es kalt ist?", "options": ["Eine Mütze", "Eine Hose", "Eine Jacke", "Einen Schal"], "correct": 2},
+      {"question": "Wie ist der Kaffee im Café?", "options": ["Schlecht", "Teuer", "Kalt", "Gut"], "correct": 3}
+    ]
+  },
+  {
+    "id": "2",
+    "title": "Das Café um die Ecke",
+    "titleEn": "The Café Around the Corner",
+    "level": "A2",
+    "topic": "Food & Drink",
+    "dialect": null,
+    "duration": 4,
+    "imageEmoji": "☕",
+    "color": "from-amber-400 to-amber-600",
+    "description": "Thomas und Lena treffen sich jeden Morgen im kleinen Café. Was bestellen sie heute?",
+    "descriptionEn": "Thomas and Lena meet every morning at the little café. What do they order today?",
+    "upvotes": 67,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Thomas und Lena kennen sich seit zwei Jahren. Sie treffen sich jeden Morgen im Café Braun.",
+        "translation": "Thomas and Lena have known each other for two years. They meet every morning at Café Braun.",
+        "words": [
+          {"word": "kennen", "translation": "to know", "type": "verb"},
+          {"word": "sich", "translation": "each other", "type": "reflexive"},
+          {"word": "seit", "translation": "since / for", "type": "preposition"},
+          {"word": "zwei", "translation": "two", "type": "number"},
+          {"word": "Jahren", "translation": "years", "type": "noun", "case": "Dativ", "gender": "neuter"},
+          {"word": "treffen", "translation": "to meet", "type": "verb", "separable": false},
+          {"word": "jeden", "translation": "every", "type": "article", "case": "Akkusativ"},
+          {"word": "Morgen", "translation": "morning", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Die Kellnerin bringt die Speisekarte. Thomas bestellt einen Cappuccino und ein Croissant.",
+        "translation": "The waitress brings the menu. Thomas orders a cappuccino and a croissant.",
+        "words": [
+          {"word": "Die", "translation": "the", "type": "article", "case": "Nominativ"},
+          {"word": "Kellnerin", "translation": "waitress", "type": "noun", "case": "Nominativ", "gender": "feminine"},
+          {"word": "bringt", "translation": "brings", "type": "verb", "base": "bringen"},
+          {"word": "Speisekarte", "translation": "menu", "type": "noun", "case": "Akkusativ", "gender": "feminine"},
+          {"word": "bestellt", "translation": "orders", "type": "verb", "base": "bestellen"},
+          {"word": "einen", "translation": "a", "type": "article", "case": "Akkusativ"},
+          {"word": "Cappuccino", "translation": "cappuccino", "type": "noun", "gender": "masculine"},
+          {"word": "ein", "translation": "a", "type": "article", "case": "Akkusativ"},
+          {"word": "Croissant", "translation": "croissant", "type": "noun", "gender": "neuter"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Lena möchte lieber Tee mit Zitrone. Sie isst auch einen Apfelkuchen.",
+        "translation": "Lena would prefer tea with lemon. She also eats an apple cake.",
+        "words": [
+          {"word": "möchte", "translation": "would like", "type": "verb", "base": "mögen"},
+          {"word": "lieber", "translation": "rather / preferably", "type": "adverb"},
+          {"word": "Tee", "translation": "tea", "type": "noun", "gender": "masculine"},
+          {"word": "mit", "translation": "with", "type": "preposition"},
+          {"word": "Zitrone", "translation": "lemon", "type": "noun", "gender": "feminine"},
+          {"word": "isst", "translation": "eats", "type": "verb", "base": "essen"},
+          {"word": "auch", "translation": "also / too", "type": "adverb"},
+          {"word": "einen", "translation": "a", "type": "article", "case": "Akkusativ"},
+          {"word": "Apfelkuchen", "translation": "apple cake", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Sie reden über ihre Arbeit und Pläne fürs Wochenende. Das Frühstück kostet zusammen acht Euro fünfzig.",
+        "translation": "They talk about their work and plans for the weekend. The breakfast together costs eight euros fifty.",
+        "words": [
+          {"word": "reden", "translation": "to talk / speak", "type": "verb"},
+          {"word": "über", "translation": "about", "type": "preposition"},
+          {"word": "ihre", "translation": "their", "type": "possessive"},
+          {"word": "Arbeit", "translation": "work / job", "type": "noun", "gender": "feminine"},
+          {"word": "Pläne", "translation": "plans", "type": "noun", "gender": "masculine"},
+          {"word": "fürs", "translation": "for the", "type": "preposition"},
+          {"word": "Wochenende", "translation": "weekend", "type": "noun", "gender": "neuter"},
+          {"word": "kostet", "translation": "costs", "type": "verb", "base": "kosten"},
+          {"word": "zusammen", "translation": "together", "type": "adverb"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "die Kellnerin", "translation": "the waitress", "example": "Die Kellnerin ist sehr freundlich."},
+      {"word": "bestellen", "translation": "to order", "example": "Ich bestelle einen Kaffee."},
+      {"word": "die Speisekarte", "translation": "the menu", "example": "Können wir die Speisekarte sehen?"},
+      {"word": "möchten", "translation": "would like", "example": "Ich möchte bitte ein Glas Wasser."},
+      {"word": "kosten", "translation": "to cost", "example": "Was kostet das?"},
+      {"word": "das Frühstück", "translation": "breakfast", "example": "Das Frühstück ist im Preis inbegriffen."}
+    ],
+    "grammarFocus": "Modal verbs (möchten), Akkusativ case, Reflexive verbs (sich treffen)",
+    "quiz": [
+      {"question": "Wie lange kennen sich Thomas und Lena?", "options": ["Seit einem Jahr", "Seit zwei Jahren", "Seit drei Jahren", "Seit einem Monat"], "correct": 1},
+      {"question": "Was bestellt Thomas?", "options": ["Tee und Kuchen", "Kaffee und Toast", "Cappuccino und Croissant", "Latte und Muffin"], "correct": 2},
+      {"question": "Was kostet das Frühstück zusammen?", "options": ["6,50 €", "7,00 €", "8,50 €", "10,00 €"], "correct": 2}
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Ein Wochenende in München",
+    "titleEn": "A Weekend in Munich",
+    "level": "B1",
+    "topic": "Travel",
+    "dialect": null,
+    "duration": 5,
+    "imageEmoji": "🏰",
+    "color": "from-green-400 to-green-600",
+    "description": "Familie Müller verbringt das Wochenende in München. Sie besuchen Sehenswürdigkeiten und genießen das bayerische Essen.",
+    "descriptionEn": "The Müller family spends the weekend in Munich. They visit sights and enjoy Bavarian food.",
+    "upvotes": 89,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Familie Müller ist mit dem Zug nach München gefahren. Die Fahrt hat ungefähr zwei Stunden gedauert.",
+        "translation": "The Müller family traveled to Munich by train. The journey took approximately two hours.",
+        "words": [
+          {"word": "mit", "translation": "by / with", "type": "preposition"},
+          {"word": "dem", "translation": "the", "type": "article", "case": "Dativ"},
+          {"word": "Zug", "translation": "train", "type": "noun", "gender": "masculine"},
+          {"word": "gefahren", "translation": "traveled/driven (past participle)", "type": "verb", "base": "fahren"},
+          {"word": "Fahrt", "translation": "journey / trip", "type": "noun", "gender": "feminine"},
+          {"word": "ungefähr", "translation": "approximately / about", "type": "adverb"},
+          {"word": "gedauert", "translation": "lasted (past participle)", "type": "verb", "base": "dauern"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Am ersten Tag besuchten sie den Englischen Garten. Es gab viele Touristen, aber der Park war trotzdem wunderschön.",
+        "translation": "On the first day, they visited the English Garden. There were many tourists, but the park was still beautiful.",
+        "words": [
+          {"word": "besuchten", "translation": "visited", "type": "verb", "base": "besuchen"},
+          {"word": "den", "translation": "the", "type": "article", "case": "Akkusativ"},
+          {"word": "Englischen Garten", "translation": "English Garden (park in Munich)", "type": "noun"},
+          {"word": "gab", "translation": "gave / there were", "type": "verb", "base": "geben"},
+          {"word": "viele", "translation": "many", "type": "adjective"},
+          {"word": "Touristen", "translation": "tourists", "type": "noun"},
+          {"word": "trotzdem", "translation": "nevertheless / still", "type": "adverb"},
+          {"word": "wunderschön", "translation": "wonderful / beautiful", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Zum Abendessen gingen sie in eine typische bayerische Gaststätte. Vater bestellte eine Weißwurst mit Breze und Weißbier.",
+        "translation": "For dinner, they went to a typical Bavarian inn. Father ordered a white sausage with pretzel and wheat beer.",
+        "words": [
+          {"word": "Zum", "translation": "for the", "type": "preposition"},
+          {"word": "Abendessen", "translation": "dinner / evening meal", "type": "noun", "gender": "neuter"},
+          {"word": "gingen", "translation": "went", "type": "verb", "base": "gehen"},
+          {"word": "typische", "translation": "typical", "type": "adjective"},
+          {"word": "bayerische", "translation": "Bavarian", "type": "adjective"},
+          {"word": "Gaststätte", "translation": "inn / pub / restaurant", "type": "noun", "gender": "feminine"},
+          {"word": "Weißwurst", "translation": "white sausage (Bavarian specialty)", "type": "noun", "gender": "feminine"},
+          {"word": "Breze", "translation": "pretzel (Bavarian)", "type": "noun", "gender": "feminine"},
+          {"word": "Weißbier", "translation": "wheat beer", "type": "noun", "gender": "neuter"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Am nächsten Morgen besichtigten sie das Schloss Nymphenburg. Die Kinder staunten über die prächtige Architektur und die riesigen Gärten.",
+        "translation": "The next morning they visited Nymphenburg Palace. The children were amazed at the magnificent architecture and the vast gardens.",
+        "words": [
+          {"word": "nächsten", "translation": "next", "type": "adjective"},
+          {"word": "besichtigten", "translation": "toured / visited (sights)", "type": "verb", "base": "besichtigen"},
+          {"word": "Schloss", "translation": "castle / palace", "type": "noun", "gender": "neuter"},
+          {"word": "staunten", "translation": "marveled / were amazed", "type": "verb", "base": "staunen"},
+          {"word": "über", "translation": "at / about / over", "type": "preposition"},
+          {"word": "prächtige", "translation": "magnificent / splendid", "type": "adjective"},
+          {"word": "Architektur", "translation": "architecture", "type": "noun", "gender": "feminine"},
+          {"word": "riesigen", "translation": "huge / vast", "type": "adjective"},
+          {"word": "Gärten", "translation": "gardens", "type": "noun"}
+        ]
+      },
+      {
+        "id": "p5",
+        "text": "Am Sonntagnachmittag fuhren sie wieder nach Hause. Alle waren sich einig: München ist eine tolle Stadt.",
+        "translation": "On Sunday afternoon they drove home again. Everyone agreed: Munich is a great city.",
+        "words": [
+          {"word": "Sonntagnachmittag", "translation": "Sunday afternoon", "type": "noun"},
+          {"word": "fuhren", "translation": "drove / traveled", "type": "verb", "base": "fahren"},
+          {"word": "wieder", "translation": "again", "type": "adverb"},
+          {"word": "nach Hause", "translation": "home(ward)", "type": "phrase"},
+          {"word": "Alle", "translation": "everyone / all", "type": "pronoun"},
+          {"word": "einig", "translation": "agreed / unified", "type": "adjective"},
+          {"word": "toll", "translation": "great / awesome", "type": "adjective"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "die Sehenswürdigkeit", "translation": "the sight / attraction", "example": "München hat viele Sehenswürdigkeiten."},
+      {"word": "die Gaststätte", "translation": "the inn / restaurant", "example": "Wir gehen in eine gemütliche Gaststätte."},
+      {"word": "besichtigen", "translation": "to visit (a sight)", "example": "Wir besichtigen das Schloss."},
+      {"word": "staunen", "translation": "to marvel / be amazed", "example": "Ich staunte über die Größe des Gebäudes."},
+      {"word": "trotzdem", "translation": "nevertheless / still", "example": "Es regnete, aber wir gingen trotzdem spazieren."},
+      {"word": "sich einigen", "translation": "to agree / come to agreement", "example": "Sie konnten sich nicht einigen."}
+    ],
+    "grammarFocus": "Präteritum (simple past), Dative prepositions (mit, in, nach), Adjective endings",
+    "quiz": [
+      {"question": "Wie ist Familie Müller nach München gereist?", "options": ["Mit dem Auto", "Mit dem Flugzeug", "Mit dem Zug", "Mit dem Bus"], "correct": 2},
+      {"question": "Was aß der Vater zum Abendessen?", "options": ["Schnitzel und Kartoffeln", "Weißwurst, Breze und Weißbier", "Pizza und Bier", "Bratwurst und Pommes"], "correct": 1},
+      {"question": "Was besuchten sie am zweiten Tag?", "options": ["Den Englischen Garten", "Das Oktoberfest", "Die Allianz Arena", "Schloss Nymphenburg"], "correct": 3}
+    ]
+  },
+  {
+    "id": "4",
+    "title": "Der Zug nach Hamburg",
+    "titleEn": "The Train to Hamburg",
+    "level": "B1",
+    "topic": "Travel",
+    "dialect": null,
+    "duration": 5,
+    "imageEmoji": "🚂",
+    "color": "from-purple-400 to-purple-600",
+    "description": "Jonas verpasst seinen Zug. Wie wird er es rechtzeitig zu seinem Vorstellungsgespräch in Hamburg schaffen?",
+    "descriptionEn": "Jonas misses his train. How will he make it to his job interview in Hamburg on time?",
+    "upvotes": 54,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Jonas lief atemlos durch den Bahnhof. Er hatte verschlafen und war zehn Minuten zu spät aufgestanden.",
+        "translation": "Jonas ran breathlessly through the train station. He had overslept and had gotten up ten minutes too late.",
+        "words": [
+          {"word": "lief", "translation": "ran", "type": "verb", "base": "laufen"},
+          {"word": "atemlos", "translation": "breathless / breathlessly", "type": "adjective"},
+          {"word": "durch", "translation": "through", "type": "preposition"},
+          {"word": "Bahnhof", "translation": "train station", "type": "noun", "gender": "masculine"},
+          {"word": "verschlafen", "translation": "to oversleep (past participle)", "type": "verb"},
+          {"word": "aufgestanden", "translation": "gotten up (past participle)", "type": "verb", "base": "aufstehen", "separable": true}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Als er Gleis 7 erreichte, fuhr der Zug gerade ab. Jonas sah ihm hilflos hinterher.",
+        "translation": "When he reached platform 7, the train was just departing. Jonas watched it helplessly.",
+        "words": [
+          {"word": "Als", "translation": "when / as", "type": "conjunction"},
+          {"word": "Gleis", "translation": "track / platform", "type": "noun", "gender": "neuter"},
+          {"word": "erreichte", "translation": "reached", "type": "verb", "base": "erreichen"},
+          {"word": "fuhr ab", "translation": "departed", "type": "verb", "base": "abfahren", "separable": true},
+          {"word": "gerade", "translation": "just (now)", "type": "adverb"},
+          {"word": "hilflos", "translation": "helpless / helplessly", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Er rief sofort bei der Bahn an und fragte nach dem nächsten Zug nach Hamburg. Der Mitarbeiter erklärte ihm, dass es in einer halben Stunde einen Zug gäbe, allerdings mit einmal Umsteigen.",
+        "translation": "He immediately called the railway and asked about the next train to Hamburg. The employee explained that there would be a train in half an hour, but with one change.",
+        "words": [
+          {"word": "rief an", "translation": "called (on the phone)", "type": "verb", "base": "anrufen", "separable": true},
+          {"word": "sofort", "translation": "immediately", "type": "adverb"},
+          {"word": "fragte nach", "translation": "asked about", "type": "verb", "base": "nachfragen"},
+          {"word": "Mitarbeiter", "translation": "employee / colleague", "type": "noun", "gender": "masculine"},
+          {"word": "erklärte", "translation": "explained", "type": "verb", "base": "erklären"},
+          {"word": "allerdings", "translation": "however / admittedly", "type": "adverb"},
+          {"word": "Umsteigen", "translation": "changing (trains)", "type": "verb", "separable": true}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Jonas atmete erleichtert auf. Er hatte noch genug Zeit, um einen Kaffee zu holen und seine Unterlagen nochmals zu überprüfen.",
+        "translation": "Jonas breathed a sigh of relief. He still had enough time to get a coffee and check his documents once more.",
+        "words": [
+          {"word": "atmete auf", "translation": "breathed (a sigh of relief)", "type": "verb", "separable": true},
+          {"word": "erleichtert", "translation": "relieved", "type": "adjective"},
+          {"word": "genug", "translation": "enough", "type": "adverb"},
+          {"word": "Unterlagen", "translation": "documents / papers", "type": "noun"},
+          {"word": "nochmals", "translation": "once more / again", "type": "adverb"},
+          {"word": "überprüfen", "translation": "to check / verify", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p5",
+        "text": "Am Ende kam er pünktlich zum Vorstellungsgespräch an. Der Chef war beeindruckt von seiner Ruhe – er ahnte nicht, was Jonas am Morgen erlebt hatte.",
+        "translation": "In the end he arrived on time for the interview. The manager was impressed by his calmness – he didn't suspect what Jonas had experienced that morning.",
+        "words": [
+          {"word": "pünktlich", "translation": "on time / punctual", "type": "adjective"},
+          {"word": "Vorstellungsgespräch", "translation": "job interview", "type": "noun", "gender": "neuter"},
+          {"word": "ankam", "translation": "arrived", "type": "verb", "base": "ankommen", "separable": true},
+          {"word": "beeindruckt", "translation": "impressed", "type": "adjective"},
+          {"word": "Ruhe", "translation": "calmness / quiet", "type": "noun", "gender": "feminine"},
+          {"word": "ahnte", "translation": "suspected / sensed", "type": "verb", "base": "ahnen"},
+          {"word": "erlebt", "translation": "experienced (past participle)", "type": "verb", "base": "erleben"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "verschlafen", "translation": "to oversleep", "example": "Ich habe heute verschlafen!"},
+      {"word": "das Gleis", "translation": "the platform / track", "example": "Der Zug fährt von Gleis 3 ab."},
+      {"word": "abfahren", "translation": "to depart", "example": "Der Bus fährt in fünf Minuten ab."},
+      {"word": "das Umsteigen", "translation": "changing trains/buses", "example": "Sie müssen in Hannover umsteigen."},
+      {"word": "pünktlich", "translation": "on time / punctual", "example": "In Deutschland sind Züge selten pünktlich."},
+      {"word": "das Vorstellungsgespräch", "translation": "the job interview", "example": "Ich habe morgen ein Vorstellungsgespräch."}
+    ],
+    "grammarFocus": "Separable verbs (anrufen, abfahren, aufstehen), Plusquamperfekt (past perfect), Konjunktiv II (gäbe)",
+    "quiz": [
+      {"question": "Warum hat Jonas den Zug verpasst?", "options": ["Er war krank", "Er hatte verschlafen", "Er hatte den falschen Bahnhof", "Der Zug war früher"], "correct": 1},
+      {"question": "Was macht Jonas, nachdem er den Zug verpasst?", "options": ["Er fährt mit dem Taxi", "Er ruft beim Chef an", "Er ruft bei der Bahn an", "Er bucht ein Hotel"], "correct": 2},
+      {"question": "Kommt Jonas rechtzeitig zum Gespräch?", "options": ["Nein, er kommt zu spät", "Ja, er ist pünktlich", "Er sagt das Gespräch ab", "Das wird nicht gesagt"], "correct": 1}
+    ]
+  },
+  {
+    "id": "5",
+    "title": "Die Jobsuche",
+    "titleEn": "The Job Search",
+    "level": "B2",
+    "topic": "Work",
+    "dialect": null,
+    "duration": 6,
+    "imageEmoji": "💼",
+    "color": "from-indigo-400 to-indigo-600",
+    "description": "Nach dem Studium sucht Sophie ihren ersten Job. Sie schreibt Bewerbungen, geht zu Interviews und lernt dabei viel über sich selbst.",
+    "descriptionEn": "After her studies, Sophie is looking for her first job. She writes applications, goes to interviews, and learns a lot about herself in the process.",
+    "upvotes": 73,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Drei Monate nach ihrem Abschluss hatte Sophie noch keine feste Stelle gefunden. Obwohl sie sich auf über zwanzig Stellen beworben hatte, kamen nur vereinzelt Einladungen zu Vorstellungsgesprächen.",
+        "translation": "Three months after her graduation, Sophie had not yet found a permanent position. Although she had applied to over twenty positions, only a few invitations to interviews came.",
+        "words": [
+          {"word": "Abschluss", "translation": "graduation / degree", "type": "noun", "gender": "masculine"},
+          {"word": "feste Stelle", "translation": "permanent position", "type": "phrase"},
+          {"word": "Obwohl", "translation": "although / even though", "type": "conjunction"},
+          {"word": "beworben", "translation": "applied (past participle)", "type": "verb", "base": "bewerben"},
+          {"word": "vereinzelt", "translation": "occasionally / sporadically", "type": "adverb"},
+          {"word": "Einladungen", "translation": "invitations", "type": "noun"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Ein Karriereberater riet ihr, ihre Bewerbungsunterlagen zu überarbeiten. Ihr Anschreiben sei zu allgemein und müsse mehr auf die jeweiligen Unternehmen zugeschnitten sein.",
+        "translation": "A career advisor advised her to revise her application documents. Her cover letter was too general and needed to be more tailored to the respective companies.",
+        "words": [
+          {"word": "Karriereberater", "translation": "career advisor", "type": "noun", "gender": "masculine"},
+          {"word": "riet", "translation": "advised", "type": "verb", "base": "raten"},
+          {"word": "überarbeiten", "translation": "to revise / rework", "type": "verb"},
+          {"word": "Anschreiben", "translation": "cover letter", "type": "noun", "gender": "neuter"},
+          {"word": "allgemein", "translation": "general", "type": "adjective"},
+          {"word": "zugeschnitten", "translation": "tailored / customized", "type": "adjective"},
+          {"word": "jeweilig", "translation": "respective / relevant", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Sophie nahm den Rat an und investierte eine Woche darin, maßgeschneiderte Bewerbungen zu verfassen. Schon bald meldeten sich mehrere Unternehmen bei ihr.",
+        "translation": "Sophie took the advice and invested a week into writing tailored applications. Before long, several companies got in touch with her.",
+        "words": [
+          {"word": "nahm an", "translation": "accepted / took up", "type": "verb", "base": "annehmen", "separable": true},
+          {"word": "investierte", "translation": "invested", "type": "verb", "base": "investieren"},
+          {"word": "maßgeschneidert", "translation": "tailor-made / customized", "type": "adjective"},
+          {"word": "verfassen", "translation": "to write / compose", "type": "verb"},
+          {"word": "Schon bald", "translation": "before long / soon enough", "type": "phrase"},
+          {"word": "meldeten sich", "translation": "got in touch / contacted", "type": "verb", "base": "sich melden"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Das entscheidende Interview fand bei einem mittelständischen IT-Unternehmen statt. Sophie war nervös, aber gut vorbereitet. Sie konnte überzeugend darlegen, warum gerade sie die ideale Kandidatin für die Position sei.",
+        "translation": "The decisive interview took place at a medium-sized IT company. Sophie was nervous, but well prepared. She was able to convincingly demonstrate why she specifically was the ideal candidate for the position.",
+        "words": [
+          {"word": "entscheidend", "translation": "decisive / crucial", "type": "adjective"},
+          {"word": "mittelständisch", "translation": "medium-sized (business)", "type": "adjective"},
+          {"word": "stattfand", "translation": "took place", "type": "verb", "base": "stattfinden", "separable": true},
+          {"word": "vorbereitet", "translation": "prepared", "type": "adjective"},
+          {"word": "überzeugend", "translation": "convincingly", "type": "adjective"},
+          {"word": "darlegen", "translation": "to demonstrate / explain", "type": "verb", "separable": true},
+          {"word": "Kandidatin", "translation": "candidate (female)", "type": "noun", "gender": "feminine"}
+        ]
+      },
+      {
+        "id": "p5",
+        "text": "Zwei Tage später erhielt sie ein Angebot. Das Gehalt entsprach ihren Vorstellungen, und die Aufgaben klangen spannend. Sophie sagte sofort zu.",
+        "translation": "Two days later she received an offer. The salary matched her expectations, and the tasks sounded exciting. Sophie immediately accepted.",
+        "words": [
+          {"word": "erhielt", "translation": "received", "type": "verb", "base": "erhalten"},
+          {"word": "Angebot", "translation": "offer", "type": "noun", "gender": "neuter"},
+          {"word": "Gehalt", "translation": "salary", "type": "noun", "gender": "neuter"},
+          {"word": "entsprach", "translation": "matched / corresponded to", "type": "verb", "base": "entsprechen"},
+          {"word": "Vorstellungen", "translation": "expectations / ideas", "type": "noun"},
+          {"word": "klangen", "translation": "sounded", "type": "verb", "base": "klingen"},
+          {"word": "sagte zu", "translation": "accepted / agreed", "type": "verb", "base": "zusagen", "separable": true}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "sich bewerben", "translation": "to apply (for a job)", "example": "Ich bewerbe mich auf diese Stelle."},
+      {"word": "das Anschreiben", "translation": "the cover letter", "example": "Das Anschreiben soll individuell sein."},
+      {"word": "maßgeschneidert", "translation": "tailor-made / customized", "example": "Eine maßgeschneiderte Bewerbung hat bessere Chancen."},
+      {"word": "das Gehalt", "translation": "the salary", "example": "Das Gehalt wird verhandelt."},
+      {"word": "entsprechen", "translation": "to correspond to / match", "example": "Das entspricht meinen Erwartungen."},
+      {"word": "zusagen", "translation": "to accept / confirm", "example": "Ich sage dem Angebot gerne zu."}
+    ],
+    "grammarFocus": "Konjunktiv I (indirect speech: sei, müsse), Complex sentence structures, Reflexive verbs",
+    "quiz": [
+      {"question": "Was empfahl der Karriereberater?", "options": ["Mehr Stellenangebote zu suchen", "Das Anschreiben zu überarbeiten", "Ein Praktikum zu machen", "Ins Ausland zu gehen"], "correct": 1},
+      {"question": "Wie lange brauchte Sophie, um neue Bewerbungen zu schreiben?", "options": ["Einen Tag", "Einen Monat", "Eine Woche", "Zwei Wochen"], "correct": 2},
+      {"question": "Hat Sophie die Stelle bekommen?", "options": ["Nein, sie wurde abgelehnt", "Ja, sie hat sofort zugesagt", "Sie denkt noch darüber nach", "Das wird nicht erwähnt"], "correct": 1}
+    ]
+  },
+  {
+    "id": "6",
+    "title": "Auf'm Oktoberfest",
+    "titleEn": "At the Oktoberfest",
+    "level": "B1",
+    "topic": "Culture",
+    "dialect": "Bayerisch",
+    "duration": 5,
+    "imageEmoji": "🍺",
+    "color": "from-yellow-400 to-yellow-600",
+    "description": "Seppl und Gretel feiern auf dem Münchner Oktoberfest. Eine Geschichte auf Bayerisch – mit Hochdeutsch-Erklärungen!",
+    "descriptionEn": "Seppl and Gretel celebrate at the Munich Oktoberfest. A story in Bavarian dialect – with standard German explanations!",
+    "upvotes": 112,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Seppl und Gretel san scho früh am Morgen aufgestanden. \"Heut genga mir aufs Wiesn!\", hat Seppl gschrian.",
+        "translation": "Seppl and Gretel got up early in the morning. \"Today we're going to the Oktoberfest!\", Seppl shouted. [Bayerisch: san = sind, genga = gehen, aufs Wiesn = auf das Oktoberfest, gschrian = geschrien]",
+        "words": [
+          {"word": "san", "translation": "sind (are) — Bayerisch", "type": "verb"},
+          {"word": "scho", "translation": "schon (already) — Bayerisch", "type": "adverb"},
+          {"word": "aufgestanden", "translation": "gotten up", "type": "verb", "base": "aufstehen", "separable": true},
+          {"word": "Heut", "translation": "heute (today) — Bayerisch", "type": "adverb"},
+          {"word": "genga", "translation": "gehen (go) — Bayerisch", "type": "verb"},
+          {"word": "aufs Wiesn", "translation": "auf das Oktoberfest — Bayerisch", "type": "phrase"},
+          {"word": "gschrian", "translation": "geschrien (shouted) — Bayerisch", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "In der Festzelt war's schon brechend voll. \"Hoid amoi!\", rief ein Kellner. \"Ihr kriagts glei an Tisch!\"",
+        "translation": "In the festival tent it was already packed. \"Wait a moment!\", called a waiter. \"You'll get a table soon!\" [Hoid amoi = Halt mal (wait a moment), kriagts = kriegt ihr (you get), glei = gleich (soon)]",
+        "words": [
+          {"word": "Festzelt", "translation": "festival tent (at Oktoberfest)", "type": "noun", "gender": "neuter"},
+          {"word": "brechend voll", "translation": "packed / crammed full", "type": "phrase"},
+          {"word": "Hoid amoi", "translation": "Halt mal (wait a moment) — Bayerisch", "type": "phrase"},
+          {"word": "kriagts", "translation": "kriegt ihr (you get) — Bayerisch", "type": "verb"},
+          {"word": "glei", "translation": "gleich (soon / right away) — Bayerisch", "type": "adverb"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Gretel bestellte a Maß Bier und an Hendl. \"Des schmeckt fei guad!\", sagte sie und leckte sich die Finger ab.",
+        "translation": "Gretel ordered a litre of beer and a chicken. \"That really tastes good!\", she said and licked her fingers. [a Maß = eine Maß (1L beer), an Hendl = ein Hendl (a chicken), Des = Das, fei guad = wirklich gut (really good)]",
+        "words": [
+          {"word": "a Maß", "translation": "eine Maß (1 litre of beer) — Bayerisch", "type": "phrase"},
+          {"word": "an Hendl", "translation": "ein Hendl / Hähnchen (a chicken) — Bayerisch", "type": "noun"},
+          {"word": "Des", "translation": "Das (that/this) — Bayerisch", "type": "article"},
+          {"word": "fei", "translation": "wirklich / echt (really / quite) — Bayerisch", "type": "adverb"},
+          {"word": "guad", "translation": "gut (good) — Bayerisch", "type": "adjective"},
+          {"word": "leckte ab", "translation": "licked off", "type": "verb", "base": "ablecken", "separable": true}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Am Abend haben sie no an Umzug zuaschaut und dann mit der Kapell getanzt. \"Oans, zwoa, gsuffa!\", sang die Menge.",
+        "translation": "In the evening they also watched a parade and then danced with the band. \"One, two, drink!\", sang the crowd. [no = noch (also/still), zuaschaut = zugeschaut (watched), Kapell = Kapelle (band), Oans zwoa gsuffa = Eins, zwei, gesoffen! (classic Oktoberfest chant)]",
+        "words": [
+          {"word": "no", "translation": "noch (still / also) — Bayerisch", "type": "adverb"},
+          {"word": "zuaschaut", "translation": "zugeschaut (watched) — Bayerisch", "type": "verb"},
+          {"word": "Kapell", "translation": "Kapelle (band / orchestra) — Bayerisch", "type": "noun"},
+          {"word": "Oans, zwoa, gsuffa", "translation": "Eins, zwei, gesoffen! (Oktoberfest chant: One, two, drink!) — Bayerisch", "type": "phrase"},
+          {"word": "Menge", "translation": "crowd", "type": "noun", "gender": "feminine"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "die Maß", "translation": "the 1-litre beer mug (Bavarian)", "example": "Eine Maß Bier kostet auf dem Oktoberfest über 15 Euro."},
+      {"word": "das Hendl", "translation": "the chicken (Bavarian)", "example": "Das Hendl ist knusprig gebraten."},
+      {"word": "das Festzelt", "translation": "the festival tent", "example": "Das Festzelt fasst tausende von Menschen."},
+      {"word": "san (Bayerisch)", "translation": "sind (are)", "example": "Mia san mia! (We are who we are – Bayern Munich motto)"},
+      {"word": "fei (Bayerisch)", "translation": "wirklich / schon (really / quite)", "example": "Des is fei schee! (That's really nice!)"},
+      {"word": "glei (Bayerisch)", "translation": "gleich (soon / right away)", "example": "I komm glei! (I'll be right there!)"}
+    ],
+    "grammarFocus": "Bavarian dialect features: vowel shifts (guad/gut, Maß), dropped endings, different pronouns (mia/wir)",
+    "quiz": [
+      {"question": "Was bedeutet 'Maß' auf dem Oktoberfest?", "options": ["Eine Maßeinheit", "Ein 1-Liter-Bierkrug", "Ein bayerisches Gericht", "Ein Festzelt"], "correct": 1},
+      {"question": "Was bedeutet 'glei' auf Bayerisch?", "options": ["Sofort / gleich", "Langsam", "Gestern", "Zusammen"], "correct": 0},
+      {"question": "Was isst Gretel auf dem Oktoberfest?", "options": ["Bratwurst", "Schnitzel", "Hendl (Hähnchen)", "Brezel"], "correct": 2}
+    ]
+  },
+  {
+    "id": "7",
+    "title": "Klimawandel und die Zukunft",
+    "titleEn": "Climate Change and the Future",
+    "level": "C1",
+    "topic": "Environment",
+    "dialect": null,
+    "duration": 7,
+    "imageEmoji": "🌍",
+    "color": "from-teal-400 to-teal-600",
+    "description": "Ein Wissenschaftler und eine Politikerin diskutieren über Klimaschutz und die Frage, wer die Verantwortung für die Zukunft trägt.",
+    "descriptionEn": "A scientist and a politician discuss climate protection and the question of who bears responsibility for the future.",
+    "upvotes": 38,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Der Klimaforscher Prof. Dr. Weber veröffentlichte kürzlich eine Studie, der zufolge der globale Temperaturanstieg schneller voranschreitet als bislang angenommen.",
+        "translation": "Climate researcher Prof. Dr. Weber recently published a study, according to which global temperature rise is advancing faster than previously assumed.",
+        "words": [
+          {"word": "veröffentlichte", "translation": "published", "type": "verb", "base": "veröffentlichen"},
+          {"word": "kürzlich", "translation": "recently", "type": "adverb"},
+          {"word": "der zufolge", "translation": "according to which", "type": "phrase"},
+          {"word": "globale", "translation": "global", "type": "adjective"},
+          {"word": "Temperaturanstieg", "translation": "temperature rise", "type": "noun", "gender": "masculine"},
+          {"word": "voranschreitet", "translation": "advances / progresses", "type": "verb", "base": "voranschreiten", "separable": true},
+          {"word": "bislang", "translation": "up to now / hitherto", "type": "adverb"},
+          {"word": "angenommen", "translation": "assumed (past participle)", "type": "verb", "base": "annehmen"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "In einer Podiumsdiskussion konfrontierte ihn die Bundestagsabgeordnete Frau Hartmann mit dem Vorwurf, die wirtschaftlichen Konsequenzen drastischer Klimaschutzmaßnahmen würden die Bevölkerung unverhältnismäßig belasten.",
+        "translation": "In a panel discussion, Member of Parliament Mrs. Hartmann confronted him with the accusation that the economic consequences of drastic climate protection measures would disproportionately burden the population.",
+        "words": [
+          {"word": "Podiumsdiskussion", "translation": "panel discussion", "type": "noun", "gender": "feminine"},
+          {"word": "konfrontierte", "translation": "confronted", "type": "verb", "base": "konfrontieren"},
+          {"word": "Bundestagsabgeordnete", "translation": "Member of Parliament (Bundestag)", "type": "noun", "gender": "feminine"},
+          {"word": "Vorwurf", "translation": "accusation / reproach", "type": "noun", "gender": "masculine"},
+          {"word": "Klimaschutzmaßnahmen", "translation": "climate protection measures", "type": "noun"},
+          {"word": "unverhältnismäßig", "translation": "disproportionately", "type": "adverb"},
+          {"word": "belasten", "translation": "to burden / strain", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Weber entgegnete, dass kurzfristige wirtschaftliche Einbußen durch die langfristigen Kosten eines unkontrollierten Klimawandels bei weitem übertroffen würden. Er verwies auf Studien, die zeigten, dass Investitionen in erneuerbare Energien mittelfristig Arbeitsplätze schaffen, nicht vernichten.",
+        "translation": "Weber retorted that short-term economic losses would be far outweighed by the long-term costs of uncontrolled climate change. He referred to studies showing that investments in renewable energy would create jobs in the medium term, not destroy them.",
+        "words": [
+          {"word": "entgegnete", "translation": "retorted / responded", "type": "verb", "base": "entgegnen"},
+          {"word": "kurzfristig", "translation": "short-term", "type": "adjective"},
+          {"word": "Einbußen", "translation": "losses / reductions", "type": "noun"},
+          {"word": "langfristig", "translation": "long-term", "type": "adjective"},
+          {"word": "bei weitem", "translation": "by far", "type": "phrase"},
+          {"word": "übertroffen", "translation": "exceeded / surpassed", "type": "verb", "base": "übertreffen"},
+          {"word": "verwies", "translation": "referred", "type": "verb", "base": "verweisen"},
+          {"word": "erneuerbare Energien", "translation": "renewable energies", "type": "phrase"},
+          {"word": "mittelfristig", "translation": "medium-term", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Die Diskussion machte deutlich, dass der Klimawandel nicht nur eine wissenschaftliche, sondern auch eine tiefgreifend politische und gesellschaftliche Herausforderung darstellt, die gesamtgesellschaftliche Lösungsansätze erfordert.",
+        "translation": "The discussion made clear that climate change represents not only a scientific, but also a profoundly political and social challenge, which requires society-wide approaches to solutions.",
+        "words": [
+          {"word": "machte deutlich", "translation": "made clear", "type": "phrase", "base": "deutlich machen"},
+          {"word": "tiefgreifend", "translation": "profound / far-reaching", "type": "adjective"},
+          {"word": "gesellschaftlich", "translation": "social / societal", "type": "adjective"},
+          {"word": "Herausforderung", "translation": "challenge", "type": "noun", "gender": "feminine"},
+          {"word": "darstellt", "translation": "represents / constitutes", "type": "verb", "base": "darstellen", "separable": true},
+          {"word": "gesamtgesellschaftlich", "translation": "society-wide / across all of society", "type": "adjective"},
+          {"word": "Lösungsansätze", "translation": "approaches to solutions", "type": "noun"},
+          {"word": "erfordert", "translation": "requires / demands", "type": "verb", "base": "erfordern"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "der Klimawandel", "translation": "climate change", "example": "Der Klimawandel bedroht die Artenvielfalt."},
+      {"word": "unverhältnismäßig", "translation": "disproportionately", "example": "Die Last ist unverhältnismäßig verteilt."},
+      {"word": "die Herausforderung", "translation": "the challenge", "example": "Das ist eine große Herausforderung."},
+      {"word": "erneuerbare Energien", "translation": "renewable energies", "example": "Deutschland investiert in erneuerbare Energien."},
+      {"word": "mittelfristig", "translation": "medium-term", "example": "Mittelfristig soll die Wirtschaft wachsen."},
+      {"word": "gesamtgesellschaftlich", "translation": "society-wide", "example": "Das ist eine gesamtgesellschaftliche Aufgabe."}
+    ],
+    "grammarFocus": "Konjunktiv II in reported speech, Passive voice, Complex subordinate clauses, Academic register",
+    "quiz": [
+      {"question": "Was besagt Webers Studie?", "options": ["Der Klimawandel ist weniger schlimm als gedacht", "Die Temperaturen steigen schneller als erwartet", "Die Wirtschaft leidet unter Klimaschutz", "Erneuerbare Energien sind zu teuer"], "correct": 1},
+      {"question": "Was wirft Frau Hartmann dem Professor vor?", "options": ["Seine Studie ist falsch", "Klimaschutz belastet die Wirtschaft", "Er ignoriert politische Aspekte", "Er hat zu wenig Belege"], "correct": 1},
+      {"question": "Was sagt Weber über Investitionen in erneuerbare Energien?", "options": ["Sie vernichten Arbeitsplätze", "Sie sind zu teuer", "Sie schaffen mittelfristig Jobs", "Sie helfen kurzfristig nichts"], "correct": 2}
+    ]
+  },
+  {
+    "id": "8",
+    "title": "Die Verwandlung",
+    "titleEn": "The Metamorphosis (excerpt)",
+    "level": "C2",
+    "topic": "Literature",
+    "dialect": null,
+    "duration": 8,
+    "imageEmoji": "📖",
+    "color": "from-gray-500 to-gray-700",
+    "description": "Ein adaptierter Auszug aus Franz Kafkas berühmtestem Werk – mit modernen Erklärungen. Gregor Samsa erwacht eines Morgens verwandelt.",
+    "descriptionEn": "An adapted excerpt from Franz Kafka's most famous work – with modern explanations. Gregor Samsa wakes one morning transformed.",
+    "upvotes": 29,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Als Gregor Samsa eines Morgens aus unruhigen Träumen erwachte, fand er sich in seinem Bett zu einem ungeheueren Ungeziefer verwandelt.",
+        "translation": "When Gregor Samsa woke one morning from troubled dreams, he found himself transformed in his bed into a monstrous vermin.",
+        "words": [
+          {"word": "unruhigen", "translation": "troubled / restless", "type": "adjective"},
+          {"word": "Träumen", "translation": "dreams", "type": "noun", "case": "Dativ"},
+          {"word": "erwachte", "translation": "woke (up)", "type": "verb", "base": "erwachen"},
+          {"word": "fand", "translation": "found", "type": "verb", "base": "finden"},
+          {"word": "ungeheueren", "translation": "monstrous / enormous", "type": "adjective"},
+          {"word": "Ungeziefer", "translation": "vermin / pest", "type": "noun", "gender": "neuter"},
+          {"word": "verwandelt", "translation": "transformed / changed", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Er lag auf seinem panzerartig harten Rücken und sah, wenn er den Kopf ein wenig hob, seinen gewölbten, braunen, von bogenförmigen Versteifungen geteilten Bauch.",
+        "translation": "He lay on his armour-like hard back and saw, when he lifted his head a little, his arched, brown belly, divided by stiff arched segments.",
+        "words": [
+          {"word": "panzerartig", "translation": "armour-like", "type": "adjective"},
+          {"word": "harten", "translation": "hard", "type": "adjective"},
+          {"word": "gewölbten", "translation": "arched / vaulted", "type": "adjective"},
+          {"word": "bogenförmigen", "translation": "arch-shaped / curved", "type": "adjective"},
+          {"word": "Versteifungen", "translation": "stiffeners / reinforcements", "type": "noun"},
+          {"word": "geteilten", "translation": "divided", "type": "adjective"},
+          {"word": "Bauch", "translation": "belly / abdomen", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Was ist mit mir geschehen?, dachte er. Es war kein Traum. Sein Zimmer, ein richtiges, nur etwas zu kleines Menschenzimmer, lag ruhig zwischen den vier wohlbekannten Wänden.",
+        "translation": "What has happened to me?, he thought. It was no dream. His room, a proper human room, only a little too small, lay peacefully between the four familiar walls.",
+        "words": [
+          {"word": "geschehen", "translation": "happened (past participle)", "type": "verb", "base": "geschehen"},
+          {"word": "richtiges", "translation": "proper / genuine", "type": "adjective"},
+          {"word": "Menschenzimmer", "translation": "human room (Kafka's coinage)", "type": "noun", "gender": "neuter"},
+          {"word": "ruhig", "translation": "peacefully / quietly", "type": "adjective"},
+          {"word": "wohlbekannten", "translation": "familiar / well-known", "type": "adjective"},
+          {"word": "Wänden", "translation": "walls", "type": "noun", "case": "Dativ"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Gregor sann darüber nach, wie er aus dem Bett kommen könnte. Er hatte noch nie versucht, auf dem Rücken zu liegen, und konnte sich nicht vorstellen, wie er sich dabei umdrehen sollte.",
+        "translation": "Gregor pondered how he might get out of bed. He had never tried to lie on his back before, and could not imagine how he was supposed to turn himself over in that position.",
+        "words": [
+          {"word": "sann nach", "translation": "pondered / reflected", "type": "verb", "base": "nachsinnen", "separable": true},
+          {"word": "darüber", "translation": "about it / over that", "type": "adverb"},
+          {"word": "könnte", "translation": "could (Konjunktiv II)", "type": "verb", "base": "können"},
+          {"word": "vorstellen", "translation": "to imagine", "type": "verb", "separable": true},
+          {"word": "umdrehen", "translation": "to turn over", "type": "verb", "separable": true},
+          {"word": "sollte", "translation": "was supposed to (Konjunktiv II)", "type": "verb", "base": "sollen"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "das Ungeziefer", "translation": "vermin / pest (Kafka uses this ambiguously)", "example": "Kafka beschreibt das Ungeziefer nie genau."},
+      {"word": "ungeheuer", "translation": "monstrous / enormous / tremendous", "example": "Ein ungeheurer Lärm drang durch die Wände."},
+      {"word": "nachsinnen", "translation": "to ponder / reflect deeply", "example": "Er sann lange über die Frage nach."},
+      {"word": "verwandeln", "translation": "to transform / change", "example": "Die Erfahrung hat ihn verwandelt."},
+      {"word": "panzerartig", "translation": "armour-like", "example": "Ein panzerartiger Schutzmantel."},
+      {"word": "wohlbekannt", "translation": "familiar / well-known", "example": "Ein wohlbekanntes Gesicht tauchte auf."}
+    ],
+    "grammarFocus": "Konjunktiv II (könnte, sollte), Extended participial phrases, Complex relative clauses, Literary style",
+    "quiz": [
+      {"question": "In was ist Gregor Samsa verwandelt?", "options": ["In einen Vogel", "In ein Ungeziefer", "In einen Hund", "In eine Pflanze"], "correct": 1},
+      {"question": "Ist es ein Traum?", "options": ["Ja, es ist ein Alptraum", "Nein, es ist kein Traum", "Das wird nicht klar", "Er weiß es nicht"], "correct": 1},
+      {"question": "Wovor hat Gregor Angst?", "options": ["Vor seiner Familie", "Vor der Arbeit", "Aus dem Bett zu kommen", "Vor dem Spiegel"], "correct": 2}
+    ]
+  }
+]
