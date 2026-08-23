@@ -32,14 +32,83 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       .catch((error: any) => sendResponse({ success: false, error: error.message }));
     return true;
   }
+  if (request.action === "fetchInMainWorld" && _sender.tab?.id) {
+    chrome.scripting.executeScript({
+      target: { tabId: _sender.tab.id },
+      world: "MAIN",
+      func: async (url) => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const text = await res.text();
+          if (!text) throw new Error("Empty body");
+          return text;
+        } catch (e: any) {
+          return { error: e.message };
+        }
+      },
+      args: [request.url]
+    }).then(results => {
+      const result = results?.[0]?.result;
+      if (result && typeof result === 'object' && result.error) {
+        sendResponse({ error: result.error });
+      } else {
+        sendResponse({ text: result });
+      }
+    }).catch(e => {
+      sendResponse({ error: e.message });
+    });
+    return true;
+  }
+
   if (request.action === "fetchSubtitles") {
     fetch(request.url, {
-      headers: request.headers || {},
       credentials: "include"
     })
-      .then(res => res.json())
+      .then(async res => {
+        const text = await res.text();
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${text.slice(0, 100)}`);
+        }
+        if (!text) {
+          throw new Error("Empty response body");
+        }
+        return { text };
+      })
       .then(sendResponse)
       .catch(e => sendResponse({ error: e.message }));
+    return true;
+  }
+  
+  if (request.action === "fetchTranscriptDirect") {
+    fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
+      method: "POST",
+      credentials: "omit",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        context: { client: { clientName: "ANDROID", clientVersion: "20.10.38" } },
+        videoId: request.videoId
+      })
+    })
+    .then(async r => {
+      if (!r.ok) {
+        const text = await r.text();
+        throw new Error(`HTTP ${r.status}: ${text.substring(0, 200)}`);
+      }
+      return r.json();
+    })
+    .then(data => {
+      const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+      if (!tracks || !tracks.length) throw new Error("No tracks found");
+      let track = tracks.find((t: any) => t.languageCode === request.lang) || tracks[0];
+      let url = track.baseUrl;
+      if (request.forceLang) {
+        url += "&tlang=" + request.forceLang;
+      }
+      return fetch(url, { credentials: "omit" }).then(r => r.text());
+    })
+    .then(xml => sendResponse({ xml }))
+    .catch((e: any) => sendResponse({ error: e.message }));
     return true;
   }
   if (request.action === "translateSentence") {
@@ -56,6 +125,47 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     updateVocabWordStatus(request.id, request.status)
       .then(() => sendResponse({ success: true }))
       .catch((error: any) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
+  if (request.action === "extractYouTubeTracks") {
+    const tabId = _sender.tab?.id;
+    if (tabId) {
+      chrome.scripting.executeScript({
+        target: { tabId },
+        world: "MAIN",
+        func: (vidId) => {
+          try {
+            let tracks = [];
+            const player = document.getElementById('movie_player') as any;
+            if (player && typeof player.getPlayerResponse === 'function') {
+              const response = player.getPlayerResponse();
+              if (response?.videoDetails?.videoId === vidId) {
+                tracks = response?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+              }
+            } 
+            if (!tracks.length && (window as any).ytInitialPlayerResponse?.videoDetails?.videoId === vidId) {
+              tracks = (window as any).ytInitialPlayerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+            }
+            return tracks;
+          } catch (e) {
+            return [];
+          }
+        },
+        args: [request.videoId]
+      }).then((results) => {
+        if (results && results[0] && results[0].result) {
+          sendResponse({ tracks: results[0].result });
+        } else {
+          sendResponse({ tracks: [] });
+        }
+      }).catch((e) => {
+        console.error(e);
+        sendResponse({ tracks: [] });
+      });
+      return true;
+    }
+    sendResponse({ tracks: [] });
     return true;
   }
 });

@@ -18,11 +18,10 @@ export default function AudioPlayer({ paragraphs, className }: AudioPlayerProps)
   const [voices, setVoices] = useState<TTSVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState("");
   const [showSettings, setShowSettings] = useState(false);
-  const [supported, setSupported] = useState(true);
+  const [supported, setSupported] = useState(typeof window !== "undefined" && !!window.speechSynthesis);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      setSupported(false);
+    if (!supported) {
       return;
     }
 
@@ -37,7 +36,7 @@ export default function AudioPlayer({ paragraphs, className }: AudioPlayerProps)
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
     return () => { window.speechSynthesis.onvoiceschanged = null; };
-  }, []);
+  }, [selectedVoice, supported]);
 
   const playAll = async () => {
     setIsPlaying(true);

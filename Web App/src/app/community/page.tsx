@@ -4,9 +4,15 @@ import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { Users, Heart, PlusCircle, BookOpen, X, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CEFR_LEVELS, CEFRLevel } from "@/lib/stories";
+import { CEFR_LEVELS, CEFRLevel, Story } from "@/lib/stories";
 
-const SAMPLE_COMMUNITY: any[] = [
+export interface CommunityStory extends Partial<Story> {
+  author: string;
+  content: string;
+  createdAt: string;
+}
+
+const SAMPLE_COMMUNITY: CommunityStory[] = [
   {
     id: "comm-1",
     title: "Meine Katze Otto",
@@ -99,11 +105,13 @@ export default function CommunityPage() {
 
       {/* Stories */}
       <div className="space-y-4">
-        {allStories.map((story) => {
-          const isUser = story.id.startsWith("community-");
-          const isUpvoted = upvotedIds.has(story.id);
+        {allStories.map((s) => {
+          const story = s as CommunityStory;
+          const storyId = story.id || "";
+          const isUser = storyId.startsWith("community-");
+          const isUpvoted = upvotedIds.has(storyId);
           return (
-            <div key={story.id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <div key={storyId} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -123,7 +131,7 @@ export default function CommunityPage() {
                   )}
                 </div>
                 <button
-                  onClick={() => handleUpvote(story.id, isUser)}
+                  onClick={() => handleUpvote(storyId, isUser)}
                   className={cn(
                     "flex flex-col items-center gap-0.5 p-2 rounded-xl border transition-all",
                     isUpvoted
@@ -132,7 +140,7 @@ export default function CommunityPage() {
                   )}
                 >
                   <ChevronUp className="w-4 h-4" />
-                  <span className="text-xs font-bold">{story.upvotes + (isUpvoted ? 1 : 0)}</span>
+                  <span className="text-xs font-bold">{(story.upvotes || 0) + (isUpvoted ? 1 : 0)}</span>
                 </button>
               </div>
 
@@ -143,7 +151,7 @@ export default function CommunityPage() {
               <div className="flex items-center gap-3 mt-3 text-xs text-gray-400">
                 <span>by @{story.author}</span>
                 <span>·</span>
-                <span>{new Date(story.createdAt).toLocaleDateString()}</span>
+                <span>{new Date(story.createdAt || "2025-01-01").toLocaleDateString()}</span>
               </div>
             </div>
           );

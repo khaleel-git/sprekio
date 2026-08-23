@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { generateStory } from "@/lib/gemini";
-import { CEFRLevel, CEFR_LEVELS } from "@/lib/stories";
-import { Sparkles, Loader2, KeyRound, BookOpen, Globe2, AlertCircle } from "lucide-react";
+import { CEFRLevel, CEFR_LEVELS, Story, Paragraph } from "@/lib/stories";
+import { Sparkles, Loader2, KeyRound, BookOpen, Globe2, AlertCircle, Save, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TOPICS = [
@@ -37,7 +37,7 @@ export default function GeneratePage() {
   const [dialect, setDialect] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [generated, setGenerated] = useState<any>(null);
+  const [generated, setGenerated] = useState<Partial<Story> | null>(null);
   const [saved, setSaved] = useState(false);
 
   const { progress } = useStore();
@@ -61,9 +61,10 @@ export default function GeneratePage() {
         wordCount: 200,
         apiKey: key,
       });
-      setGenerated(story);
-    } catch (e: any) {
-      setError(e.message || "Failed to generate story. Check your API key.");
+      setGenerated(story as unknown as Partial<Story>);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to generate story. Check your API key.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -253,7 +254,7 @@ export default function GeneratePage() {
 
           {/* Story paragraphs */}
           <div className="space-y-3">
-            {generated.paragraphs?.map((p: any, i: number) => (
+            {generated.paragraphs?.map((p: Paragraph, i: number) => (
               <div key={i} className="bg-gray-50 rounded-xl p-4">
                 <p className="text-gray-900 text-sm leading-relaxed">{p.text}</p>
                 <p className="text-gray-400 text-xs italic mt-2">{p.translation}</p>

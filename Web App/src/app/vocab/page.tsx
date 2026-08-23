@@ -6,6 +6,7 @@ import { getDueCards, getNewCards, getLearnedCards } from "@/lib/srs";
 import VocabCardComponent from "@/components/VocabCard";
 import { Brain, BookOpen, Layers, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export default function VocabPage() {
   const { vocabDeck, reviewVocabCard, progress } = useStore();
@@ -102,15 +103,15 @@ export default function VocabPage() {
         <h2 className="text-xl font-bold text-gray-900">Your vocab deck is empty</h2>
         <p className="text-gray-500 text-sm max-w-xs mx-auto">
           While reading stories, tap any highlighted word and click{" "}
-          <span className="font-medium">"Save to Vocab Deck"</span> to add it here.
+          <span className="font-medium">&quot;Save to Vocab Deck&quot;</span> to add it here.
         </p>
-        <a
+        <Link
           href="/"
           className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700"
         >
           <BookOpen className="w-4 h-4" />
           Browse Stories
-        </a>
+        </Link>
       </div>
     );
   }

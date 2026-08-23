@@ -34,6 +34,19 @@ const SprekioOverlay: React.FC = () => {
   const lastPausedIndex = useRef(-1);
   const currentLineIndexRef = useRef(-1);
 
+  const interceptedTranscripts = useRef<{url: string, text: string, status: number, headers: any[]}[]>([]);
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data && e.data.type === 'SPREKIO_INTERCEPTED') {
+         console.log("[Sprekio] Content Script received intercepted transcript:", e.data);
+         interceptedTranscripts.current.push(e.data);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const fetchTranscript = async (retryCount = 0) => {
     if (transcript.length > 0) return;
     if (retryCount === 0 && isFetchingTranscript) return;
@@ -42,50 +55,31 @@ const SprekioOverlay: React.FC = () => {
     if (!videoId) return;
 
     setIsFetchingTranscript(true);
+
+    // Force CC on so the native player requests transcripts
+    const ccButton = document.querySelector('.ytp-subtitles-button') as HTMLButtonElement;
+    if (ccButton) {
+      if (ccButton.getAttribute('aria-pressed') === 'true') {
+        if (interceptedTranscripts.current.length === 0) {
+          console.log("[Sprekio] CC is on but we missed the initial fetch. Toggling to re-fetch.");
+          ccButton.click(); // turn off
+          await new Promise(r => setTimeout(r, 100));
+          ccButton.click(); // turn on
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      } else {
+        console.log("[Sprekio] Forcing CC on to trigger native transcript fetch");
+        ccButton.click();
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
     
     try {
-      const getTracksFromDOM = () => {
+      const getTracksFromDOM = async () => {
         return new Promise<any[]>((resolve) => {
-          const script = document.createElement('script');
-          const scriptId = 'sprekio-extract-' + Math.random().toString(36).substr(2, 9);
-          script.id = scriptId;
-          script.textContent = `
-            (function() {
-              try {
-                let tracks = [];
-                const player = document.getElementById('movie_player');
-                if (player && typeof player.getPlayerResponse === 'function') {
-                  const response = player.getPlayerResponse();
-                  tracks = response?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-                } 
-                if (!tracks.length && window.ytInitialPlayerResponse) {
-                  tracks = window.ytInitialPlayerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-                }
-                window.postMessage({ type: 'SPREKIO_TRACKS', tracks: tracks, scriptId: '${scriptId}' }, '*');
-              } catch (e) {
-                window.postMessage({ type: 'SPREKIO_TRACKS', tracks: [], scriptId: '${scriptId}' }, '*');
-              }
-            })();
-          `;
-          
-          const listener = (event: MessageEvent) => {
-            if (event.source === window && event.data && event.data.type === 'SPREKIO_TRACKS' && event.data.scriptId === scriptId) {
-              window.removeEventListener('message', listener);
-              const s = document.getElementById(scriptId);
-              if (s) s.remove();
-              resolve(event.data.tracks);
-            }
-          };
-          
-          window.addEventListener('message', listener);
-          document.documentElement.appendChild(script);
-          
-          setTimeout(() => {
-            window.removeEventListener('message', listener);
-            const s = document.getElementById(scriptId);
-            if (s) s.remove();
-            resolve([]);
-          }, 2000);
+          chrome.runtime.sendMessage({ action: "extractYouTubeTracks", videoId }, (res) => {
+            resolve(res?.tracks || []);
+          });
         });
       };
       
@@ -105,44 +99,200 @@ const SprekioOverlay: React.FC = () => {
                     
       let defaultTrack = captionTracks[0];
       
+      const decodeEntities = (text: string) => {
+        return text
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&apos;/g, "'")
+            .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+            .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)));
+      };
+
+      const parseTranscriptXml = (xml: string) => {
+        const results = [];
+        const pRegex = /<p\s+t="(\d+)"\s+d="(\d+)"[^>]*>([\s\S]*?)<\/p>/g;
+        let match;
+        while ((match = pRegex.exec(xml)) !== null) {
+            const startMs = parseInt(match[1], 10);
+            const durMs = parseInt(match[2], 10);
+            const inner = match[3];
+            let text = '';
+            const sRegex = /<s[^>]*>([^<]*)<\/s>/g;
+            let sMatch;
+            while ((sMatch = sRegex.exec(inner)) !== null) {
+                text += sMatch[1];
+            }
+            if (!text) {
+                text = inner.replace(/<[^>]+>/g, '');
+            }
+            text = decodeEntities(text).trim();
+            if (text) {
+                results.push({
+                    text,
+                    duration: durMs,
+                    offset: startMs,
+                });
+            }
+        }
+        if (results.length > 0) return results;
+        
+        const classicRegex = /<text start="([^"]*)" dur="([^"]*)">([^<]*)<\/text>/g;
+        const classicResults = [...xml.matchAll(classicRegex)];
+        return classicResults.map((result) => ({
+            text: decodeEntities(result[3]),
+            duration: parseFloat(result[2]) * 1000,
+            offset: parseFloat(result[1]) * 1000,
+        }));
+      };
+
       const fetchTrack = async (track: any, forceLang?: string) => {
         if (!track) return null;
-        let url = track.baseUrl + "&fmt=json3";
-        if (forceLang) url += "&tlang=" + forceLang;
+        let baseUrl = track.baseUrl;
+        if (forceLang) baseUrl += "&tlang=" + forceLang;
 
-        const res = await new Promise<any>((resolve) => {
-          chrome.runtime.sendMessage({ 
-            action: "fetchSubtitles", 
-            url,
-            headers: {
-              "X-YouTube-Client-Name": "1",
-              "X-YouTube-Client-Version": "2.20240101.01.00"
+        const tryFetch = async (url: string, isJson: boolean) => {
+          console.log(`[Sprekio] Fetching ${isJson ? 'JSON3' : 'XML'}: ${url}`);
+
+          // 1. Check if we intercepted this request from the native player!
+          const baseUrlWithoutQuery = url.split('?')[0];
+          const intercepted = interceptedTranscripts.current.find(t => 
+             t.url.includes(baseUrlWithoutQuery) && t.status === 200 && t.text.length > 50
+          );
+          
+          let fetchUrl = url;
+          if (intercepted) {
+             console.log(`[Sprekio] Found matching INTERCEPTED transcript in cache!`, intercepted.url);
+             
+             // If this request needs a translation (tlang), we CANNOT use the cached text.
+             // We must fetch from network using the intercepted URL's tokens (signature, pot, etc).
+             if (url.includes('tlang=')) {
+               const tlangMatch = url.match(/tlang=([^&]+)/);
+               if (tlangMatch) {
+                 fetchUrl = intercepted.url + `&tlang=${tlangMatch[1]}`;
+                 console.log("[Sprekio] Rewrote URL to use intercepted tokens for translation:", fetchUrl);
+               }
+             } else {
+               // If no translation needed, just return the cached text directly!
+               try {
+                  return isJson ? JSON.parse(intercepted.text) : parseTranscriptXml(intercepted.text);
+               } catch(e) {
+                  console.error("[Sprekio] Error parsing intercepted text:", e);
+               }
+             }
+          }
+          
+          try {
+            const localRes = await fetch(fetchUrl);
+            const text = await localRes.text();
+            console.log(`[Sprekio] Isolated World Fetch - Status: ${localRes.status}, Content-Type: ${localRes.headers.get('content-type')}, Redirected: ${localRes.redirected}, URL: ${localRes.url}, Text (200): ${text.substring(0, 200)}`);
+            if (localRes.ok && text) {
+              return isJson ? JSON.parse(text) : parseTranscriptXml(text);
             }
-          }, resolve);
-        });
-        
-        if (res.error) return null;
-        return res;
+          } catch (e) {
+            console.error(`[Sprekio] Isolated World Fetch Exception:`, e);
+          }
+          
+          try {
+            const mainRes = await new Promise<any>((resolve) => {
+              chrome.runtime.sendMessage({ action: "fetchInMainWorld", url: fetchUrl }, resolve);
+            });
+            console.log(`[Sprekio] Main World Fetch - Response:`, mainRes);
+            if (mainRes && !mainRes.error && mainRes.text) {
+               return isJson ? JSON.parse(mainRes.text) : parseTranscriptXml(mainRes.text);
+            }
+          } catch(e) {
+            console.error(`[Sprekio] Main World Fetch Exception:`, e);
+          }
+
+          const res = await new Promise<any>((resolve) => {
+            chrome.runtime.sendMessage({ action: "fetchSubtitles", url: fetchUrl }, resolve);
+          });
+          console.log(`[Sprekio] Background Service Fetch - Response:`, res);
+          if (res && res.error) throw new Error(res.error);
+          return isJson ? JSON.parse(res.text) : parseTranscriptXml(res.text || "");
+        };
+
+        try {
+          // Try JSON3 first
+          return { data: await tryFetch(baseUrl + "&fmt=json3", true), type: 'json' };
+        } catch (e) {
+          console.warn("JSON3 fetch failed, trying XML...", e);
+          try {
+            // Try standard XML
+            return { data: await tryFetch(baseUrl, false), type: 'xml' };
+          } catch (err) {
+            console.error("Both JSON3 and XML fetches failed", err);
+            
+            // MASTER FALLBACK: Direct InnerTube API fetch via Background Script
+            console.warn("Attempting direct InnerTube API fetch fallback...");
+            
+            // get videoId from window or url
+            const vidId = new URLSearchParams(window.location.search).get('v') || '';
+            const res = await new Promise<any>((resolve) => {
+              chrome.runtime.sendMessage({ 
+                action: "fetchTranscriptDirect", 
+                videoId: vidId, 
+                lang: track.languageCode,
+                forceLang: forceLang
+              }, resolve);
+            });
+            console.log(`[Sprekio] InnerTube Fallback - Response:`, res);
+            if (res && res.error) throw new Error(res.error);
+            if (res && res.xml) {
+                return { data: parseTranscriptXml(res.xml), type: 'xml' };
+            }
+            return null;
+          }
+        }
       };
 
       const deData = await fetchTrack(deTrack || defaultTrack, !deTrack ? 'de' : undefined);
-      const enData = await fetchTrack(enTrack || defaultTrack, !enTrack ? 'en' : undefined);
-
-      if (!deData) {
-        throw new Error("Failed to fetch German track JSON");
+      let enData = null;
+      try {
+        enData = await fetchTrack(enTrack || defaultTrack, !enTrack ? 'en' : undefined);
+      } catch (e) {
+        console.warn("[Sprekio] English track failed, proceeding with only German track", e);
       }
 
-      const deEvents = deData.events || [];
-      const enEvents = enData?.events || [];
+      console.log("[Sprekio] deData =>", deData);
+      console.log("[Sprekio] enData =>", enData);
+
+      // JSON3 responses are objects, not arrays. Do not check .length on them!
+      if (!deData || !deData.data) {
+        throw new Error("Failed to fetch German track");
+      }
+
+      const formatJsonText = (segs: any[]) => segs?.map(s => s.utf8).join('').replace(/\n/g, ' ').trim() || "";
       
-      const formatText = (segs: any[]) => segs?.map(s => s.utf8).join('').replace(/\n/g, ' ').trim() || "";
+      const normalizeEvents = (res: any) => {
+        if (!res || !res.data) return [];
+        if (res.type === 'xml') {
+          return res.data.map((item: any) => ({
+            text: item.text,
+            start: item.offset,
+            duration: item.duration
+          }));
+        } else {
+          return (res.data.events || []).map((e: any) => ({
+            text: formatJsonText(e.segs),
+            start: e.tStartMs || 0,
+            duration: e.dDurationMs || 2000
+          }));
+        }
+      };
+
+      const deEvents = normalizeEvents(deData);
+      const enEvents = normalizeEvents(enData);
       
       const merged = deEvents.map((deEvent: any) => {
-        const deText = formatText(deEvent.segs);
-        const tStart = deEvent.tStartMs || 0;
-        const dDur = deEvent.dDurationMs || 2000;
-        const enEvent = enEvents.find((e: any) => Math.abs((e.tStartMs || 0) - tStart) < 2000);
-        const enText = enEvent ? formatText(enEvent.segs) : "";
+        const tStart = deEvent.start;
+        const dDur = deEvent.duration;
+        const deText = deEvent.text;
+        const enEvent = enEvents.find((e: any) => Math.abs(e.start - tStart) < 2000);
+        const enText = enEvent ? enEvent.text : "";
         return {
           start: tStart / 1000,
           end: (tStart + dDur) / 1000,
@@ -158,8 +308,8 @@ const SprekioOverlay: React.FC = () => {
       }
     } catch (err) {
       console.error("Sprekio transcript fetch failed:", err);
-      if (retryCount < 20) {
-        setTimeout(() => { setIsFetchingTranscript(false); fetchTranscript(retryCount + 1); }, 2000);
+      if (retryCount < 1) {
+        setTimeout(() => { setIsFetchingTranscript(false); fetchTranscript(retryCount + 1); }, 3000);
         return;
       }
     }
@@ -306,22 +456,29 @@ const SprekioOverlay: React.FC = () => {
     let videoElem: HTMLVideoElement | null = null;
     let fallbackInterval: number | null = null;
     
+    // ALWAYS hide native CC when Sprekio is enabled to prevent overlap
+    let style = document.getElementById('sprekio-cc-hider') as HTMLStyleElement;
+    if (isEnabled) {
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'sprekio-cc-hider';
+        style.textContent = `.ytp-caption-window-container { opacity: 0.01 !important; pointer-events: none !important; }`;
+        document.head.appendChild(style);
+      }
+    } else {
+      if (style) style.remove();
+    }
+    
     // FALLBACK: DOM Scraper (Only used if the internal API fails to fetch transcript)
-    let style: HTMLStyleElement | null = null;
     const updateCaptionsFromDOM = () => {
       if (!isEnabled || transcript.length > 0) {
-        if (style) {
-          style.remove();
-          style = null;
-        }
         return;
       }
       
-      // If we are using the DOM fallback, we hide the native CC to prevent overlap
-      if (!style) {
-        style = document.createElement('style');
-        style.textContent = `.ytp-caption-window-container { opacity: 0.01 !important; pointer-events: none !important; }`;
-        document.head.appendChild(style);
+      // Force native CC to turn on so we can scrape it (since it's visually hidden anyway)
+      const ccButton = document.querySelector('.ytp-subtitles-button') as HTMLButtonElement;
+      if (ccButton && ccButton.getAttribute('aria-pressed') === 'false') {
+        ccButton.click();
       }
 
       const segments = Array.from(document.querySelectorAll('.ytp-caption-segment'));
@@ -416,7 +573,6 @@ const SprekioOverlay: React.FC = () => {
 
     return () => {
       observer.disconnect();
-      if (style) style.remove();
       if (fallbackInterval) clearInterval(fallbackInterval);
       window.removeEventListener('keydown', handleKeyDown);
       if (videoElem) videoElem.removeEventListener('timeupdate', handleTimeUpdate);
@@ -566,7 +722,7 @@ const SprekioOverlay: React.FC = () => {
   };
 
   // 3. UI Render
-  const tokens = liveText ? liveText.split(/(\s+|[.,!?;:\"'”„“()[\]])/) : [];
+  const tokens = liveText ? liveText.split(/(\s+|[.,!?;:"'”„“()[\]])/) : [];
 
   return (
     <>
@@ -596,7 +752,7 @@ const SprekioOverlay: React.FC = () => {
                 lineHeight: '1.3', textShadow: '0 2px 10px rgba(0,0,0,0.9)', margin: 0
               }}>
                 {tokens.map((token, i) => {
-                  if (!token.trim() || /^[.,!?;:\"'”„“()[\]]+$/.test(token)) {
+                  if (!token.trim() || /^[.,!?;:"'”„“()[\]]+$/.test(token)) {
                     return <span key={i}>{token}</span>;
                   }
                   return (

@@ -1,4 +1,5 @@
 // Gemini API client for story generation
+import { Paragraph } from "./stories";
 
 export interface StoryGenerationRequest {
   topic: string;
@@ -13,18 +14,7 @@ export interface GeneratedStory {
   titleEn: string;
   description: string;
   descriptionEn: string;
-  paragraphs: {
-    text: string;
-    translation: string;
-    words: {
-      word: string;
-      translation: string;
-      type: string;
-      case?: string;
-      gender?: string;
-      separable?: boolean;
-    }[];
-  }[];
+  paragraphs: Paragraph[];
   vocabulary: {
     word: string;
     translation: string;

@@ -16,6 +16,16 @@ function App() {
   const [words, setWords] = useState<SavedWord[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchWords = () => {
+    setLoading(true);
+    chrome.runtime.sendMessage({ action: "getWords" }, (res) => {
+      if (res && res.success) {
+        setWords(res.words);
+      }
+      setLoading(false);
+    });
+  };
+
   useEffect(() => {
     // Check auth
     chrome.runtime.sendMessage({ action: "checkAuth" }, (res) => {
@@ -27,16 +37,6 @@ function App() {
       }
     });
   }, []);
-
-  const fetchWords = () => {
-    setLoading(true);
-    chrome.runtime.sendMessage({ action: "getWords" }, (res) => {
-      if (res && res.success) {
-        setWords(res.words);
-      }
-      setLoading(false);
-    });
-  };
 
   const handleLogin = () => {
     setLoading(true);
@@ -52,7 +52,7 @@ function App() {
   };
 
   const launchDashboard = () => {
-    chrome.tabs.create({ url: 'https://sperkio.khaleel.eu' });
+    chrome.tabs.create({ url: 'https://sprekio.khaleel.eu/' });
   };
 
   return (
