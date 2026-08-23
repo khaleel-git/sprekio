@@ -177,60 +177,58 @@ function VocabularyVault({ words, setWords, playAudio, getGenderColor }: any) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {displayedWords.map((w: any) => (
-          <div key={w.id} className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 relative overflow-hidden flex flex-col">
-            <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-              <button 
-                onClick={() => playAudio(w.word)} 
-                className="bg-gray-100 hover:bg-blue-100 text-blue-600 p-2 rounded-full transition-colors"
-                title="Play audio"
-              >
-                🔊
-              </button>
-              <button 
-                onClick={() => handleDelete(w.id)} 
-                className="bg-gray-100 hover:bg-red-100 text-red-600 p-2 rounded-full transition-colors"
-                title="Delete completely"
-              >
-                🗑️
-              </button>
-            </div>
-            
+          <div key={w.id} className="group bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col">
             <div className="mb-4">
-              <div className="flex justify-between items-center mb-3">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getGenderColor(w.gender)}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getGenderColor(w.gender)}`}>
                   {w.gender ? w.gender : w.type || 'Word'}
                 </span>
-                
                 {w.status === 'learned' ? (
-                  <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md border border-green-200">✅ Learned</span>
+                  <span className="text-[10px] font-black text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200 uppercase tracking-widest">✅ Learned</span>
                 ) : (
-                  <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-md border border-orange-200">⏳ Learning</span>
+                  <span className="text-[10px] font-black text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 uppercase tracking-widest">⏳ Learning</span>
                 )}
               </div>
 
-              <h2 className="text-3xl font-bold text-gray-900 mb-1">{w.word}</h2>
-              <p className="text-lg font-semibold text-blue-600">{w.translation}</p>
+              <div className="flex items-center gap-3 mb-1">
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">{w.word}</h2>
+                <button 
+                  onClick={() => playAudio(w.word)} 
+                  className="opacity-0 group-hover:opacity-100 text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-all transform hover:scale-110 active:scale-95"
+                  title="Play audio"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                </button>
+              </div>
+              <p className="text-lg font-bold text-blue-600">{w.translation}</p>
             </div>
 
-            <div className="mt-auto pt-4 border-t border-gray-50 flex flex-col gap-3">
-              <p className="text-sm text-gray-500 italic leading-relaxed">"{w.contextSentence}"</p>
+            <div className="mt-auto pt-5 border-t border-gray-100 flex flex-col gap-4">
+              <p className="text-sm text-gray-500 font-medium leading-relaxed italic">"{w.contextSentence}"</p>
               
-              <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-2 mt-1 h-0 overflow-hidden group-hover:h-10 opacity-0 group-hover:opacity-100 transition-all duration-300 origin-top">
                 {w.status === 'learned' ? (
                   <button 
                     onClick={() => handleUpdateStatus(w.id, 'learning')}
-                    className="flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold py-2 rounded-lg transition-colors border border-orange-200"
+                    className="flex-1 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold rounded-xl transition-colors border border-orange-200 flex items-center justify-center"
                   >
                     Mark as Learning
                   </button>
                 ) : (
                   <button 
                     onClick={() => handleUpdateStatus(w.id, 'learned')}
-                    className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-bold py-2 rounded-lg transition-colors border border-green-200"
+                    className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-bold rounded-xl transition-colors border border-green-200 flex items-center justify-center"
                   >
                     Mark as Learned
                   </button>
                 )}
+                <button 
+                  onClick={() => handleDelete(w.id)} 
+                  className="w-10 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors border border-red-200 flex items-center justify-center"
+                  title="Delete completely"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                </button>
               </div>
             </div>
           </div>
