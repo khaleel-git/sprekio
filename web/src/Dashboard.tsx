@@ -60,9 +60,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] text-gray-900 font-sans selection:bg-blue-200">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">
+    <div className="flex flex-col md:flex-row h-screen bg-[#f8fafc] text-gray-900 font-sans selection:bg-blue-200">
+      {/* Sidebar (Desktop) */}
+      <div className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col shadow-sm z-10">
         <div className="p-6">
           <h1 className="text-2xl font-black tracking-tighter text-blue-600 flex items-center gap-2">
             <span>🇩🇪</span> Sprekio
@@ -105,8 +105,20 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* Mobile Top Bar */}
+      <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm z-10">
+        <h1 className="text-xl font-black tracking-tighter text-blue-600 flex items-center gap-2">
+          <span>🇩🇪</span> Sprekio
+        </h1>
+        {user && (
+          <button onClick={logout} className="text-xs font-medium bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-100">
+            Log out
+          </button>
+        )}
+      </div>
+
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
@@ -130,6 +142,24 @@ export default function Dashboard() {
           <QuizArena words={words} />
         )}
       </div>
+
+      {/* Mobile Bottom Nav */}
+      {user && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-2 shadow-[0_-4px_15px_rgba(0,0,0,0.05)] z-20 pb-safe">
+          <button onClick={() => setActiveTab('vault')} className={`flex flex-col items-center p-2 rounded-xl flex-1 transition-colors ${activeTab === 'vault' ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}>
+            <span className="text-xl mb-1">📚</span>
+            <span className="text-[10px] font-bold">Vault</span>
+          </button>
+          <button onClick={() => setActiveTab('videos')} className={`flex flex-col items-center p-2 rounded-xl flex-1 transition-colors ${activeTab === 'videos' ? 'text-purple-600 bg-purple-50' : 'text-gray-500 hover:bg-gray-50'}`}>
+            <span className="text-xl mb-1">📺</span>
+            <span className="text-[10px] font-bold">Videos</span>
+          </button>
+          <button onClick={() => setActiveTab('quiz')} className={`flex flex-col items-center p-2 rounded-xl flex-1 transition-colors ${activeTab === 'quiz' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-500 hover:bg-gray-50'}`}>
+            <span className="text-xl mb-1">🎮</span>
+            <span className="text-[10px] font-bold">Quiz</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -172,32 +202,32 @@ function VocabularyVault({ words, setWords, user, playAudio, getGenderColor }: a
   const displayedWords = filter === 'all' ? words : filter === 'learning' ? learningWords : learnedWords;
 
   return (
-    <div className="p-10 max-w-7xl mx-auto">
-      <header className="mb-10 flex justify-between items-end">
+    <div className="p-4 md:p-10 max-w-7xl mx-auto">
+      <header className="mb-6 md:mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Vocabulary Vault</h1>
-          <p className="text-gray-500 mt-2 text-lg">
+          <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Vocabulary Vault</h1>
+          <p className="text-gray-500 mt-1 md:mt-2 text-sm md:text-lg">
             You have saved <span className="font-bold text-blue-600">{words.length}</span> words. 
             ({learnedWords.length} learned, {learningWords.length} learning)
           </p>
         </div>
         
-        <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
+        <div className="flex bg-gray-100 rounded-lg p-1 gap-1 w-full md:w-auto overflow-x-auto scrollbar-hide">
           <button 
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${filter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'}`}
+            className={`flex-1 md:flex-none px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${filter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'}`}
           >
             All
           </button>
           <button 
             onClick={() => setFilter('learning')}
-            className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${filter === 'learning' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'}`}
+            className={`flex-1 md:flex-none px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${filter === 'learning' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'}`}
           >
             Still Learning
           </button>
           <button 
             onClick={() => setFilter('learned')}
-            className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${filter === 'learned' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'}`}
+            className={`flex-1 md:flex-none px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${filter === 'learned' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'}`}
           >
             Learned
           </button>
@@ -308,21 +338,21 @@ function VideoTracker({ words }: { words: SavedWord[] }) {
   }
 
   return (
-    <div className="p-10 max-w-5xl mx-auto">
-      <header className="mb-10">
-        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Watched Videos</h1>
-        <p className="text-gray-500 mt-2 text-lg">You have learned words from <span className="font-bold text-purple-600">{videos.length}</span> videos.</p>
+    <div className="p-4 md:p-10 max-w-5xl mx-auto">
+      <header className="mb-6 md:mb-10">
+        <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight">Watched Videos</h1>
+        <p className="text-gray-500 mt-1 md:mt-2 text-sm md:text-lg">You have learned words from <span className="font-bold text-purple-600">{videos.length}</span> videos.</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {videos.map(v => (
           <a href={`https://youtube.com/watch?v=${v.id}`} target="_blank" rel="noreferrer" key={v.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-xl transition-all duration-300 flex">
-            <div className="w-48 h-full bg-gray-100 flex-shrink-0 relative overflow-hidden">
+            <div className="w-32 md:w-48 h-full bg-gray-100 flex-shrink-0 relative overflow-hidden">
               <img src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`} alt={v.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             </div>
-            <div className="p-5 flex flex-col justify-center">
-              <h2 className="font-bold text-gray-900 leading-tight mb-2 group-hover:text-purple-600 transition-colors line-clamp-2">{v.title}</h2>
-              <p className="text-sm font-semibold text-gray-500 bg-gray-100 self-start px-3 py-1 rounded-full">
+            <div className="p-4 md:p-5 flex flex-col justify-center">
+              <h2 className="text-sm md:text-base font-bold text-gray-900 leading-tight mb-2 group-hover:text-purple-600 transition-colors line-clamp-2">{v.title}</h2>
+              <p className="text-xs md:text-sm font-semibold text-gray-500 bg-gray-100 self-start px-2 py-1 md:px-3 rounded-full">
                 {v.count} word{v.count > 1 ? 's' : ''} learned
               </p>
             </div>
@@ -416,13 +446,13 @@ function QuizArena({ words }: { words: SavedWord[] }) {
 
   if (!isPlaying) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-10">
-        <div className="bg-white p-12 rounded-3xl shadow-xl border border-gray-100 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-6">🎯</div>
-          <h1 className="text-4xl font-black text-gray-900 mb-4">The Quiz Arena</h1>
-          <p className="text-xl text-gray-500 mb-8">Test your knowledge. Words you save more frequently are more likely to appear!</p>
+      <div className="h-full flex flex-col items-center justify-center p-4 md:p-10">
+        <div className="bg-white p-6 md:p-12 rounded-3xl shadow-xl border border-gray-100 max-w-2xl w-full text-center">
+          <div className="text-4xl md:text-6xl mb-4 md:mb-6">🎯</div>
+          <h1 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 md:mb-4">The Quiz Arena</h1>
+          <p className="text-base md:text-xl text-gray-500 mb-6 md:mb-8">Test your knowledge. Words you save more frequently are more likely to appear!</p>
           
-          <div className="mb-8 text-left bg-gray-50 p-6 rounded-2xl border border-gray-200">
+          <div className="mb-6 md:mb-8 text-left bg-gray-50 p-4 md:p-6 rounded-2xl border border-gray-200">
             <label className="block text-sm font-bold text-gray-700 mb-2">Select Quiz Source:</label>
             <select 
               value={selectedVideo}
@@ -438,7 +468,7 @@ function QuizArena({ words }: { words: SavedWord[] }) {
 
           <button 
             onClick={startQuiz}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold w-full py-4 px-12 rounded-full shadow-lg hover:shadow-indigo-300/50 transition-all transform hover:-translate-y-1 active:translate-y-0"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white text-lg md:text-xl font-bold w-full py-3 md:py-4 px-8 md:px-12 rounded-full shadow-lg hover:shadow-indigo-300/50 transition-all transform hover:-translate-y-1 active:translate-y-0"
           >
             Start Challenge
           </button>
@@ -450,26 +480,26 @@ function QuizArena({ words }: { words: SavedWord[] }) {
   const currentQ = questions[currentIndex];
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-10 bg-indigo-50/50">
+    <div className="min-h-full flex flex-col items-center justify-center p-4 md:p-10 bg-indigo-50/50 py-8">
       <div className="w-full max-w-3xl">
-        <div className="flex justify-between items-center mb-8">
-          <span className="text-indigo-800 font-bold bg-indigo-100 px-4 py-2 rounded-full">
+        <div className="flex justify-between items-center mb-6 md:mb-8 text-sm md:text-base">
+          <span className="text-indigo-800 font-bold bg-indigo-100 px-3 py-1.5 md:px-4 md:py-2 rounded-full">
             Question {currentIndex + 1} of {questions.length}
           </span>
-          <span className="text-indigo-800 font-bold bg-indigo-100 px-4 py-2 rounded-full">
+          <span className="text-indigo-800 font-bold bg-indigo-100 px-3 py-1.5 md:px-4 md:py-2 rounded-full">
             Score: {score}
           </span>
         </div>
 
-        <div className={`bg-white rounded-3xl p-12 shadow-2xl border-2 transition-colors duration-300 text-center mb-8 ${
+        <div className={`bg-white rounded-3xl p-6 md:p-12 shadow-2xl border-2 transition-colors duration-300 text-center mb-6 md:mb-8 ${
           feedback === 'correct' ? 'border-green-400 bg-green-50' : 
           feedback === 'incorrect' ? 'border-red-400 bg-red-50' : 'border-transparent'
         }`}>
-          <h2 className="text-5xl font-black text-gray-900 mb-4">{currentQ.word.word}</h2>
-          <p className="text-gray-400 italic">"{currentQ.word.contextSentence}"</p>
+          <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-3 md:mb-4">{currentQ.word.word}</h2>
+          <p className="text-xs md:text-sm text-gray-400 italic">"{currentQ.word.contextSentence}"</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {currentQ.options.map((opt: any) => {
             let btnClass = "bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-800";
             if (feedback !== null) {
@@ -484,7 +514,7 @@ function QuizArena({ words }: { words: SavedWord[] }) {
               <button
                 key={opt.id}
                 onClick={() => handleAnswer(opt.id)}
-                className={`text-xl font-bold py-6 px-6 rounded-2xl transition-all shadow-sm ${btnClass}`}
+                className={`text-lg md:text-xl font-bold py-4 md:py-6 px-4 md:px-6 rounded-2xl transition-all shadow-sm ${btnClass}`}
               >
                 {opt.translation}
               </button>
