@@ -94,6 +94,7 @@ Requirements:
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 4096,
+          responseMimeType: "application/json",
         },
       }),
     });
@@ -116,18 +117,26 @@ Requirements:
       });
     }
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return new Response(JSON.stringify({ error: "Could not parse JSON from response" }), {
+    // Validate JSON and return
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const cleanText = jsonMatch ? jsonMatch[0] : text;
+      const parsed = JSON.parse(cleanText);
+      
+      return new Response(JSON.stringify(parsed), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError, "Raw Text:", text);
+      return new Response(JSON.stringify({ 
+        error: "AI generated malformed JSON. Please try generating again.", 
+        rawText: text 
+      }), {
         status: 500,
         headers: { "Content-Type": "application/json" }
       });
     }
-
-    return new Response(jsonMatch[0], {
-      status: 200,
-      headers: { "Content-Type": "application/json" }
-    });
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
