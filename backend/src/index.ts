@@ -144,6 +144,169 @@ Return ONLY a valid JSON object (no markdown, no backticks) with the following p
       }
     }
 
+    if (url.pathname === "/api/generate" && request.method === "POST") {
+      try {
+        const { topic, level, dialect, wordCount, apiKey, provider = "gemini" } = await request.json();
+
+        const TARGET_API_KEY = provider === "nvidia" ? (env.NVIDIA_API_KEY || apiKey) : (env.GEMINI_API_KEY || apiKey);
+        
+        if (!TARGET_API_KEY) {
+          return new Response(JSON.stringify({ error: `${provider.toUpperCase()}_API_KEY is not configured in Cloudflare Environment Variables, and no key was provided.` }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        const dialectNote = dialect
+          ? `The story should be written primarily in ${dialect} dialect with standard German explanations in brackets for dialect words.`
+          : "The story should be in standard German (Hochdeutsch).";
+
+        const levelGuide: Record<string, string> = {
+          A1: "Very simple sentences, present tense only, basic vocabulary (top 500 words), max 3-4 sentences per paragraph.",
+          A2: "Simple sentences, present and past tense, common vocabulary, up to 5 sentences per paragraph.",
+          B1: "Mixed tenses, some complex sentences, intermediate vocabulary, connectors like 'obwohl', 'weil', 'damit'.",
+          B2: "Complex sentences, passive voice, subjunctive, rich vocabulary, idiomatic expressions.",
+          C1: "Sophisticated language, academic register possible, complex grammar, nuanced vocabulary.",
+          C2: "Literary quality, complex syntax, rare vocabulary, all grammatical structures.",
+        };
+
+        const prompt = `You are a German language teacher creating a CEFR-graded reading story for learners.
+
+Level: ${level}
+Level requirements: ${levelGuide[level] || levelGuide["B1"]}
+Topic: ${topic}
+Target length: approximately ${wordCount || 200} words
+${dialectNote}
+
+Create a complete story and return it as a JSON object with EXACTLY this structure:
+{
+  "title": "Story title in German",
+  "titleEn": "Story title in English",
+  "description": "2-sentence summary in German",
+  "descriptionEn": "2-sentence summary in English",
+  "paragraphs": [
+    {
+      "text": "German paragraph text",
+      "translation": "English translation of paragraph",
+      "words": [
+        {
+          "word": "individual word",
+          "translation": "English translation",
+          "type": "noun|verb|adjective|adverb|preposition|conjunction|pronoun|article|phrase",
+          "case": "Nominativ|Akkusativ|Dativ|Genitiv (for nouns/articles only, omit if not applicable)",
+          "gender": "masculine|feminine|neuter (for nouns only, omit if not applicable)",
+          "separable": true (only for separable verbs, omit otherwise)
+        }
+      ]
+    }
+  ],
+  "vocabulary": [
+    {
+      "word": "key word or phrase",
+      "translation": "English translation",
+      "example": "Example sentence in German"
+    }
+  ],
+  "grammarFocus": "Short description of main grammar points in this story",
+  "quiz": [
+    {
+      "question": "Comprehension question in German",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct": 0
+    }
+  ]
+}
+
+Requirements:
+- Include 3-5 paragraphs
+- Annotate 5-8 key words per paragraph (the most important vocabulary)
+- Include 5-8 vocabulary items total
+- Include exactly 3 quiz questions
+- Make the story engaging and culturally relevant to German-speaking countries
+- Return ONLY the JSON, no other text`;
+
+        let response;
+        let text = "";
+
+        if (provider === "nvidia") {
+          response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${TARGET_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: "meta/llama-3.1-70b-instruct",
+              messages: [{ role: "user", content: prompt }],
+              temperature: 0.7,
+              top_p: 0.9,
+              max_tokens: 4000,
+            })
+          });
+          
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || err.detail || `NVIDIA API Error: ${response.status}`);
+          }
+          const data = await response.json();
+          text = data.choices?.[0]?.message?.content || "";
+        } else {
+          const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
+          response = await fetch(`${GEMINI_API_URL}?key=${TARGET_API_KEY}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.8,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 4096,
+                responseMimeType: "application/json",
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error?.message || `Gemini API Error: ${response.status}`);
+          }
+          const data = await response.json();
+          text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        }
+
+        if (!text) {
+          throw new Error("No content returned from AI");
+        }
+
+        // Validate JSON and return
+        try {
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          const cleanText = jsonMatch ? jsonMatch[0] : text;
+          const parsed = JSON.parse(cleanText);
+          
+          return new Response(JSON.stringify(parsed), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        } catch (parseError) {
+          console.error("JSON Parse Error:", parseError, "Raw Text:", text);
+          return new Response(JSON.stringify({ 
+            error: "AI generated malformed JSON. Please try generating again.", 
+            rawText: text 
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
     return new Response("Not found", { status: 404, headers: corsHeaders });
   },
 };
