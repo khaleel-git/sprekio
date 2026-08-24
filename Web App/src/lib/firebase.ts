@@ -1,6 +1,6 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { getFirestore, collection, getDocs, query, where, updateDoc, doc, deleteDoc, orderBy } from "firebase/firestore";
+import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5-pEPCKcO6TATKrWZKGp8AZIt6rdr_WU",
@@ -12,9 +12,68 @@ const firebaseConfig = {
   measurementId: "G-0K927093LQ"
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const auth = getAuth(app);
-const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const googleProvider = new GoogleAuthProvider();
 
-export { app, auth, db, googleProvider, signInWithPopup, signOut, collection, getDocs, query, where, updateDoc, doc, deleteDoc, orderBy };
+export const loginWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return { success: true, user: result.user };
+  } catch (error: any) {
+    console.error("Firebase Login Error:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const logout = async () => {
+  await signOut(auth);
+};
+
+export const getVocabularyWords = async (userId: string) => {
+  try {
+    const snapshot = await getDocs(collection(db, "users", userId, "vocabulary"));
+    const allWords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+    
+    // Sort descending by timestamp so newest duplicates come first
+    allWords.sort((a: any, b: any) => {
+      const timeA = a.savedAt?.seconds ? a.savedAt.seconds * 1000 : 0;
+      const timeB = b.savedAt?.seconds ? b.savedAt.seconds * 1000 : 0;
+      return timeB - timeA;
+    });
+
+    // Deduplicate by word (case-insensitive)
+    const seen = new Set();
+    const words = allWords.filter(w => {
+      const key = (w.word || '').toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return { success: true, words };
+  } catch (error: any) {
+    return { success: false, error: error.message, words: [] };
+  }
+};
+
+export const deleteVocabularyWord = async (userId: string, wordId: string) => {
+  try {
+    await deleteDoc(doc(db, "users", userId, "vocabulary", wordId));
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting word:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateVocabularyWordStatus = async (userId: string, wordId: string, status: 'learning' | 'learned') => {
+  try {
+    await updateDoc(doc(db, "users", userId, "vocabulary", wordId), { status });
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating status:", error);
+    return { success: false, error: error.message };
+  }
+};
