@@ -4,22 +4,26 @@ export async function onRequest(context: any) {
     const v = searchParams.get('v');
     if (!v) throw new Error("No video ID");
     
-    // Simplest transcript fetching logic
-    const res = await fetch('https://www.youtube.com/watch?v=' + v, {
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
+    // Use the InnerTube API to reliably fetch transcript info
+    const res = await fetch('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            context: { client: { clientName: "ANDROID", clientVersion: "20.10.38" } },
+            videoId: v
+        })
     });
-    const text = await res.text();
     
-    const captionsMatch = text.match(/"captionTracks":(\[.*?\])/);
-    if (!captionsMatch) throw new Error("No captions found");
+    if (!res.ok) throw new Error("Failed to fetch player data");
     
-    const tracks = JSON.parse(captionsMatch[1]);
+    const data = await res.json();
+    const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    
+    if (!tracks || tracks.length === 0) {
+        throw new Error("No captions found for this video.");
+    }
+    
     const track = tracks.find((t: any) => t.languageCode === 'de') || tracks[0];
-    
-    if (!track) throw new Error("No track found");
-    
     const xmlRes = await fetch(track.baseUrl);
     const xml = await xmlRes.text();
     
