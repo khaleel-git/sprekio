@@ -325,6 +325,7 @@ const SprekioOverlay: React.FC = () => {
       setActiveTranscriptIndex(-1);
       currentLineIndexRef.current = -1;
       setIsFetchingTranscript(false);
+      interceptedTranscripts.current = [];
       
       // Wait a moment for YouTube's SPA to load the new video's state
       setTimeout(() => {
@@ -454,9 +455,6 @@ const SprekioOverlay: React.FC = () => {
 
   // 1. Live DOM Scraping and Sidebar Sync
   useEffect(() => {
-    let videoElem: HTMLVideoElement | null = null;
-    let fallbackInterval: number | null = null;
-    
     // ALWAYS hide native CC when Sprekio is enabled to prevent overlap
     let style = document.getElementById('sprekio-cc-hider') as HTMLStyleElement;
     if (isEnabled) {
@@ -498,75 +496,110 @@ const SprekioOverlay: React.FC = () => {
     };
     startObserving();
 
-    const handleTimeUpdate = () => {
-      if (!isEnabled || transcript.length === 0) return;
+    // High-precision loop using requestAnimationFrame for syncing subtitles AND auto-pause
+    let reqId: number;
+    let lastKnownCurrentIndex = -1;
+
+    const checkLoop = () => {
+      if (!isEnabled) {
+        reqId = requestAnimationFrame(checkLoop);
+        return;
+      }
+
       const video = document.querySelector('video');
-      if (!video) return;
-      
-      const currentTime = video.currentTime;
-      let currentIndex = -1;
-      for (let i = transcript.length - 1; i >= 0; i--) {
-        if (currentTime >= transcript[i].start && currentTime <= transcript[i].end) {
-          currentIndex = i;
-          break;
-        }
-      }
-      
-      if (currentLineIndexRef.current !== currentIndex) {
-        currentLineIndexRef.current = currentIndex;
-        setActiveTranscriptIndex(currentIndex);
-        
-        if (currentIndex !== -1) {
-          setLiveText(transcript[currentIndex].deText);
-        } else {
-          setLiveText("");
-        }
-      }
+      if (video) {
+        const t = video.currentTime;
 
-      // Sidebar scrolling logic
-      if (showSidebar && currentIndex !== -1) {
-        const activeElem = document.getElementById(`transcript-line-${currentIndex}`);
-        if (activeElem && transcriptRef.current) {
-          activeElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // 1. Sync Subtitles
+        if (transcript.length > 0) {
+          let currentIndex = -1;
+          for (let i = transcript.length - 1; i >= 0; i--) {
+            if (t >= transcript[i].start && t <= transcript[i].end) {
+              currentIndex = i;
+              break;
+            }
+          }
+          
+          if (currentLineIndexRef.current !== currentIndex) {
+            currentLineIndexRef.current = currentIndex;
+            setActiveTranscriptIndex(currentIndex);
+            
+            if (currentIndex !== -1) {
+              setLiveText(transcript[currentIndex].deText);
+            } else {
+              setLiveText("");
+            }
+          }
+
+          // Sidebar scrolling logic
+          if (showSidebar && currentIndex !== -1 && currentIndex !== lastKnownCurrentIndex) {
+            lastKnownCurrentIndex = currentIndex;
+            const activeElem = document.getElementById(`transcript-line-${currentIndex}`);
+            if (activeElem && transcriptRef.current) {
+              activeElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        }
+
+        // 2. Auto-Pause Logic
+        if (autoPause && transcript.length > 0 && !video.paused) {
+          const prevT = prevTimeRef.current;
+          
+          // Detect seek
+          if (Math.abs(t - prevT) > 1.0) {
+            prevTimeRef.current = t;
+            lastPausedIndex.current = -1;
+          } else {
+            let shouldPause = false;
+            let newPausedIndex = -1;
+            
+            for (let i = 0; i < transcript.length; i++) {
+              const line = transcript[i];
+              if (t >= line.end - 0.15 && t < line.end + 0.2) {
+                if (lastPausedIndex.current !== i) {
+                  shouldPause = true;
+                  newPausedIndex = i;
+                  break;
+                }
+              }
+            }
+            
+            if (shouldPause) {
+              video.pause();
+              lastPausedIndex.current = newPausedIndex;
+            }
+            prevTimeRef.current = t;
+          }
+        } else if (autoPause && video.paused) {
+          // Keep synced while paused so unpausing doesn't trigger seek logic
+          prevTimeRef.current = t;
         }
       }
+      reqId = requestAnimationFrame(checkLoop);
     };
-
-    const attachVideo = () => {
-      videoElem = document.querySelector('video');
-      if (videoElem) {
-        videoElem.addEventListener('timeupdate', handleTimeUpdate);
-        if (fallbackInterval) {
-          clearInterval(fallbackInterval);
-          fallbackInterval = null;
-        }
-      } else {
-        if (!fallbackInterval) fallbackInterval = window.setInterval(attachVideo, 1000);
-      }
-    };
-
-    attachVideo();
+    
+    reqId = requestAnimationFrame(checkLoop);
 
     // Language Reactor style keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && autoPause) {
         const video = document.querySelector('video');
-        if (video && video.paused) {
+        if (video) {
           e.preventDefault();
-          video.play();
+          e.stopPropagation();
+          if (video.paused) video.play();
+          else video.pause();
         }
+        return;
       }
-      if (!isEnabled) return;
-      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
-      
-      const video = document.querySelector('video');
-      if (!video) return;
 
       const key = e.key.toLowerCase();
       if (key === 'a') {
-        video.currentTime = Math.max(0, video.currentTime - 5);
+        const video = document.querySelector('video');
+        if (video) video.currentTime = Math.max(0, video.currentTime - 5);
       } else if (key === 'd') {
-        video.currentTime += 5;
+        const video = document.querySelector('video');
+        if (video) video.currentTime += 5;
       }
     };
 
@@ -574,68 +607,10 @@ const SprekioOverlay: React.FC = () => {
 
     return () => {
       observer.disconnect();
-      if (fallbackInterval) clearInterval(fallbackInterval);
+      cancelAnimationFrame(reqId);
       window.removeEventListener('keydown', handleKeyDown);
-      if (videoElem) videoElem.removeEventListener('timeupdate', handleTimeUpdate);
     };
   }, [isEnabled, autoPause, showSidebar, transcript]);
-
-  // High-precision Auto-Pause loop using requestAnimationFrame
-  useEffect(() => {
-    if (!isEnabled || !autoPause || transcript.length === 0) return;
-
-    let reqId: number;
-    const checkPause = () => {
-      const video = document.querySelector('video');
-      if (video && !video.paused) {
-        const t = video.currentTime;
-        const prevT = prevTimeRef.current;
-        
-        // Detect seek
-        if (Math.abs(t - prevT) > 1.0) {
-          prevTimeRef.current = t;
-          lastPausedIndex.current = -1;
-        } else {
-          let shouldPause = false;
-          let newPausedIndex = -1;
-          
-          for (let i = 0; i < transcript.length; i++) {
-            const line = transcript[i];
-            
-            // Check if we are approaching the end of this line
-            if (t >= line.end - 0.15 && t < line.end + 0.2) {
-              if (lastPausedIndex.current !== i) {
-                shouldPause = true;
-                newPausedIndex = i;
-                break;
-              }
-            }
-          }
-          
-          if (shouldPause) {
-            video.pause();
-            // Skip any other lines that end at the exact same time to avoid double pausing
-            while (
-              newPausedIndex + 1 < transcript.length && 
-              Math.abs(transcript[newPausedIndex + 1].end - transcript[newPausedIndex].end) < 0.1
-            ) {
-              newPausedIndex++;
-            }
-            lastPausedIndex.current = newPausedIndex;
-          }
-          
-          prevTimeRef.current = t;
-        }
-      } else if (video && video.paused) {
-        // Keep synced while paused so unpausing doesn't trigger seek logic
-        prevTimeRef.current = video.currentTime;
-      }
-      reqId = requestAnimationFrame(checkPause);
-    };
-    
-    reqId = requestAnimationFrame(checkPause);
-    return () => cancelAnimationFrame(reqId);
-  }, [isEnabled, autoPause, transcript]);
 
   // Translate full sentence when liveText changes
   useEffect(() => {
