@@ -20,7 +20,7 @@ export async function onRequest(context: any) {
     const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
     
     if (!tracks || tracks.length === 0) {
-        throw new Error("No captions found for this video.");
+        throw new Error("No captions found for this video. Raw data: " + JSON.stringify(data).slice(0, 500));
     }
     
     const track = tracks.find((t: any) => t.languageCode === 'de') || tracks[0];
