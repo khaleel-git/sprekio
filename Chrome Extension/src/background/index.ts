@@ -1,41 +1,7 @@
 import { loginWithGoogle, saveVocabularyWord, getVocabularyWords, auth, deleteVocabWord, updateVocabWordStatus } from './firebase';
 
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-  if (request.action === "fetchTranscriptDirect") {
-    // The web app asks us to fetch the transcript, bypassing datacenter blocks!
-    fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
-      method: "POST",
-      credentials: "omit", // or "include" to use user's session
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        context: { client: { clientName: "ANDROID", clientVersion: "20.10.38" } },
-        videoId: request.videoId
-      })
-    })
-    .then(async r => {
-      if (!r.ok) {
-        const text = await r.text();
-        throw new Error(`HTTP ${r.status}: ${text.substring(0, 200)}`);
-      }
-      return r.json();
-    })
-    .then(data => {
-      const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-      if (!tracks || tracks.length === 0) {
-        throw new Error("No captions found for this video.");
-      }
-      const track = tracks.find((t: any) => t.languageCode === 'de') || tracks[0];
-      return fetch(track.baseUrl);
-    })
-    .then(r => r.text())
-    .then(xml => {
-       sendResponse({ xml });
-    })
-    .catch(e => {
-       sendResponse({ error: e.message });
-    });
-    return true; // async
-  }
+
 
   if (request.action === "translate") {
     handleTranslation(request.word, request.contextSentence, request.provider).then(sendResponse);
