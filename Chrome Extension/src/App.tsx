@@ -52,7 +52,7 @@ function App() {
   };
 
   const launchDashboard = () => {
-    chrome.tabs.create({ url: 'https://sprekio.khaleel.eu/' });
+    chrome.tabs.create({ url: 'https://sprekio.khaleel.eu/dashboard' });
   };
 
   return (

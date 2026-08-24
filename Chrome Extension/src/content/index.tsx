@@ -32,6 +32,7 @@ const SprekioOverlay: React.FC = () => {
   const translationTimeout = useRef<number | null>(null);
   const activeRequest = useRef("");
   const lastPausedIndex = useRef(-1);
+  const prevTimeRef = useRef(0);
   const currentLineIndexRef = useRef(-1);
 
   const interceptedTranscripts = useRef<{url: string, text: string, status: number, headers: any[]}[]>([]);
@@ -588,25 +589,46 @@ const SprekioOverlay: React.FC = () => {
       const video = document.querySelector('video');
       if (video && !video.paused) {
         const t = video.currentTime;
+        const prevT = prevTimeRef.current;
         
-        // Find the active line (allow a tiny 0.1s overlap to ensure smooth transitions)
-        let currentIndex = -1;
-        for (let i = transcript.length - 1; i >= 0; i--) {
-          const line = transcript[i];
-          if (t >= line.start && t <= line.end + 0.1) {
-            currentIndex = i;
-            break;
+        // Detect seek
+        if (Math.abs(t - prevT) > 1.0) {
+          prevTimeRef.current = t;
+          lastPausedIndex.current = -1;
+        } else {
+          let shouldPause = false;
+          let newPausedIndex = -1;
+          
+          for (let i = 0; i < transcript.length; i++) {
+            const line = transcript[i];
+            
+            // Check if we are approaching the end of this line
+            if (t >= line.end - 0.15 && t < line.end + 0.2) {
+              if (lastPausedIndex.current !== i) {
+                shouldPause = true;
+                newPausedIndex = i;
+                break;
+              }
+            }
           }
-        }
-        
-        if (currentIndex !== -1) {
-          const line = transcript[currentIndex];
-          // Pause exactly within the last 150ms of the line's end timestamp
-          if (t >= line.end - 0.15 && lastPausedIndex.current !== currentIndex) {
+          
+          if (shouldPause) {
             video.pause();
-            lastPausedIndex.current = currentIndex;
+            // Skip any other lines that end at the exact same time to avoid double pausing
+            while (
+              newPausedIndex + 1 < transcript.length && 
+              Math.abs(transcript[newPausedIndex + 1].end - transcript[newPausedIndex].end) < 0.1
+            ) {
+              newPausedIndex++;
+            }
+            lastPausedIndex.current = newPausedIndex;
           }
+          
+          prevTimeRef.current = t;
         }
+      } else if (video && video.paused) {
+        // Keep synced while paused so unpausing doesn't trigger seek logic
+        prevTimeRef.current = video.currentTime;
       }
       reqId = requestAnimationFrame(checkPause);
     };
@@ -934,7 +956,7 @@ const SprekioOverlay: React.FC = () => {
               onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
               onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
             >
-              {autoPause ? '▶️ AP' : '⏸️ AP'}
+              {autoPause ? 'AP ON' : 'AP OFF'}
             </button>
           )}
 
