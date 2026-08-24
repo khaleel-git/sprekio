@@ -62,72 +62,40 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-[#f8fafc] text-gray-900 font-sans selection:bg-blue-200">
-      {/* Sidebar (Desktop) */}
-      <div className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col shadow-sm z-10">
-        <div className="p-6">
-          <h1 className="text-2xl font-black tracking-tighter text-blue-600 flex items-center gap-2">
-            <span>🇩🇪</span> Sprekio
-          </h1>
-        </div>
-        
-        <div className="flex-1 px-4 py-2 space-y-2">
+    <div className="flex-1 w-full max-w-5xl mx-auto flex flex-col font-sans selection:bg-blue-200">
+      {/* Horizontal Tabs for Dashboard */}
+      {user && (
+        <div className="flex flex-col sm:flex-row gap-2 mb-8 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
           <button 
             onClick={() => setActiveTab('vault')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'vault' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'vault' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
           >
-            <span>📚</span> Vocab Vault
+            Vocab Vault
           </button>
           <button 
             onClick={() => setActiveTab('videos')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'videos' ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'videos' ? 'bg-purple-50 text-purple-700 shadow-sm border border-purple-100' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
           >
-            <span>📺</span> Watched Videos
+            Watched Videos
           </button>
           <button 
             onClick={() => setActiveTab('quiz')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'quiz' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'quiz' ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
           >
-            <span>🎮</span> Quiz Arena
+            Quiz Arena
           </button>
         </div>
-
-        {user && (
-          <div className="p-4 border-t border-gray-100 flex flex-col gap-2">
-            <div className="text-sm font-medium text-gray-500 truncate">
-              {user.email}
-            </div>
-            <button 
-              onClick={logout}
-              className="text-xs text-red-500 hover:text-red-700 font-medium text-left"
-            >
-              Log out
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Mobile Top Bar */}
-      <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm z-10">
-        <h1 className="text-xl font-black tracking-tighter text-blue-600 flex items-center gap-2">
-          <span>🇩🇪</span> Sprekio
-        </h1>
-        {user && (
-          <button onClick={logout} className="text-xs font-medium bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-100">
-            Log out
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
+      <div className="flex-1">
         {loading ? (
-          <div className="h-full flex items-center justify-center">
+          <div className="min-h-[400px] flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
           </div>
         ) : !user ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-8">
-            <h2 className="text-3xl font-bold mb-4">Welcome to Sprekio!</h2>
+          <div className="min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl shadow-sm border border-gray-100">
+            <h2 className="text-3xl font-bold mb-4">Welcome to your Dashboard!</h2>
             <p className="text-gray-500 mb-8 max-w-md">Log in to view your saved German vocabulary, practice with quizzes, and track the videos you've learned from.</p>
             <button 
               onClick={handleLogin}
@@ -144,24 +112,6 @@ export default function Dashboard() {
           <QuizArena words={words} />
         )}
       </div>
-
-      {/* Mobile Bottom Nav */}
-      {user && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-2 shadow-[0_-4px_15px_rgba(0,0,0,0.05)] z-20 pb-safe">
-          <button onClick={() => setActiveTab('vault')} className={`flex flex-col items-center p-2 rounded-xl flex-1 transition-colors ${activeTab === 'vault' ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}>
-            <span className="text-xl mb-1">📚</span>
-            <span className="text-[10px] font-bold">Vault</span>
-          </button>
-          <button onClick={() => setActiveTab('videos')} className={`flex flex-col items-center p-2 rounded-xl flex-1 transition-colors ${activeTab === 'videos' ? 'text-purple-600 bg-purple-50' : 'text-gray-500 hover:bg-gray-50'}`}>
-            <span className="text-xl mb-1">📺</span>
-            <span className="text-[10px] font-bold">Videos</span>
-          </button>
-          <button onClick={() => setActiveTab('quiz')} className={`flex flex-col items-center p-2 rounded-xl flex-1 transition-colors ${activeTab === 'quiz' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-500 hover:bg-gray-50'}`}>
-            <span className="text-xl mb-1">🎮</span>
-            <span className="text-[10px] font-bold">Quiz</span>
-          </button>
-        </div>
-      )}
     </div>
   );
 }

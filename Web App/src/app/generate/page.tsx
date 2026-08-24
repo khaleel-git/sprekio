@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { generateStory } from "@/lib/gemini";
 import { CEFRLevel, CEFR_LEVELS, Story, Paragraph } from "@/lib/stories";
-import { Sparkles, Loader2, KeyRound, BookOpen, Globe2, AlertCircle, Save, ExternalLink } from "lucide-react";
+import { Sparkles, Loader2, BookOpen, Globe2, AlertCircle, Save, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TOPICS = [
@@ -30,7 +30,6 @@ const DIALECTS = [
 ];
 
 export default function GeneratePage() {
-  const [apiKey, setApiKey] = useState("");
   const [topic, setTopic] = useState("Daily life in Germany");
   const [customTopic, setCustomTopic] = useState("");
   const [level, setLevel] = useState<CEFRLevel>("B1");
@@ -43,11 +42,6 @@ export default function GeneratePage() {
   const { progress } = useStore();
 
   const handleGenerate = async () => {
-    const key = apiKey.trim();
-    if (!key) {
-      setError("Please enter your Gemini API key.");
-      return;
-    }
     setLoading(true);
     setError("");
     setGenerated(null);
@@ -59,11 +53,10 @@ export default function GeneratePage() {
         level,
         dialect: dialect || undefined,
         wordCount: 200,
-        apiKey: key,
       });
       setGenerated(story as unknown as Partial<Story>);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to generate story. Check your API key.";
+      const msg = e instanceof Error ? e.message : "Failed to generate story.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -100,34 +93,6 @@ export default function GeneratePage() {
         </div>
         <p className="text-purple-100 text-sm">
           Generate personalized German stories on any topic using Google Gemini AI.
-        </p>
-      </div>
-
-      {/* API Key */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-3">
-        <div className="flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-gray-500" />
-          <label className="font-semibold text-gray-900 text-sm">Gemini API Key</label>
-        </div>
-        <input
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="AIza..."
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-        />
-        <p className="text-xs text-gray-400 flex items-start gap-1.5">
-          <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          Your key is only used in-browser and never sent to any server.
-          Get a free key at{" "}
-          <a
-            href="https://aistudio.google.com/app/apikey"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-violet-600 underline"
-          >
-            aistudio.google.com
-          </a>
         </p>
       </div>
 

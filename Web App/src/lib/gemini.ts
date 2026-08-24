@@ -102,38 +102,21 @@ Requirements:
 }
 
 export async function generateStory(
-  req: StoryGenerationRequest
+  req: Omit<StoryGenerationRequest, 'apiKey'>
 ): Promise<GeneratedStory> {
-  const response = await fetch(`${GEMINI_API_URL}?key=${req.apiKey}`, {
+  const response = await fetch('/api/generate', {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: buildPrompt(req) }] }],
-      generationConfig: {
-        temperature: 0.8,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 4096,
-      },
-    }),
+    body: JSON.stringify(req),
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({}));
     throw new Error(
-      error.error?.message || `API error: ${response.status}`
+      error.error || `Server error: ${response.status}`
     );
   }
 
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!text) throw new Error("No content returned from Gemini");
-
-  // Extract JSON from the response
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Could not parse story JSON from response");
-
-  const story = JSON.parse(jsonMatch[0]) as GeneratedStory;
+  const story = await response.json() as GeneratedStory;
   return story;
 }
