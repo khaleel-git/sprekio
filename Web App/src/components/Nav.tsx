@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useStore, LEVEL_NAMES } from "@/lib/store";
 import StreakWidget from "./StreakWidget";
-import { BookOpen, Brain, Sparkles, Users, User } from "lucide-react";
+import { BookOpen, Brain, Sparkles, Users, User, PlayCircle, Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -13,6 +13,8 @@ const navItems = [
   { href: "/vocab", icon: Brain, label: "Vocab" },
   { href: "/generate", icon: Sparkles, label: "Generate" },
   { href: "/community", icon: Users, label: "Community" },
+  { href: "/watch", icon: PlayCircle, label: "Watch" },
+  { href: "/dashboard", icon: Archive, label: "Dashboard" },
   { href: "/profile", icon: User, label: "Profile" },
 ];
 
