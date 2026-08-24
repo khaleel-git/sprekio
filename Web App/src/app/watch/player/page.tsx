@@ -1,74 +1,183 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, useMemo } from "react";
 import YouTube from "react-youtube";
 import { useSearchParams } from "next/navigation";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, Pause, Settings, Info, Loader2, X, BookmarkPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Dummy data for related videos
-const RELATED_VIDEOS = [
-  { id: "dQw4w9WgXcQ", title: "Never Gonna Give You Up", channel: "Rick Astley" },
-  { id: "jNQXAC9IVRw", title: "Me at the zoo", channel: "jawed" },
-  { id: "W5Bscl7ALrE", title: "German Listening Practice", channel: "Easy German" },
-];
+interface TranscriptLine {
+  id: number;
+  start: number;
+  end: number;
+  text: string;
+}
+
+interface DictResult {
+  translation: string;
+  type?: string;
+  gender?: string;
+  case?: string;
+  root?: string;
+  error?: string;
+}
 
 function PlayerContent() {
   const searchParams = useSearchParams();
   const videoId = searchParams.get("v") || "";
-  const [currentTime, setCurrentTime] = useState(0);
-  const [transcript, setTranscript] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Poll video time
-  const playerRef = useRef<any>(null);
   
-  useEffect(() => {
-    // We would fetch the transcript here. 
-    // For now, we mock it.
-    setTimeout(() => {
-      setTranscript([
-        { start: 1, end: 4, text: "Hallo und herzlich willkommen zu diesem Video." },
-        { start: 4, end: 8, text: "Heute lernen wir Deutsch mit YouTube." },
-        { start: 8, end: 12, text: "Das ist ein sehr gutes Werkzeug für alle." },
-        { start: 12, end: 16, text: "Wir können die Untertitel auf der rechten Seite sehen." },
-        { start: 16, end: 20, text: "Und wir können jedes Wort übersetzen!" },
-      ]);
-      setIsLoading(false);
-    }, 1000);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [autoPause, setAutoPause] = useState(false);
+  const [lastAutoPausedId, setLastAutoPausedId] = useState<number>(-1);
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  const [dictWord, setDictWord] = useState<{word: string, context: string, x: number, y: number} | null>(null);
+  const [dictData, setDictData] = useState<DictResult | null>(null);
+  const [isDictLoading, setIsDictLoading] = useState(false);
 
+  const playerRef = useRef<any>(null);
+  const transcriptRef = useRef<HTMLDivElement>(null);
+  
+  // Fetch transcript
+  useEffect(() => {
+    if (!videoId) return;
+    setIsLoading(true);
+    fetch('/api/transcript?v=' + videoId)
+      .then(res => res.text())
+      .then(xml => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xml, "text/xml");
+        const texts = doc.getElementsByTagName("text");
+        const parsed: TranscriptLine[] = [];
+        
+        for (let i = 0; i < texts.length; i++) {
+          const t = texts[i];
+          const start = parseFloat(t.getAttribute("start") || "0");
+          const dur = parseFloat(t.getAttribute("dur") || "0");
+          // Decode HTML entities
+          const text = t.textContent?.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') || "";
+          parsed.push({
+            id: i,
+            start,
+            end: start + dur,
+            text: text.trim()
+          });
+        }
+        
+        setTranscript(parsed.filter(t => t.text.length > 0));
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setIsLoading(false);
+      });
+  }, [videoId]);
+
+  // Sync player time and handle auto-pause
+  useEffect(() => {
     const interval = setInterval(() => {
       if (playerRef.current && playerRef.current.internalPlayer) {
         playerRef.current.internalPlayer.getCurrentTime().then((time: number) => {
           setCurrentTime(time);
+          
+          if (autoPause && isPlaying) {
+             const activeLine = transcript.find(t => time >= t.start && time <= t.end);
+             // If we just passed a line's end, or if we're near the end of the active line
+             if (activeLine && time >= activeLine.end - 0.2 && lastAutoPausedId !== activeLine.id) {
+                playerRef.current.internalPlayer.pauseVideo();
+                setLastAutoPausedId(activeLine.id);
+             }
+          }
         });
       }
-    }, 500);
+    }, 100);
     return () => clearInterval(interval);
-  }, [videoId]);
+  }, [autoPause, isPlaying, transcript, lastAutoPausedId]);
+
+  // Scroll active transcript line into view
+  const activeIndex = useMemo(() => {
+    return transcript.findIndex(t => currentTime >= t.start && currentTime <= t.end);
+  }, [currentTime, transcript]);
+
+  useEffect(() => {
+    if (activeIndex >= 0 && transcriptRef.current) {
+      const activeEl = transcriptRef.current.children[activeIndex] as HTMLElement;
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [activeIndex]);
 
   const onReady = (e: any) => {
     playerRef.current = e.target;
   };
-
-  const seekTo = (time: number) => {
-    if (playerRef.current && playerRef.current.seekTo) {
-      playerRef.current.seekTo(time);
+  
+  const onStateChange = (e: any) => {
+    // 1 = playing, 2 = paused
+    if (e.data === 1) {
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
     }
   };
 
-  const activeIndex = transcript.findIndex(
-    (t) => currentTime >= t.start && currentTime <= t.end
-  );
+  const seekTo = (time: number) => {
+    if (playerRef.current && playerRef.current.internalPlayer) {
+      playerRef.current.internalPlayer.seekTo(time);
+      playerRef.current.internalPlayer.playVideo();
+    }
+  };
+
+  const handleWordClick = async (e: React.MouseEvent, word: string, contextSentence: string) => {
+    e.stopPropagation();
+    
+    // Pause video when opening dictionary
+    if (playerRef.current && playerRef.current.internalPlayer) {
+      playerRef.current.internalPlayer.pauseVideo();
+    }
+    
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    
+    setDictWord({
+      word: word.replace(/[.,!?()[\]{}"':;]/g, '').trim(), // Clean punctuation
+      context: contextSentence,
+      x: rect.left,
+      y: rect.bottom + 10
+    });
+    setDictData(null);
+    setIsDictLoading(true);
+
+    try {
+      const res = await fetch("https://sprekio-backend.khaleel-eu.workers.dev/api/translate-word", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          word: word.replace(/[.,!?()[\]{}"':;]/g, '').trim(),
+          contextSentence,
+          provider: "nvidia" // Fast lookups!
+        })
+      });
+      const data = await res.json();
+      setDictData(data);
+    } catch (err) {
+      setDictData({ translation: "Error fetching translation", error: String(err) });
+    } finally {
+      setIsDictLoading(false);
+    }
+  };
+
+  const currentLine = activeIndex >= 0 ? transcript[activeIndex] : null;
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-6 pb-24 md:pb-8">
+    <main className="max-w-7xl mx-auto px-4 py-6 pb-24 md:pb-8 relative">
       <div className="flex flex-col lg:flex-row gap-6">
         
-        {/* Left Column: Video & Related */}
+        {/* Left Column: Video */}
         <div className="flex-1 min-w-0">
-          {/* Video Player Container */}
-          <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-sm mb-6 relative">
+          <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-sm mb-6 relative group">
             <YouTube
               videoId={videoId}
               opts={{
@@ -81,60 +190,94 @@ function PlayerContent() {
                 },
               }}
               onReady={onReady}
+              onStateChange={onStateChange}
               className="absolute inset-0 w-full h-full"
               iframeClassName="w-full h-full border-none"
             />
+            
+            {/* On-Screen Subtitle Overlay */}
+            {currentLine && (
+               <div className="absolute bottom-12 left-0 w-full flex justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                 <div className="bg-black/70 backdrop-blur-sm text-white px-6 py-2 rounded-xl text-xl font-medium max-w-[80%] text-center">
+                   {currentLine.text}
+                 </div>
+               </div>
+            )}
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-8">Video Title</h1>
-
-          {/* Related Videos (Far Below) */}
-          <div className="border-t border-gray-100 pt-8 mt-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Related Videos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {RELATED_VIDEOS.map((v) => (
-                <div key={v.id} className="flex gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-transparent hover:border-gray-100">
-                  <div className="w-32 aspect-video bg-gray-200 rounded-lg overflow-hidden relative flex-shrink-0">
-                    <img src={`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`} alt="Thumbnail" className="object-cover w-full h-full" />
-                  </div>
-                  <div className="flex flex-col">
-                    <h3 className="font-medium text-gray-900 text-sm line-clamp-2">{v.title}</h3>
-                    <p className="text-gray-500 text-xs mt-1">{v.channel}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Interactive Player</h1>
+          <p className="text-gray-500 mb-8">Hover over the video to see on-screen subtitles. Click any word in the transcript to translate it in context!</p>
         </div>
 
-        {/* Right Column: Sticky CC */}
-        <div className="w-full lg:w-[400px] flex-shrink-0">
+        {/* Right Column: Transcript */}
+        <div className="w-full lg:w-[420px] flex-shrink-0 relative">
           <div className="sticky top-20 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-120px)]">
             <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between shrink-0">
               <h2 className="font-bold text-gray-900">Transcript</h2>
-              <span className="text-xs font-medium text-gray-500 bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-                CC
-              </span>
+              
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setAutoPause(!autoPause)}
+                  className={cn(
+                    "text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5",
+                    autoPause 
+                      ? "bg-violet-50 text-violet-700 border-violet-200 shadow-sm" 
+                      : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
+                  )}
+                  title="Automatically pause at the end of each sentence"
+                >
+                  {autoPause ? <Pause className="w-3.5 h-3.5" /> : <PlayCircle className="w-3.5 h-3.5" />}
+                  Auto-Pause {autoPause ? "ON" : "OFF"}
+                </button>
+              </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 relative scroll-smooth">
+            <div ref={transcriptRef} className="flex-1 overflow-y-auto p-4 space-y-3 relative">
               {isLoading ? (
-                <div className="text-center text-gray-400 py-10">Loading captions...</div>
+                <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
+                   <Loader2 className="w-6 h-6 animate-spin" />
+                   <p className="text-sm font-medium">Loading Transcript...</p>
+                </div>
+              ) : transcript.length === 0 ? (
+                <div className="text-center text-gray-400 py-10">No German captions found for this video.</div>
               ) : (
                 transcript.map((line, i) => {
                   const isActive = i === activeIndex;
                   return (
                     <div
-                      key={i}
-                      onClick={() => seekTo(line.start)}
+                      key={line.id}
                       className={cn(
-                        "p-3 rounded-xl cursor-pointer transition-colors text-[15px] leading-relaxed",
+                        "p-4 rounded-xl transition-colors text-[16px] leading-loose relative group",
                         isActive 
-                          ? "bg-blue-50 text-blue-900 font-medium" 
-                          : "hover:bg-gray-50 text-gray-700"
+                          ? "bg-blue-50/80 border border-blue-100 shadow-sm" 
+                          : "hover:bg-gray-50 border border-transparent"
                       )}
                     >
-                      {line.text}
+                      {/* Play line button */}
+                      <button 
+                        onClick={() => seekTo(line.start)}
+                        className={cn(
+                          "absolute -left-2 top-4 -ml-2 p-1 rounded-full bg-white border border-gray-200 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 transition-all shadow-sm",
+                          isActive && "opacity-100 text-blue-500 border-blue-200"
+                        )}
+                      >
+                        <PlayCircle className="w-4 h-4" />
+                      </button>
+
+                      <div className="ml-4">
+                        {line.text.split(" ").map((word, wIdx) => (
+                          <span
+                            key={wIdx}
+                            onClick={(e) => handleWordClick(e, word, line.text)}
+                            className={cn(
+                              "cursor-pointer rounded hover:bg-blue-200 transition-colors px-0.5",
+                              isActive ? "text-blue-900 font-medium" : "text-gray-700"
+                            )}
+                          >
+                            {word}{" "}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   );
                 })
@@ -144,13 +287,84 @@ function PlayerContent() {
         </div>
 
       </div>
+
+      {/* Dictionary Popup Overlay */}
+      {dictWord && (
+        <>
+          {/* Invisible backdrop to catch clicks and close */}
+          <div className="fixed inset-0 z-40" onClick={() => setDictWord(null)} />
+          
+          <div 
+            className="fixed z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 w-80 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            style={{
+              // Position smartly to not overflow screen
+              left: Math.min(dictWord.x - 160, window.innerWidth - 340 > 0 ? window.innerWidth - 340 : 10) + 'px',
+              top: Math.min(dictWord.y, window.innerHeight - 300) + 'px'
+            }}
+          >
+            <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-start">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{dictWord.word}</h3>
+                {dictData?.root && dictData.root !== dictWord.word && (
+                  <p className="text-sm text-gray-500 font-medium">Root: {dictData.root}</p>
+                )}
+              </div>
+              <button onClick={() => setDictWord(null)} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              {isDictLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                </div>
+              ) : dictData ? (
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 block">Translation</span>
+                    <p className="text-lg font-medium text-blue-700">{dictData.translation}</p>
+                  </div>
+                  
+                  {(dictData.type || dictData.gender || dictData.case) && (
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                      {dictData.type && (
+                        <span className="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+                          {dictData.type}
+                        </span>
+                      )}
+                      {dictData.gender && (
+                        <span className="text-xs font-medium bg-violet-50 text-violet-700 border border-violet-100 px-2 py-1 rounded-md">
+                          {dictData.gender}
+                        </span>
+                      )}
+                      {dictData.case && (
+                        <span className="text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100 px-2 py-1 rounded-md">
+                          {dictData.case}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <button className="w-full mt-2 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <BookmarkPlus className="w-4 h-4" /> Save to Vault
+                  </button>
+                </div>
+              ) : (
+                <p className="text-sm text-red-500">Failed to load translation.</p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
     </main>
   );
 }
 
 export default function WatchPlayerPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>}>
       <PlayerContent />
     </Suspense>
   );
