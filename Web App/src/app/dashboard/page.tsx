@@ -18,8 +18,13 @@ interface SavedWord {
   status?: 'learning' | 'learned';
 }
 
-export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'vault' | 'videos' | 'quiz'>('vault');
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+
+function DashboardContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab = tabParam === 'videos' ? 'videos' : tabParam === 'quiz' ? 'quiz' : 'vault';
   const [words, setWords] = useState<SavedWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ uid: string, email: string } | null>(null);
@@ -63,30 +68,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 w-full max-w-5xl mx-auto flex flex-col font-sans selection:bg-blue-200">
-      {/* Horizontal Tabs for Dashboard */}
-      {user && (
-        <div className="flex flex-col sm:flex-row gap-2 mb-8 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-          <button 
-            onClick={() => setActiveTab('vault')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'vault' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
-          >
-            Vocab Vault
-          </button>
-          <button 
-            onClick={() => setActiveTab('videos')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'videos' ? 'bg-purple-50 text-purple-700 shadow-sm border border-purple-100' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
-          >
-            Watched Videos
-          </button>
-          <button 
-            onClick={() => setActiveTab('quiz')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'quiz' ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
-          >
-            Quiz Arena
-          </button>
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="flex-1">
         {loading ? (
@@ -186,39 +167,39 @@ function VocabularyVault({ words, setWords, user, playAudio, getGenderColor }: a
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedWords.map((w: any) => (
-          <div key={w.id} className="group bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col">
+          <div key={w.id} className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-300 flex flex-col h-full">
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-3">
-                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getGenderColor(w.gender)}`}>
+                <span className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${getGenderColor(w.gender)}`}>
                   {w.gender ? w.gender : w.type || 'Word'}
                 </span>
                 {w.status === 'learned' ? (
-                  <span className="text-[10px] font-black text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200 uppercase tracking-widest">✅ Learned</span>
+                  <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2.5 py-0.5 rounded-md border border-green-200 uppercase tracking-wider">Learned</span>
                 ) : (
-                  <span className="text-[10px] font-black text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 uppercase tracking-widest">⏳ Learning</span>
+                  <span className="text-[10px] font-bold text-orange-700 bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-200 uppercase tracking-wider">Learning</span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between gap-3 mb-1">
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight break-words flex-1 min-w-0">{w.word}</h2>
+              <div className="flex items-start justify-between gap-3 mb-1">
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight break-words flex-1 min-w-0 leading-tight">{w.word}</h2>
                 <button 
                   onClick={() => playAudio(w.word)} 
-                  className="opacity-0 group-hover:opacity-100 text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-all transform hover:scale-110 active:scale-95"
+                  className="opacity-0 group-hover:opacity-100 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg transition-all"
                   title="Play audio"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
                 </button>
               </div>
-              <p className="text-lg font-bold text-blue-600 break-words">{w.translation}</p>
+              <p className="text-base font-semibold text-blue-600 break-words leading-tight">{w.translation}</p>
             </div>
 
-            <div className="mt-auto pt-5 border-t border-gray-100 flex flex-col gap-4">
-              <p className="text-sm text-gray-500 font-medium leading-relaxed italic">"{w.contextSentence}"</p>
+            <div className="mt-auto pt-4 border-t border-gray-100">
+              <p className="text-sm text-gray-600 font-medium leading-relaxed italic line-clamp-3">"{w.contextSentence}"</p>
               
               {w.videoTitle && (
-                <div className="text-xs font-bold text-gray-400 flex items-center gap-1.5">
+                <div className="text-xs font-bold text-gray-400 flex items-center gap-1.5 mt-3">
                   <span className="text-red-500">▶</span> {w.videoTitle.substring(0, 35)}{w.videoTitle.length > 35 ? '...' : ''}
                 </div>
               )}
@@ -475,5 +456,13 @@ function QuizArena({ words }: { words: SavedWord[] }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div>Loading Dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

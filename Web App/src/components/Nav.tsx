@@ -10,11 +10,13 @@ import { cn } from "@/lib/utils";
 
 const mainNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Vocab Vault" },
-  { href: "/watch", icon: PlayCircle, label: "Watched Videos" },
+  { href: "/dashboard?tab=videos", icon: PlayCircle, label: "Watched Videos" },
+  { href: "/dashboard?tab=quiz", icon: Brain, label: "Quiz Arena" },
 ];
 
 const secondaryNavItems = [
   { href: "/", icon: BookOpen, label: "Stories" },
+  { href: "/watch", icon: PlayCircle, label: "YouTube Player" },
   { href: "/vocab", icon: Brain, label: "SRS Review" },
   { href: "/generate", icon: Sparkles, label: "Generate AI Stories" },
   { href: "/community", icon: Users, label: "Community" },
