@@ -45,37 +45,85 @@ function PlayerContent() {
   useEffect(() => {
     if (!videoId) return;
     setIsLoading(true);
-    fetch('https://sprekio-backend.khaleel-eu.workers.dev/api/transcript?v=' + videoId)
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          throw new Error(data.error);
-        }
+    
+    // Attempt 1: Fetch via Chrome Extension (bypasses datacenter IP blocks using user's browser)
+    const reqId = Date.now().toString();
+    let extensionTimeout: NodeJS.Timeout;
+    
+    const onResult = (e: any) => {
+      if (e.detail.reqId === reqId) {
+        clearTimeout(extensionTimeout);
+        window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
         
+        const response = e.detail.response;
+        if (response && response.xml) {
+           parseXmlTranscript(response.xml);
+        } else {
+           // Extension failed, fallback to backend
+           console.warn("Extension failed to fetch transcript:", response?.error);
+           fetchBackendTranscript();
+        }
+      }
+    };
+    
+    window.addEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
+    
+    // Dispatch to extension
+    window.dispatchEvent(new CustomEvent('SPREKIO_FETCH_TRANSCRIPT', {
+      detail: { videoId, reqId }
+    }));
+    
+    // If extension is not installed or takes > 1.5s, fallback to backend
+    extensionTimeout = setTimeout(() => {
+      window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
+      console.warn("Chrome Extension not detected, falling back to backend API.");
+      fetchBackendTranscript();
+    }, 1500);
+    
+    function parseXmlTranscript(xml: string) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xml, "text/xml");
+        const texts = doc.getElementsByTagName("text");
         const parsed: TranscriptLine[] = [];
-        const tracks = data.transcript || [];
-        
-        for (let i = 0; i < tracks.length; i++) {
-          const t = tracks[i];
-          const start = t.offset / 1000;
-          const dur = t.duration / 1000;
-          // Clean up string
-          const text = t.text.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') || "";
-          parsed.push({
-            id: i,
-            start,
-            end: start + dur,
-            text: text.trim()
-          });
+        for (let i = 0; i < texts.length; i++) {
+          const t = texts[i];
+          const start = parseFloat(t.getAttribute("start") || "0");
+          const dur = parseFloat(t.getAttribute("dur") || "0");
+          const text = t.textContent?.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') || "";
+          parsed.push({ id: i, start, end: start + dur, text: text.trim() });
         }
-        
         setTranscript(parsed.filter(t => t.text.length > 0));
         setIsLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setIsLoading(false);
-      });
+    }
+
+    function fetchBackendTranscript() {
+      fetch('https://sprekio-backend.khaleel-eu.workers.dev/api/transcript?v=' + videoId)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          
+          const parsed: TranscriptLine[] = [];
+          const tracks = data.transcript || [];
+          
+          for (let i = 0; i < tracks.length; i++) {
+            const t = tracks[i];
+            const start = t.offset / 1000;
+            const dur = t.duration / 1000;
+            const text = t.text.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') || "";
+            parsed.push({ id: i, start, end: start + dur, text: text.trim() });
+          }
+          
+          setTranscript(parsed.filter(t => t.text.length > 0));
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          // If BOTH fail, set an error message in transcript
+          setTranscript([{ id: 0, start: 0, end: 9999, text: "Error: Could not load captions. YouTube blocking Datacenter IPs. Please install Sprekio Chrome Extension to fix." }]);
+          setIsLoading(false);
+        });
+    }
+
   }, [videoId]);
 
   // Sync player time and handle auto-pause

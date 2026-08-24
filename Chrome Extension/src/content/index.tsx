@@ -1095,3 +1095,14 @@ const SprekioOverlay: React.FC = () => {
   // Run immediately, and then keep checking every second to survive YouTube SPA navigations
   ensureApp();
   setInterval(ensureApp, 1000);
+
+
+// Custom event listener for the Web App to fetch transcripts via the extension
+window.addEventListener('SPREKIO_FETCH_TRANSCRIPT', (e: any) => {
+  const { videoId, reqId } = e.detail;
+  chrome.runtime.sendMessage({ action: 'fetchTranscriptDirect', videoId }, (response) => {
+    window.dispatchEvent(new CustomEvent('SPREKIO_TRANSCRIPT_RESULT', {
+      detail: { reqId, response }
+    }));
+  });
+});

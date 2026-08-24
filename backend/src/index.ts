@@ -1,3 +1,5 @@
+import { YoutubeTranscript } from "youtube-transcript";
+
 export interface Env {
   GEMINI_API_KEY: string;
   NVIDIA_API_KEY: string;
@@ -305,6 +307,33 @@ Requirements:
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
+    }
+    
+    // =========================================================================
+    // GET /api/transcript
+    // =========================================================================
+    if (url.pathname === "/api/transcript" && request.method === "GET") {
+        try {
+            const v = url.searchParams.get("v");
+            if (!v) {
+                return new Response(JSON.stringify({ error: "No video id provided" }), {
+                    status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+            
+            const transcript = await YoutubeTranscript.fetchTranscript(v, { lang: 'de' })
+              .catch((err: any) => YoutubeTranscript.fetchTranscript(v)); // fallback to default lang if de is not found
+            
+            return new Response(JSON.stringify({ transcript }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+        } catch (e: any) {
+             return new Response(JSON.stringify({ error: e.message }), {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+             });
+        }
     }
 
     return new Response("Not found", { status: 404, headers: corsHeaders });
