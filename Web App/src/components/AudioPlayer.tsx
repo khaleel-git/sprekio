@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 interface AudioPlayerProps {
   paragraphs: string[];
   className?: string;
+  onProgress?: (paragraphIndex: number, charIndex: number, charLength: number) => void;
 }
 
-export default function AudioPlayer({ paragraphs, className }: AudioPlayerProps) {
+export default function AudioPlayer({ paragraphs, className, onProgress }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [paused, setPaused] = useState(false);
   const [currentParagraph, setCurrentParagraph] = useState(-1);
@@ -21,18 +22,12 @@ export default function AudioPlayer({ paragraphs, className }: AudioPlayerProps)
   const [supported, setSupported] = useState(typeof window !== "undefined" && !!window.speechSynthesis);
 
   useEffect(() => {
-    if (!supported) {
-      return;
-    }
-
+    if (!supported) return;
     const loadVoices = () => {
       const v = getGermanVoices();
       setVoices(v);
-      if (v.length > 0 && !selectedVoice) {
-        setSelectedVoice(v[0].name);
-      }
+      if (v.length > 0 && !selectedVoice) setSelectedVoice(v[0].name);
     };
-
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
     return () => { window.speechSynthesis.onvoiceschanged = null; };
@@ -41,15 +36,30 @@ export default function AudioPlayer({ paragraphs, className }: AudioPlayerProps)
   const playAll = async () => {
     setIsPlaying(true);
     setPaused(false);
-    for (let i = 0; i < paragraphs.length; i++) {
-      setCurrentParagraph(i);
-      await speak(paragraphs[i], {
-        rate: speed,
-        voiceName: selectedVoice || undefined,
-      });
+    
+    try {
+      for (let i = 0; i < paragraphs.length; i++) {
+        setCurrentParagraph(i);
+        if (onProgress) onProgress(i, 0, 0);
+        
+        await speak(paragraphs[i], {
+          rate: speed,
+          voiceName: selectedVoice || undefined,
+          onBoundary: (charIndex, charLength) => {
+            if (onProgress) onProgress(i, charIndex, charLength);
+          }
+        });
+      }
+    } catch (e: any) {
+      if (e.message !== "Stopped explicitly") {
+        console.error("Speech playback error:", e);
+      }
+    } finally {
+      setIsPlaying(false);
+      setPaused(false);
+      setCurrentParagraph(-1);
+      if (onProgress) onProgress(-1, -1, -1);
     }
-    setIsPlaying(false);
-    setCurrentParagraph(-1);
   };
 
   const handlePlayPause = () => {

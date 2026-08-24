@@ -6,6 +6,7 @@ export interface TTSOptions {
   pitch?: number;   // 0 - 2, default 1
   volume?: number;  // 0 - 1, default 1
   voiceName?: string;
+  onBoundary?: (charIndex: number, charLength: number) => void;
 }
 
 export interface TTSVoice {
@@ -15,6 +16,7 @@ export interface TTSVoice {
 }
 
 let currentUtterance: SpeechSynthesisUtterance | null = null;
+let isExplicitlyStopped = false;
 
 export function getGermanVoices(): TTSVoice[] {
   if (typeof window === "undefined" || !window.speechSynthesis) return [];
@@ -33,6 +35,7 @@ export function speak(text: string, options: TTSOptions = {}): Promise<void> {
 
     // Stop any current speech
     stopSpeaking();
+    isExplicitlyStopped = false;
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = options.lang || "de-DE";
@@ -57,10 +60,23 @@ export function speak(text: string, options: TTSOptions = {}): Promise<void> {
       currentUtterance = null;
       resolve();
     };
+    
+    if (options.onBoundary) {
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          options.onBoundary!(event.charIndex, event.charLength);
+        }
+      };
+    }
+
     utterance.onerror = (e) => {
       currentUtterance = null;
-      if (e.error !== "interrupted") reject(e);
-      else resolve();
+      if (isExplicitlyStopped) {
+        reject(new Error("Stopped explicitly"));
+      } else {
+        if (e.error !== "interrupted") reject(e);
+        else resolve();
+      }
     };
 
     currentUtterance = utterance;
@@ -70,6 +86,7 @@ export function speak(text: string, options: TTSOptions = {}): Promise<void> {
 
 export function stopSpeaking(): void {
   if (typeof window !== "undefined" && window.speechSynthesis) {
+    isExplicitlyStopped = true;
     window.speechSynthesis.cancel();
     currentUtterance = null;
   }
