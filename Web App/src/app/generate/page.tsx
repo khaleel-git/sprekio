@@ -31,7 +31,7 @@ const DIALECTS = [
 
 export default function GeneratePage() {
   const [apiKey, setApiKey] = useState("");
-  const [provider, setProvider] = useState<"gemini" | "nvidia">("gemini");
+  const [provider, setProvider] = useState<"gemini" | "nvidia">("nvidia");
   const [topic, setTopic] = useState("Daily life in Germany");
   const [customTopic, setCustomTopic] = useState("");
   const [level, setLevel] = useState<CEFRLevel>("B1");
