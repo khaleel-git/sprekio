@@ -49,10 +49,12 @@ function PlayerContent() {
     // Attempt 1: Fetch via Chrome Extension (bypasses datacenter IP blocks using user's browser)
     const reqId = Date.now().toString();
     let extensionTimeout: NodeJS.Timeout;
+    let dispatchInterval: NodeJS.Timeout;
     
     const onResult = (e: any) => {
       if (e.detail.reqId === reqId) {
         clearTimeout(extensionTimeout);
+        clearInterval(dispatchInterval);
         window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
         
         const response = e.detail.response;
@@ -68,13 +70,21 @@ function PlayerContent() {
     
     window.addEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
     
-    // Dispatch to extension
+    // Dispatch to extension repeatedly in case it hasn't loaded yet (race condition)
+    dispatchInterval = setInterval(() => {
+      window.dispatchEvent(new CustomEvent('SPREKIO_FETCH_TRANSCRIPT', {
+        detail: { videoId, reqId }
+      }));
+    }, 300);
+    
+    // Initial dispatch
     window.dispatchEvent(new CustomEvent('SPREKIO_FETCH_TRANSCRIPT', {
       detail: { videoId, reqId }
     }));
     
     // If extension is not installed or takes > 5s, fallback to backend
     extensionTimeout = setTimeout(() => {
+      clearInterval(dispatchInterval);
       window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
       console.warn("Chrome Extension not detected or timed out, falling back to backend API.");
       fetchBackendTranscript();
