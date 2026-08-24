@@ -1,6 +1,6 @@
 import { loginWithGoogle, saveVocabularyWord, getVocabularyWords, auth, deleteVocabWord, updateVocabWordStatus } from './firebase';
 
-chrome.runtime.onMessageExternal.addListener((request, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.action === "fetchTranscriptDirect") {
     // The web app asks us to fetch the transcript, bypassing datacenter blocks!
     fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
@@ -36,9 +36,7 @@ chrome.runtime.onMessageExternal.addListener((request, _sender, sendResponse) =>
     });
     return true; // async
   }
-});
 
-chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.action === "translate") {
     handleTranslation(request.word, request.contextSentence, request.provider).then(sendResponse);
     return true; // Keep message channel open for async response

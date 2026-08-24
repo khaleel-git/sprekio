@@ -73,12 +73,12 @@ function PlayerContent() {
       detail: { videoId, reqId }
     }));
     
-    // If extension is not installed or takes > 1.5s, fallback to backend
+    // If extension is not installed or takes > 5s, fallback to backend
     extensionTimeout = setTimeout(() => {
       window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
-      console.warn("Chrome Extension not detected, falling back to backend API.");
+      console.warn("Chrome Extension not detected or timed out, falling back to backend API.");
       fetchBackendTranscript();
-    }, 1500);
+    }, 5000);
     
     function parseXmlTranscript(xml: string) {
         const parser = new DOMParser();
