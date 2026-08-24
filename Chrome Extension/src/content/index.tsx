@@ -1061,6 +1061,7 @@ const SprekioOverlay: React.FC = () => {
     // Create and inject the root
     const appContainer = document.createElement('div');
     appContainer.id = 'sprekio-extension-root';
+    appContainer.className = 'sprekio-tw';
     videoContainer.appendChild(appContainer);
     
     currentRoot = createRoot(appContainer);
