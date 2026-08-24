@@ -236,11 +236,11 @@ Requirements:
               "Authorization": `Bearer ${TARGET_API_KEY}`
             },
             body: JSON.stringify({
-              model: "meta/llama-3.1-70b-instruct",
+              model: "meta/llama-3.1-8b-instruct",
               messages: [{ role: "user", content: prompt }],
               temperature: 0.7,
               top_p: 0.9,
-              max_tokens: 4000,
+              max_tokens: 2000,
             })
           });
           
