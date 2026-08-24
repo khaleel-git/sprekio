@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { stories, CEFRLevel, CEFR_LEVELS, CEFR_DESCRIPTIONS } from "@/lib/stories";
+import { useState, useEffect } from "react";
+import { stories as staticStories, CEFRLevel, CEFR_LEVELS, CEFR_DESCRIPTIONS, Story } from "@/lib/stories";
 import { useStore } from "@/lib/store";
 import StoryCard from "@/components/StoryCard";
-import { Search, Filter, Globe2 } from "lucide-react";
+import { Search, Filter, Globe2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ALL = "All";
@@ -13,9 +13,26 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<CEFRLevel | typeof ALL>(ALL);
   const [showDialect, setShowDialect] = useState(false);
+  const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
+  const [generatedStories, setGeneratedStories] = useState<Story[]>([]);
   const { progress } = useStore();
 
-  const filtered = stories.filter((s) => {
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("dl_generated_stories") || "[]");
+      setGeneratedStories(saved);
+    } catch (e) {}
+  }, []);
+
+  const allStories = [...generatedStories, ...staticStories];
+
+  const handleDeleteGenerated = (id: string) => {
+    const updated = generatedStories.filter((s) => s.id !== id);
+    setGeneratedStories(updated);
+    localStorage.setItem("dl_generated_stories", JSON.stringify(updated));
+  };
+
+  const filtered = allStories.filter((s) => {
     const matchSearch =
       !search ||
       s.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -23,11 +40,18 @@ export default function HomePage() {
       s.description.toLowerCase().includes(search.toLowerCase());
     const matchLevel = selectedLevel === ALL || s.level === selectedLevel;
     const matchDialect = !showDialect || s.dialect !== null;
-    return matchSearch && matchLevel && matchDialect;
+
+    const isRead = progress.completedStories.includes(s.id);
+    const matchRead =
+      readFilter === "all" ||
+      (readFilter === "read" && isRead) ||
+      (readFilter === "unread" && !isRead);
+
+    return matchSearch && matchLevel && matchDialect && matchRead;
   });
 
   const completedCount = progress.completedStories.length;
-  const totalCount = stories.length;
+  const totalCount = allStories.length;
 
   return (
     <div className="space-y-6">
@@ -54,7 +78,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div className="text-6xl">🇩🇪</div>
+          <div className="text-6xl">📖</div>
         </div>
 
         {/* Progress bar */}
@@ -80,7 +104,7 @@ export default function HomePage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search stories…"
+            placeholder="Search stories..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -99,6 +123,30 @@ export default function HomePage() {
           >
             All levels
           </button>
+
+          <button
+            onClick={() => setReadFilter(readFilter === "unread" ? "all" : "unread")}
+            className={cn(
+              "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
+              readFilter === "unread"
+                ? "bg-green-600 text-white border-green-600"
+                : "bg-white text-gray-600 border-gray-200 hover:border-green-300"
+            )}
+          >
+            Unread
+          </button>
+          <button
+            onClick={() => setReadFilter(readFilter === "read" ? "all" : "read")}
+            className={cn(
+              "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
+              readFilter === "read"
+                ? "bg-purple-600 text-white border-purple-600"
+                : "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+            )}
+          >
+            Read
+          </button>
+
           {CEFR_LEVELS.map((level) => (
             <button
               key={level}
@@ -110,7 +158,7 @@ export default function HomePage() {
                   : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
               )}
             >
-              {level} · {CEFR_DESCRIPTIONS[level]}
+              {level} - {CEFR_DESCRIPTIONS[level]}
             </button>
           ))}
           <button
@@ -132,7 +180,22 @@ export default function HomePage() {
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((story) => (
-            <StoryCard key={story.id} story={story} />
+            <div key={story.id} className="relative group">
+              <StoryCard story={story} />
+              {story.id.startsWith("gen-") && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDeleteGenerated(story.id);
+                  }}
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                  title="Delete generated story"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       ) : (

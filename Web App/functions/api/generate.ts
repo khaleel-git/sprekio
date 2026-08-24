@@ -3,12 +3,12 @@ export async function onRequestPost(context: any) {
   
   try {
     const reqBody = await request.json();
-    const { topic, level, dialect, wordCount, apiKey } = reqBody;
+    const { topic, level, dialect, wordCount, apiKey, provider = "gemini" } = reqBody;
 
-    const GEMINI_API_KEY = env.GEMINI_API_KEY || apiKey;
+    const TARGET_API_KEY = provider === "nvidia" ? (env.NVIDIA_API_KEY || apiKey) : (env.GEMINI_API_KEY || apiKey);
     
-    if (!GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "GEMINI_API_KEY is not configured in Cloudflare Environment Variables, and no key was provided." }), {
+    if (!TARGET_API_KEY) {
+      return new Response(JSON.stringify({ error: `${provider.toUpperCase()}_API_KEY is not configured in Cloudflare Environment Variables, and no key was provided.` }), {
         status: 400,
         headers: { "Content-Type": "application/json" }
       });
@@ -82,39 +82,58 @@ Requirements:
 - Make the story engaging and culturally relevant to German-speaking countries
 - Return ONLY the JSON, no other text`;
 
-    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
-    
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.8,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096,
-          responseMimeType: "application/json",
-        },
-      }),
-    });
+    let response;
+    let text = "";
 
-    if (!response.ok) {
-      const error = await response.json();
-      return new Response(JSON.stringify({ error: error.error?.message || "API error" }), {
-        status: response.status,
-        headers: { "Content-Type": "application/json" }
+    if (provider === "nvidia") {
+      response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${TARGET_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "meta/llama-3.1-70b-instruct",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          top_p: 0.9,
+          max_tokens: 4000,
+        })
       });
+      
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || err.detail || `NVIDIA API Error: ${response.status}`);
+      }
+      const data = await response.json();
+      text = data.choices?.[0]?.message?.content || "";
+    } else {
+      const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
+      response = await fetch(`${GEMINI_API_URL}?key=${TARGET_API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 4096,
+            responseMimeType: "application/json",
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error?.message || `Gemini API Error: ${response.status}`);
+      }
+      const data = await response.json();
+      text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
     if (!text) {
-      return new Response(JSON.stringify({ error: "No content returned from Gemini" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      });
+      throw new Error("No content returned from AI");
     }
 
     // Validate JSON and return

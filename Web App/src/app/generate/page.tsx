@@ -31,6 +31,7 @@ const DIALECTS = [
 
 export default function GeneratePage() {
   const [apiKey, setApiKey] = useState("");
+  const [provider, setProvider] = useState<"gemini" | "nvidia">("gemini");
   const [topic, setTopic] = useState("Daily life in Germany");
   const [customTopic, setCustomTopic] = useState("");
   const [level, setLevel] = useState<CEFRLevel>("B1");
@@ -55,6 +56,7 @@ export default function GeneratePage() {
         dialect: dialect || undefined,
         wordCount: 200,
         apiKey: apiKey.trim(),
+        provider,
       });
       setGenerated(story as unknown as Partial<Story>);
     } catch (e: unknown) {
@@ -101,6 +103,31 @@ export default function GeneratePage() {
       {/* Configuration */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-5">
         <h2 className="font-semibold text-gray-900">Story Settings</h2>
+
+        {/* AI Provider */}
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">AI Provider</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setProvider("gemini")}
+              className={cn(
+                "px-4 py-2 rounded-xl text-sm font-medium border flex items-center justify-center gap-2 transition-all",
+                provider === "gemini" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+              )}
+            >
+              Google Gemini
+            </button>
+            <button
+              onClick={() => setProvider("nvidia")}
+              className={cn(
+                "px-4 py-2 rounded-xl text-sm font-medium border flex items-center justify-center gap-2 transition-all",
+                provider === "nvidia" ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+              )}
+            >
+              NVIDIA NIM
+            </button>
+          </div>
+        </div>
 
         {/* CEFR Level */}
         <div>

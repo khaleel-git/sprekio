@@ -11,15 +11,15 @@ import { Clock, BookOpen, CheckCircle2, Brain, ArrowLeft, Sparkles } from "lucid
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { use } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function StoryPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+function GeneratedStoryContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   
-  // Try static first
-  let story = getStoryById(id);
-  
-  // If not static, try local storage (for generated stories)
-  if (!story && typeof window !== "undefined") {
+  let story: any = null;
+  if (id && typeof window !== "undefined") {
     try {
       const saved = JSON.parse(localStorage.getItem("dl_generated_stories") || "[]");
       story = saved.find((s: any) => s.id === id);
@@ -35,7 +35,7 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
 
   const { completeStory, addWordToDeck, progress } = useStore();
   const isAlreadyCompleted = progress.completedStories.includes(story.id);
-  const xpValue = XP_PER_STORY[story.level];
+  const xpValue = XP_PER_STORY[story.level as keyof typeof XP_PER_STORY];
 
   const handleMarkComplete = () => {
     completeStory(story.id, xpValue);
@@ -52,7 +52,7 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
   };
 
   const handleSaveAllVocab = () => {
-    story.vocabulary.forEach((v) => {
+    story.vocabulary.forEach((v: any) => {
       addWordToDeck(v.word, v.translation, story.id, story.title, v.example);
     });
   };
@@ -193,7 +193,7 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
               Save all to deck
             </button>
           </div>
-          {story.vocabulary.map((v, i) => (
+          {story.vocabulary.map((v: any, i: number) => (
             <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -260,5 +260,13 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
         />
       )}
     </div>
+  );
+}
+
+export default function GeneratedStoryPage() {
+  return (
+    <Suspense fallback={<div className='p-10 text-center text-gray-500'>Loading story...</div>}>
+      <GeneratedStoryContent />
+    </Suspense>
   );
 }

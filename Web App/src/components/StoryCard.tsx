@@ -22,8 +22,11 @@ export default function StoryCard({ story }: StoryCardProps) {
     upvoteStory(story.id);
   };
 
+  const isGenerated = story.id.startsWith("gen-");
+  const href = isGenerated ? `/story/generated?id=${story.id}` : `/story/${story.id}`;
+
   return (
-    <Link href={`/story/${story.id}`}>
+    <Link href={href}>
       <div
         className={cn(
           "group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden",

@@ -1,12 +1,15 @@
 // Gemini API client for story generation
 import { Paragraph } from "./stories";
 
+export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+
 export interface StoryGenerationRequest {
   topic: string;
-  level: string;        // A1, A2, B1, B2, C1, C2
+  level: CEFRLevel;
   dialect?: string;     // null, "Bayerisch", "Österreichisch", "Schweizerdeutsch"
   wordCount?: number;   // target word count
-  apiKey: string;
+  apiKey?: string;
+  provider?: "gemini" | "nvidia";
 }
 
 export interface GeneratedStory {
