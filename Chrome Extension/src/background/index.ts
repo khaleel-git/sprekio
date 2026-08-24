@@ -83,50 +83,55 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   }
   
   if (request.action === "fetchTranscriptDirect") {
-    // Instead of hitting the InnerTube ANDROID API which can trigger CAPTCHAs,
-    // we fetch the web page directly and extract the transcript URL.
-    // This perfectly mimics a normal user visit!
-    fetch(`https://www.youtube.com/watch?v=${request.videoId}`, {
-      headers: {
-        "User-Agent": navigator.userAgent,
-        "Accept-Language": "en-US,en;q=0.9"
-      },
-      credentials: "include"
-    })
-    .then(async r => {
-      if (!r.ok) {
-        throw new Error(`HTTP ${r.status}`);
+    (async () => {
+      try {
+        const res = await fetch(`https://www.youtube.com/watch?v=${request.videoId}`, {
+          headers: {
+            "Accept-Language": "en-US,en;q=0.9"
+          },
+          credentials: "include"
+        });
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        
+        const html = await res.text();
+        
+        let data;
+        const match = html.match(/ytInitialPlayerResponse\s*=\s*({.+?})\s*;/);
+        if (match) {
+          data = JSON.parse(match[1]);
+        } else {
+          const match2 = html.match(/ytInitialPlayerResponse\s*=\s*({.+?})\s*<\//);
+          if (match2) {
+            data = JSON.parse(match2[1]);
+          } else {
+            throw new Error("Could not find ytInitialPlayerResponse in HTML. Video might be age-restricted or unavailable.");
+          }
+        }
+        
+        const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+        if (!tracks || !tracks.length) {
+          throw new Error("Transcript is disabled on this video (or it does not exist).");
+        }
+        
+        let track = tracks.find((t: any) => t.languageCode === (request.lang || 'de')) || tracks[0];
+        let url = track.baseUrl;
+        
+        if (request.forceLang) {
+          url += "&tlang=" + request.forceLang;
+        }
+        
+        const xmlRes = await fetch(url);
+        const xml = await xmlRes.text();
+        sendResponse({ xml });
+        
+      } catch (error: any) {
+        console.error("fetchTranscriptDirect error:", error);
+        sendResponse({ error: error.message || String(error) });
       }
-      return r.text();
-    })
-    .then(html => {
-      // Extract ytInitialPlayerResponse
-      const match = html.match(/ytInitialPlayerResponse\s*=\s*({.+?})\s*;/);
-      if (!match) {
-         // Try alternate format
-         const match2 = html.match(/ytInitialPlayerResponse\s*=\s*({.+?})\s*<\//);
-         if (!match2) throw new Error("Could not find ytInitialPlayerResponse in HTML");
-         return JSON.parse(match2[1]);
-      }
-      return JSON.parse(match[1]);
-    })
-    .then(data => {
-      const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-      
-      if (!tracks || !tracks.length) throw new Error("Transcript is disabled on this video");
-      
-      // Default to German, fallback to first available
-      let track = tracks.find((t: any) => t.languageCode === (request.lang || 'de')) || tracks[0];
-      let url = track.baseUrl;
-      
-      if (request.forceLang) {
-        url += "&tlang=" + request.forceLang;
-      }
-      
-      return fetch(url).then(r => r.text());
-    })
-    .then(xml => sendResponse({ xml }))
-    .catch((e: any) => sendResponse({ error: e.message }));
+    })();
     return true;
   }
   if (request.action === "translateSentence") {
