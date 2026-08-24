@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import YouTube from "react-youtube";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,9 +13,9 @@ const RELATED_VIDEOS = [
   { id: "W5Bscl7ALrE", title: "German Listening Practice", channel: "Easy German" },
 ];
 
-export default function WatchPlayerPage() {
-  const params = useParams();
-  const videoId = params.videoId as string;
+function PlayerContent() {
+  const searchParams = useSearchParams();
+  const videoId = searchParams.get("v") || "";
   const [currentTime, setCurrentTime] = useState(0);
   const [transcript, setTranscript] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -145,5 +145,13 @@ export default function WatchPlayerPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function WatchPlayerPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PlayerContent />
+    </Suspense>
   );
 }

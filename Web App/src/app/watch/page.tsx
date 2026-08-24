@@ -28,7 +28,7 @@ export default function WatchPage() {
     }
 
     if (videoId) {
-      router.push(`/watch/${videoId}`);
+      router.push(`/watch/player?v=${videoId}`);
     }
   };
 
