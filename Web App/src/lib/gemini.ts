@@ -107,7 +107,7 @@ Requirements:
 export async function generateStory(
   req: StoryGenerationRequest
 ): Promise<GeneratedStory> {
-  const response = await fetch('/api/generate', {
+  const response = await fetch('https://sprekio-backend.khaleel-eu.workers.dev/api/generate', {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
