@@ -2,16 +2,17 @@ export async function onRequestPost(context: any) {
   const { request, env } = context;
   
   try {
-    const GEMINI_API_KEY = env.GEMINI_API_KEY;
+    const reqBody = await request.json();
+    const { topic, level, dialect, wordCount, apiKey } = reqBody;
+
+    const GEMINI_API_KEY = env.GEMINI_API_KEY || apiKey;
+    
     if (!GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "GEMINI_API_KEY is not configured in Cloudflare Environment Variables" }), {
-        status: 500,
+      return new Response(JSON.stringify({ error: "GEMINI_API_KEY is not configured in Cloudflare Environment Variables, and no key was provided." }), {
+        status: 400,
         headers: { "Content-Type": "application/json" }
       });
     }
-
-    const reqBody = await request.json();
-    const { topic, level, dialect, wordCount } = reqBody;
 
     const dialectNote = dialect
       ? `The story should be written primarily in ${dialect} dialect with standard German explanations in brackets for dialect words.`

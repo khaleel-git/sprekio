@@ -102,7 +102,7 @@ Requirements:
 }
 
 export async function generateStory(
-  req: Omit<StoryGenerationRequest, 'apiKey'>
+  req: StoryGenerationRequest
 ): Promise<GeneratedStory> {
   const response = await fetch('/api/generate', {
     method: "POST",

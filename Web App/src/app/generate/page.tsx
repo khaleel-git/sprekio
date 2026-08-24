@@ -30,6 +30,7 @@ const DIALECTS = [
 ];
 
 export default function GeneratePage() {
+  const [apiKey, setApiKey] = useState("");
   const [topic, setTopic] = useState("Daily life in Germany");
   const [customTopic, setCustomTopic] = useState("");
   const [level, setLevel] = useState<CEFRLevel>("B1");
@@ -53,6 +54,7 @@ export default function GeneratePage() {
         level,
         dialect: dialect || undefined,
         wordCount: 200,
+        apiKey: apiKey.trim(),
       });
       setGenerated(story as unknown as Partial<Story>);
     } catch (e: unknown) {
@@ -170,6 +172,23 @@ export default function GeneratePage() {
               </label>
             ))}
           </div>
+        </div>
+
+        {/* Optional Advanced API Key */}
+        <div className="pt-4 border-t border-gray-100 mt-4">
+          <label className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-1.5 cursor-pointer hover:text-gray-700">
+            Advanced: Override API Key
+          </label>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Leave empty to use server default..."
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-50 hover:bg-white focus:bg-white transition-colors"
+          />
+          <p className="text-[10px] text-gray-400 mt-1.5">
+            If Cloudflare fails to read your API key, paste it here to run directly.
+          </p>
         </div>
       </div>
 

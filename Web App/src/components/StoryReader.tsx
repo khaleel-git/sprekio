@@ -169,7 +169,7 @@ function AnnotatedText({
               key={i}
               onClick={() => annotation && onWordClick(annotation)}
               className={cn(
-                annotation ? "cursor-pointer hover:bg-blue-50 rounded px-0.5 transition-colors" : ""
+                annotation ? "cursor-pointer bg-yellow-100/60 hover:bg-yellow-200 border-b-2 border-yellow-200/50 rounded px-0.5 font-medium transition-colors" : ""
               )}
             >
               {token}
@@ -185,12 +185,12 @@ function AnnotatedText({
             key={i}
             onClick={() => onWordClick(annotation)}
             className={cn(
-              "cursor-pointer hover:bg-blue-50 rounded px-0.5 transition-colors",
+              "cursor-pointer bg-yellow-100/60 hover:bg-yellow-200 border-b-2 border-yellow-200/50 rounded px-0.5 font-medium transition-colors",
               caseClass,
               annotation.separable && "decoration-dashed underline decoration-yellow-400",
-              isSaved && "bg-green-50"
+              isSaved && "bg-green-50 border-green-200/50"
             )}
-            title={`${annotation.translation}${annotation.case ? ` · ${annotation.case}` : ""}`}
+            title={`${annotation.translation}${annotation.case ? ` - ${annotation.case}` : ""}`}
           >
             {token}
           </span>
