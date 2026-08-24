@@ -117,31 +117,47 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   }
   
   if (request.action === "fetchTranscriptDirect") {
-    fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
-      method: "POST",
-      credentials: "omit",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        context: { client: { clientName: "ANDROID", clientVersion: "20.10.38" } },
-        videoId: request.videoId
-      })
+    // Instead of hitting the InnerTube ANDROID API which can trigger CAPTCHAs,
+    // we fetch the web page directly and extract the transcript URL.
+    // This perfectly mimics a normal user visit!
+    fetch(`https://www.youtube.com/watch?v=${request.videoId}`, {
+      headers: {
+        "User-Agent": navigator.userAgent,
+        "Accept-Language": "en-US,en;q=0.9"
+      },
+      credentials: "include"
     })
     .then(async r => {
       if (!r.ok) {
-        const text = await r.text();
-        throw new Error(`HTTP ${r.status}: ${text.substring(0, 200)}`);
+        throw new Error(`HTTP ${r.status}`);
       }
-      return r.json();
+      return r.text();
+    })
+    .then(html => {
+      // Extract ytInitialPlayerResponse
+      const match = html.match(/ytInitialPlayerResponse\s*=\s*({.+?})\s*;/);
+      if (!match) {
+         // Try alternate format
+         const match2 = html.match(/ytInitialPlayerResponse\s*=\s*({.+?})\s*<\//);
+         if (!match2) throw new Error("Could not find ytInitialPlayerResponse in HTML");
+         return JSON.parse(match2[1]);
+      }
+      return JSON.parse(match[1]);
     })
     .then(data => {
       const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-      if (!tracks || !tracks.length) throw new Error("No tracks found");
-      let track = tracks.find((t: any) => t.languageCode === request.lang) || tracks[0];
+      
+      if (!tracks || !tracks.length) throw new Error("Transcript is disabled on this video");
+      
+      // Default to German, fallback to first available
+      let track = tracks.find((t: any) => t.languageCode === (request.lang || 'de')) || tracks[0];
       let url = track.baseUrl;
+      
       if (request.forceLang) {
         url += "&tlang=" + request.forceLang;
       }
-      return fetch(url, { credentials: "omit" }).then(r => r.text());
+      
+      return fetch(url).then(r => r.text());
     })
     .then(xml => sendResponse({ xml }))
     .catch((e: any) => sendResponse({ error: e.message }));
