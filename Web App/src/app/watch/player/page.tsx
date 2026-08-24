@@ -45,20 +45,22 @@ function PlayerContent() {
   useEffect(() => {
     if (!videoId) return;
     setIsLoading(true);
-    fetch('/api/transcript?v=' + videoId)
-      .then(res => res.text())
-      .then(xml => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(xml, "text/xml");
-        const texts = doc.getElementsByTagName("text");
-        const parsed: TranscriptLine[] = [];
+    fetch('https://sprekio-backend.khaleel-eu.workers.dev/api/transcript?v=' + videoId)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
         
-        for (let i = 0; i < texts.length; i++) {
-          const t = texts[i];
-          const start = parseFloat(t.getAttribute("start") || "0");
-          const dur = parseFloat(t.getAttribute("dur") || "0");
-          // Decode HTML entities
-          const text = t.textContent?.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') || "";
+        const parsed: TranscriptLine[] = [];
+        const tracks = data.transcript || [];
+        
+        for (let i = 0; i < tracks.length; i++) {
+          const t = tracks[i];
+          const start = t.offset / 1000;
+          const dur = t.duration / 1000;
+          // Clean up string
+          const text = t.text.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') || "";
           parsed.push({
             id: i,
             start,
