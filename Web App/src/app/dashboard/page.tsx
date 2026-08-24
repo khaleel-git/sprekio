@@ -201,8 +201,8 @@ function VocabularyVault({ words, setWords, user, playAudio, getGenderColor }: a
                 )}
               </div>
 
-              <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">{w.word}</h2>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight break-words flex-1 min-w-0">{w.word}</h2>
                 <button 
                   onClick={() => playAudio(w.word)} 
                   className="opacity-0 group-hover:opacity-100 text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition-all transform hover:scale-110 active:scale-95"
@@ -211,7 +211,7 @@ function VocabularyVault({ words, setWords, user, playAudio, getGenderColor }: a
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
                 </button>
               </div>
-              <p className="text-lg font-bold text-blue-600">{w.translation}</p>
+              <p className="text-lg font-bold text-blue-600 break-words">{w.translation}</p>
             </div>
 
             <div className="mt-auto pt-5 border-t border-gray-100 flex flex-col gap-4">
