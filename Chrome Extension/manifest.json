@@ -43,7 +43,7 @@
     "https://sprekio-backend.khaleel-eu.workers.dev/*"
   ],
   "oauth2": {
-    "client_id": "320928767182-lhce801v9v379b1eq8ai0c5ca2ve9q7d.apps.googleusercontent.com",
+    "client_id": "87574039132-5g58ls19hvp5oq8q8drgji0km7fb37su.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"
