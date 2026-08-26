@@ -34,4 +34,5 @@ CREATE TABLE IF NOT EXISTS ai_cache (
 );
 
 CREATE INDEX IF NOT EXISTS idx_forms_normalized ON forms(normalized);
+CREATE INDEX IF NOT EXISTS idx_senses_lemma_id ON senses(lemma_id);
 CREATE INDEX IF NOT EXISTS idx_ai_cache_key ON ai_cache(cache_key);

@@ -61,6 +61,7 @@ async function buildDatabase() {
       );
       
       CREATE INDEX idx_forms_normalized ON forms(normalized);
+      CREATE INDEX idx_senses_lemma_id ON senses(lemma_id);
     `);
 
     db.prepare(`INSERT INTO dictionary_metadata (version, source, source_date, generated_at, transform_version) VALUES (?, ?, ?, ?, ?)`).run(
