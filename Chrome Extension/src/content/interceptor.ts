@@ -1,8 +1,5 @@
 if (!(window as any).__sprekioInterceptor) {
   (window as any).__sprekioInterceptor = true;
-  // Buffer for SPREKIO_INTERCEPTED messages that arrive before React mounts and
-  // registers its window.addEventListener. The content script drains this on mount.
-  (window as any).__sprekioBuffer = (window as any).__sprekioBuffer || [];
 
   console.log("[Sprekio Interceptor] Installed in MAIN world at document_start");
 
@@ -26,7 +23,6 @@ if (!(window as any).__sprekioInterceptor) {
             status: response.status,
             headers: [...response.headers.entries()]
           };
-          (window as any).__sprekioBuffer.push(msg);
           window.postMessage(msg, '*');
         }).catch(e => console.error("[Sprekio Interceptor] clone error", e));
         return response;
@@ -47,9 +43,8 @@ if (!(window as any).__sprekioInterceptor) {
           type: 'SPREKIO_INTERCEPTED', 
           url: urlStr, 
           text: this.responseText, 
-          status: this.status 
+          status: this.status
         };
-        (window as any).__sprekioBuffer.push(msg);
         window.postMessage(msg, '*');
       });
     }

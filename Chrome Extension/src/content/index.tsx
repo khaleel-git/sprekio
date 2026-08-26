@@ -35,6 +35,8 @@ const SprekioOverlay: React.FC = () => {
   const currentLineIndexRef = useRef(-1);
 
   const interceptedTranscripts = useRef<{url: string, text: string, status: number, headers: any[]}[]>([]);
+  const sentenceTranslationCache = useRef<Record<string, string>>({});
+  const sentenceTranslateTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
@@ -52,7 +54,7 @@ const SprekioOverlay: React.FC = () => {
     if (buffer.length > 0) {
       console.log(`[Sprekio] Draining ${buffer.length} early-buffered transcript(s)`);
       buffer.forEach(msg => {
-        if (!interceptedTranscripts.current.some(t => t.url === msg.url)) {
+        if (!interceptedTranscripts.current.some(t => t.url === msg.url && t.status === msg.status)) {
           console.log("[Sprekio] Recovered early transcript:", msg.url);
           interceptedTranscripts.current.push(msg);
         }
@@ -331,11 +333,14 @@ const SprekioOverlay: React.FC = () => {
         const deText = deEvent.text;
         
         let enEvent = null;
-        // YouTube's auto-translate (tlang=en) returns the exact same number of cues
-        if (deEvents.length === enEvents.length) {
+        // YouTube's auto-translate (tlang=en) returns the exact same number of cues,
+        // sharing the same timing as the German track, so pairing by index is normally safe.
+        if (deEvents.length === enEvents.length && Math.abs(enEvents[idx].start - tStart) < 2000) {
           enEvent = enEvents[idx];
         } else {
-          // If lengths differ, find the cue with the absolute closest start time
+          // Lengths differ (or the index-aligned cue's timing looks wrong, e.g. a native
+          // English track that coincidentally has the same cue count) — find the cue
+          // with the absolute closest start time instead.
           let minDiff = Infinity;
           for (const e of enEvents) {
             const diff = Math.abs(e.start - tStart);
@@ -526,11 +531,15 @@ const SprekioOverlay: React.FC = () => {
     }
     
     // FALLBACK: DOM Scraper (Only used if the internal API fails to fetch transcript)
+    // Auto-pause has no timestamp data to work with here, so it pauses whenever the
+    // scraped caption text goes blank right after showing a line (end of a cue).
+    let domLastCaptionText = "";
+    let domAutoPausedAfter = "";
     const updateCaptionsFromDOM = () => {
       if (!isEnabled || transcript.length > 0) {
         return;
       }
-      
+
       // Force native CC to turn on so we can scrape it (since it's visually hidden anyway)
       const ccButton = document.querySelector('.ytp-subtitles-button') as HTMLButtonElement;
       if (ccButton && ccButton.getAttribute('aria-pressed') === 'false') {
@@ -540,6 +549,18 @@ const SprekioOverlay: React.FC = () => {
       const segments = Array.from(document.querySelectorAll('.ytp-caption-segment'));
       const text = segments.map(s => s.textContent).join(' ').replace(/\n/g, ' ').trim();
       setLiveText(text);
+
+      if (autoPause) {
+        if (text) {
+          domLastCaptionText = text;
+        } else if (domLastCaptionText && domAutoPausedAfter !== domLastCaptionText) {
+          const video = document.querySelector('video');
+          if (video && !video.paused) {
+            video.pause();
+            domAutoPausedAfter = domLastCaptionText;
+          }
+        }
+      }
     };
     
     const observer = new MutationObserver(updateCaptionsFromDOM);
@@ -734,6 +755,11 @@ const SprekioOverlay: React.FC = () => {
 
   // Translate full sentence when liveText changes
   useEffect(() => {
+    if (sentenceTranslateTimeout.current) {
+      clearTimeout(sentenceTranslateTimeout.current);
+      sentenceTranslateTimeout.current = null;
+    }
+
     if (!isEnabled || !liveText.trim()) {
       setTranslatedText("");
       setIsTranslating(false);
@@ -774,9 +800,30 @@ const SprekioOverlay: React.FC = () => {
       }
     }
 
-    // No English subtitle available for this cue — clear any stale translation.
-    setTranslatedText("");
-    setIsTranslating(false);
+    // No official English subtitle track available (e.g. transcript fetch failed and
+    // we're relying on the DOM-scraper fallback) — fall back to AI sentence translation.
+    const cached = sentenceTranslationCache.current[liveText];
+    if (cached) {
+      setTranslatedText(cached);
+      setIsTranslating(false);
+      return;
+    }
+
+    setIsTranslating(true);
+    const textToTranslate = liveText;
+    sentenceTranslateTimeout.current = window.setTimeout(() => {
+      chrome.runtime.sendMessage(
+        { action: "translateSentence", text: textToTranslate, provider },
+        (response) => {
+          void chrome.runtime.lastError;
+          if (liveText !== textToTranslate) return; // stale response, subtitle already advanced
+          const translation = response?.translation || "";
+          sentenceTranslationCache.current[textToTranslate] = translation;
+          setTranslatedText(translation);
+          setIsTranslating(false);
+        }
+      );
+    }, 400);
   }, [liveText, isEnabled, activeTranscriptIndex, transcript]);
 
   // 2. Hover Handlers
@@ -926,12 +973,13 @@ const SprekioOverlay: React.FC = () => {
 
       {/* Hover Tooltip */}
       {isEnabled && hoveredWord && createPortal(
-        <div 
+        <div
+          className="sprekio-scroll-hidden"
           style={{
             position: 'fixed', zIndex: 2147483647, backgroundColor: '#ffffff', color: '#111827',
             borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', border: '1px solid #e5e7eb',
             padding: '20px', width: 'min(520px, calc(100vw - 20px))', maxWidth: 'calc(100vw - 20px)',
-            maxHeight: 'calc(100vh - 20px)', overflow: 'hidden',
+            maxHeight: 'calc(100vh - 20px)', overflowY: 'auto', overflowX: 'hidden',
             boxSizing: 'border-box', pointerEvents: 'auto',
             bottom: window.innerHeight - hoveredWord.rect.top + 15,
             left: tooltipLeft,

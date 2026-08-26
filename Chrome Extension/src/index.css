@@ -26,6 +26,16 @@
 	color: #bfdbfe !important;
 }
 
+/* Keeps content scrollable when it exceeds the popup height, without showing a scrollbar */
+.sprekio-scroll-hidden {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.sprekio-scroll-hidden::-webkit-scrollbar {
+	display: none;
+}
+
 @media (max-width: 700px) {
 	.sprekio-subtitle-box {
 		padding-left: 20px !important;

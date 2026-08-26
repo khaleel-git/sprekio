@@ -14,8 +14,9 @@
 window.addEventListener('message', (e: MessageEvent) => {
   if (e.data && e.data.type === 'SPREKIO_INTERCEPTED') {
     const buf: any[] = (window as any).__sprekioEarlyBuffer;
-    // Deduplicate by URL to avoid storing the same transcript multiple times
-    if (!buf.some((m: any) => m.url === e.data.url)) {
+    // Deduplicate by URL+status so a retried request's successful response isn't
+    // dropped just because an earlier failed response for the same URL was buffered.
+    if (!buf.some((m: any) => m.url === e.data.url && m.status === e.data.status)) {
       console.log('[Sprekio Early Buffer] Stored intercepted transcript:', e.data.url);
       buf.push(e.data);
     }
