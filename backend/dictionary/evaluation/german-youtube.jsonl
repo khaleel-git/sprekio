@@ -1,0 +1,31 @@
+{"id":"poly-ziehen-1","surface":"ziehen","sentence":"Wir ziehen nächstes Jahr nach Berlin.","expectedLemma":"ziehen","acceptableTranslations":["move","relocate","migrate"],"category":"polysemy"}
+{"id":"poly-ziehen-2","surface":"ziehen","sentence":"Die Familie zieht nach Deutschland.","expectedLemma":"ziehen","acceptableTranslations":["move","relocate","migrate"],"category":"polysemy"}
+{"id":"poly-ziehen-3","surface":"zieht","sentence":"Er zieht den schweren Wagen.","expectedLemma":"ziehen","acceptableTranslations":["pull","drag"],"category":"polysemy"}
+{"id":"poly-ziehen-4","surface":"zieht","sentence":"Der Arzt zieht den Zahn.","expectedLemma":"ziehen","acceptableTranslations":["pull","extract"],"category":"polysemy"}
+{"id":"poly-ziehen-5","surface":"zieht","sentence":"Sie zieht eine gerade Linie.","expectedLemma":"ziehen","acceptableTranslations":["draw"],"category":"polysemy"}
+{"id":"poly-ziehen-6","surface":"zieht","sentence":"Er zieht eine Karte aus dem Stapel.","expectedLemma":"ziehen","acceptableTranslations":["draw","pick"],"category":"polysemy"}
+{"id":"phrase-freuen-1","surface":"freue","sentence":"Ich freue mich auf den Urlaub.","expectedLemma":"sich freuen auf","acceptableTranslations":["look forward"],"category":"phrases"}
+{"id":"phrase-freuen-2","surface":"freue","sentence":"Ich freue mich über das Geschenk.","expectedLemma":"sich freuen über","acceptableTranslations":["happy about","glad about"],"category":"phrases"}
+{"id":"adv-freuen-3","surface":"freue","sentence":"Ich freue mich neben dem Tisch.","expectedLemma":"freuen","acceptableTranslations":["rejoice","glad"],"category":"adversarial"}
+{"id":"phrase-angst-1","surface":"habe","sentence":"Ich habe große Angst davor.","expectedLemma":"Angst haben","acceptableTranslations":["be afraid","have fear"],"category":"phrases"}
+{"id":"adv-angst-2","surface":"Angst","sentence":"Ich habe große Angst davor.","expectedLemma":"Angst haben","acceptableTranslations":["be afraid","have fear"],"category":"phrases"}
+{"id":"sep-stehen-1","surface":"steht","sentence":"Er steht jeden Morgen um sieben Uhr auf.","expectedLemma":"aufstehen","acceptableTranslations":["get up","stand up"],"category":"separable_verbs"}
+{"id":"adv-stehen-2","surface":"steht","sentence":"Er steht neben dem Tisch.","expectedLemma":"stehen","acceptableTranslations":["stand"],"category":"adversarial"}
+{"id":"adv-stehen-3","surface":"steht","sentence":"Er steht auf dem Tisch.","expectedLemma":"stehen","acceptableTranslations":["stand"],"category":"adversarial"}
+{"id":"adv-stehen-4","surface":"steht","sentence":"Ich weiß nicht, ob er auf mich steht.","expectedLemma":"auf jemanden stehen","acceptableTranslations":["into","like"],"category":"adversarial"}
+{"id":"morph-gehen-1","surface":"ging","sentence":"Gestern ging er nach Hause.","expectedLemma":"gehen","acceptableTranslations":["go","walk"],"category":"morphology"}
+{"id":"morph-gehen-2","surface":"gegangen","sentence":"Wir sind in die Stadt gegangen.","expectedLemma":"gehen","acceptableTranslations":["go","walk"],"category":"morphology"}
+{"id":"morph-haus-1","surface":"Häuser","sentence":"Die Häuser sind sehr groß.","expectedLemma":"Haus","acceptableTranslations":["house","building"],"category":"morphology"}
+{"id":"morph-buch-1","surface":"Bücher","sentence":"Er liest viele Bücher.","expectedLemma":"Buch","acceptableTranslations":["book"],"category":"morphology"}
+{"id":"morph-schlaf-1","surface":"schläfst","sentence":"Du schläfst zu viel.","expectedLemma":"schlafen","acceptableTranslations":["sleep"],"category":"morphology"}
+{"id":"sep-einkaufen-1","surface":"kaufe","sentence":"Ich kaufe heute im Supermarkt ein.","expectedLemma":"einkaufen","acceptableTranslations":["shop","groceries"],"category":"separable_verbs"}
+{"id":"adv-einkaufen-2","surface":"kaufe","sentence":"Ich kaufe ein neues Auto.","expectedLemma":"kaufen","acceptableTranslations":["buy","purchase"],"category":"adversarial"}
+{"id":"poly-schlagen-1","surface":"schlägt","sentence":"Sein Herz schlägt schnell.","expectedLemma":"schlagen","acceptableTranslations":["beat"],"category":"polysemy"}
+{"id":"poly-schlagen-2","surface":"schlägt","sentence":"Er schlägt den Ball.","expectedLemma":"schlagen","acceptableTranslations":["hit","strike"],"category":"polysemy"}
+{"id":"phrase-abhangen-1","surface":"hängt","sentence":"Das hängt vom Wetter ab.","expectedLemma":"abhängen von","acceptableTranslations":["depend"],"category":"phrases"}
+{"id":"adv-abhangen-2","surface":"hängt","sentence":"Das Bild hängt an der Wand.","expectedLemma":"hängen","acceptableTranslations":["hang"],"category":"adversarial"}
+{"id":"adv-aufstehen-4","surface":"auf","sentence":"Er steht vor dem Haus auf.","expectedLemma":"aufstehen","acceptableTranslations":["get up","stand up"],"category":"separable_verbs"}
+{"id":"adv-aufstehen-5","surface":"steht","sentence":"Er steht früh auf, bevor die Sonne scheint.","expectedLemma":"aufstehen","acceptableTranslations":["get up","stand up"],"category":"separable_verbs"}
+{"id":"adv-einkaufen-3","surface":"kaufen","sentence":"Wir kaufen im Supermarkt ein.","expectedLemma":"einkaufen","acceptableTranslations":["shop"],"category":"separable_verbs"}
+{"id":"adv-einkaufen-4","surface":"Buch","sentence":"Ich kaufe ein Buch.","expectedLemma":"Buch","acceptableTranslations":["book"],"category":"adversarial"}
+{"id":"adv-einkaufen-5","surface":"KAUFT","sentence":"Er KAUFT heute EIN.","expectedLemma":"einkaufen","acceptableTranslations":["shop"],"category":"separable_verbs"}

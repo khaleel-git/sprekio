@@ -13,12 +13,24 @@ interface TranscriptLine {
   text: string;
 }
 
+interface SprekioTranslation {
+  text: string;
+  definition?: string;
+  confidence?: number;
+}
+
 interface DictResult {
-  translation: string;
-  type?: string;
+  surface: string;
+  normalized: string;
+  lemma: string;
+  translations: SprekioTranslation[];
+  partOfSpeech?: string;
   gender?: string;
   case?: string;
-  root?: string;
+  confidence: number;
+  source: "dictionary" | "ai";
+  cached: boolean;
+  contextUsed?: boolean;
   error?: string;
 }
 
@@ -223,7 +235,16 @@ function PlayerContent() {
       const data = await res.json();
       setDictData(data);
     } catch (err) {
-      setDictData({ translation: "Error fetching translation", error: String(err) });
+      setDictData({ 
+        surface: word.replace(/[.,!?()[\]{}"':;]/g, '').trim(),
+        normalized: word.replace(/[.,!?()[\]{}"':;]/g, '').trim().toLowerCase(),
+        lemma: word.replace(/[.,!?()[\]{}"':;]/g, '').trim(),
+        translations: [{ text: "Error fetching translation" }], 
+        source: "ai",
+        cached: false,
+        confidence: 0,
+        error: String(err) 
+      });
     } finally {
       setIsDictLoading(false);
     }
@@ -365,8 +386,8 @@ function PlayerContent() {
             <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-start">
               <div>
                 <h3 className="text-xl font-bold text-gray-900">{dictWord.word}</h3>
-                {dictData?.root && dictData.root !== dictWord.word && (
-                  <p className="text-sm text-gray-500 font-medium">Root: {dictData.root}</p>
+                {dictData?.lemma && dictData.lemma !== dictWord.word && (
+                  <p className="text-sm text-gray-500 font-medium">Lemma: {dictData.lemma}</p>
                 )}
               </div>
               <button onClick={() => setDictWord(null)} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
@@ -381,30 +402,42 @@ function PlayerContent() {
                 </div>
               ) : dictData ? (
                 <div className="space-y-4">
-                  <div>
+                  <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 block">Translation</span>
-                    <p className="text-lg font-medium text-blue-700">{dictData.translation}</p>
+                    {dictData.translations?.map((t, idx) => (
+                      <p key={idx} className={cn("font-medium", idx === 0 ? "text-lg text-blue-700" : "text-sm text-gray-600")}>
+                        {t.text}
+                      </p>
+                    ))}
                   </div>
                   
-                  {(dictData.type || dictData.gender || dictData.case) && (
-                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-                      {dictData.type && (
-                        <span className="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
-                          {dictData.type}
-                        </span>
-                      )}
-                      {dictData.gender && (
-                        <span className="text-xs font-medium bg-violet-50 text-violet-700 border border-violet-100 px-2 py-1 rounded-md">
-                          {dictData.gender}
-                        </span>
-                      )}
-                      {dictData.case && (
-                        <span className="text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100 px-2 py-1 rounded-md">
-                          {dictData.case}
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 items-center">
+                    {dictData.partOfSpeech && (
+                      <span className="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+                        {dictData.partOfSpeech}
+                      </span>
+                    )}
+                    {dictData.gender && (
+                      <span className="text-xs font-medium bg-violet-50 text-violet-700 border border-violet-100 px-2 py-1 rounded-md">
+                        {dictData.gender}
+                      </span>
+                    )}
+                    {dictData.case && (
+                      <span className="text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100 px-2 py-1 rounded-md">
+                        {dictData.case}
+                      </span>
+                    )}
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                        {dictData.source === 'ai' ? '🤖 AI' : '📖 Dict'}{dictData.cached && ' ⚡'}
+                      </span>
+                      {dictData.confidence !== undefined && (
+                        <span className="text-[10px] text-gray-400">
+                          {dictData.confidence >= 0.9 ? '(High)' : dictData.confidence >= 0.7 ? '(Likely)' : '(Contextual)'}
                         </span>
                       )}
                     </div>
-                  )}
+                  </div>
 
                   <button className="w-full mt-2 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
                     <BookmarkPlus className="w-4 h-4" /> Save to Vault

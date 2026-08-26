@@ -4,14 +4,20 @@
   "description": "Cloudflare Worker for Sprekio Chrome Extension",
   "main": "src/index.ts",
   "scripts": {
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "dict:download": "ts-node dictionary/scripts/download.ts",
+    "dict:build": "ts-node dictionary/scripts/build.ts",
+    "dict:validate": "ts-node dictionary/scripts/validate.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240320.0",
+    "@types/better-sqlite3": "^9.6.0",
     "typescript": "^5.0.0",
     "wrangler": "^3.0.0"
   },
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "ts-node": "^10.9.2",
     "youtube-transcript": "^1.3.1",
     "youtubei.js": "^18.0.0"
   }

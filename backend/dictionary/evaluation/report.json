@@ -1,0 +1,351 @@
+{
+  "summary": {
+    "total": 31,
+    "passed": 15,
+    "aiAvoided": 15,
+    "falsePositives": 0
+  },
+  "results": [
+    {
+      "id": "poly-ziehen-1",
+      "category": "polysemy",
+      "passed": true,
+      "actualLemma": "ziehen",
+      "actualTranslation": "to move; to migrate",
+      "resolution": "contextual",
+      "latencyMs": 24221.1939,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "poly-ziehen-2",
+      "category": "polysemy",
+      "passed": true,
+      "actualLemma": "ziehen",
+      "actualTranslation": "to move; to migrate",
+      "resolution": "contextual",
+      "latencyMs": 86.53520000000208,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "poly-ziehen-3",
+      "category": "polysemy",
+      "passed": true,
+      "actualLemma": "ziehen",
+      "actualTranslation": "to pull; to drag",
+      "resolution": "contextual",
+      "latencyMs": 86.43960000000152,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "poly-ziehen-4",
+      "category": "polysemy",
+      "passed": true,
+      "actualLemma": "ziehen",
+      "actualTranslation": "to pull; to drag",
+      "resolution": "contextual",
+      "latencyMs": 86.0544000000009,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "poly-ziehen-5",
+      "category": "polysemy",
+      "passed": true,
+      "actualLemma": "ziehen",
+      "actualTranslation": "to draw (e.g. a weapon); to extract; to puff",
+      "resolution": "contextual",
+      "latencyMs": 95.27820000000065,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "poly-ziehen-6",
+      "category": "polysemy",
+      "passed": false,
+      "actualLemma": "ziehen",
+      "actualTranslation": "to pull; to drag",
+      "resolution": "ai",
+      "latencyMs": 100.62259999999878,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "phrase-freuen-1",
+      "category": "phrases",
+      "passed": true,
+      "actualLemma": "sich freuen auf",
+      "actualTranslation": "to look forward to",
+      "resolution": "contextual",
+      "latencyMs": 100.26039999999921,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "phrase-freuen-2",
+      "category": "phrases",
+      "passed": true,
+      "actualLemma": "sich freuen über",
+      "actualTranslation": "to be happy about",
+      "resolution": "contextual",
+      "latencyMs": 95.4900000000016,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-freuen-3",
+      "category": "adversarial",
+      "passed": true,
+      "actualLemma": "freuen",
+      "actualTranslation": "to gladden, to make glad, to make pleased",
+      "resolution": "ai",
+      "latencyMs": 86.90310000000318,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "phrase-angst-1",
+      "category": "phrases",
+      "passed": true,
+      "actualLemma": "Angst haben",
+      "actualTranslation": "to be afraid, to have fear",
+      "resolution": "contextual",
+      "latencyMs": 84.94450000000143,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-angst-2",
+      "category": "phrases",
+      "passed": true,
+      "actualLemma": "Angst haben",
+      "actualTranslation": "to be afraid, to have fear",
+      "resolution": "contextual",
+      "latencyMs": 81.86939999999959,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "sep-stehen-1",
+      "category": "separable_verbs",
+      "passed": true,
+      "actualLemma": "aufstehen",
+      "actualTranslation": "to get up, to stand up",
+      "resolution": "contextual",
+      "latencyMs": 84.60749999999825,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-stehen-2",
+      "category": "adversarial",
+      "passed": true,
+      "actualLemma": "stehen",
+      "actualTranslation": "to stand (to be upright, support oneself in an erect position)",
+      "resolution": "ai",
+      "latencyMs": 91.04729999999836,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-stehen-3",
+      "category": "adversarial",
+      "passed": true,
+      "actualLemma": "stehen",
+      "actualTranslation": "to stand (to be upright, support oneself in an erect position)",
+      "resolution": "ai",
+      "latencyMs": 87.0080999999991,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-stehen-4",
+      "category": "adversarial",
+      "passed": false,
+      "actualLemma": "stehen",
+      "actualTranslation": "to stand (to be upright, support oneself in an erect position)",
+      "resolution": "ai",
+      "latencyMs": 85.76550000000134,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "morph-gehen-1",
+      "category": "morphology",
+      "passed": true,
+      "actualLemma": "gehen",
+      "actualTranslation": "to go, to walk",
+      "resolution": "ai",
+      "latencyMs": 84.77100000000064,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "morph-gehen-2",
+      "category": "morphology",
+      "passed": true,
+      "actualLemma": "gehen",
+      "actualTranslation": "to go, to walk",
+      "resolution": "ai",
+      "latencyMs": 90.37960000000021,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "morph-haus-1",
+      "category": "morphology",
+      "passed": true,
+      "actualLemma": "Haus",
+      "actualTranslation": "house, building",
+      "resolution": "ai",
+      "latencyMs": 85.01849999999831,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "morph-buch-1",
+      "category": "morphology",
+      "passed": true,
+      "actualLemma": "Buch",
+      "actualTranslation": "book (collection of sheets of paper bound together to hinge at one edge; long work fit for publication)",
+      "resolution": "ai",
+      "latencyMs": 80.02279999999882,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "morph-schlaf-1",
+      "category": "morphology",
+      "passed": true,
+      "actualLemma": "schlafen",
+      "actualTranslation": "to sleep",
+      "resolution": "ai",
+      "latencyMs": 77.82710000000225,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "sep-einkaufen-1",
+      "category": "separable_verbs",
+      "passed": true,
+      "actualLemma": "einkaufen",
+      "actualTranslation": "to shop, to buy groceries",
+      "resolution": "contextual",
+      "latencyMs": 81.65560000000187,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-einkaufen-2",
+      "category": "adversarial",
+      "passed": true,
+      "actualLemma": "kaufen",
+      "actualTranslation": "to buy, to purchase",
+      "resolution": "ai",
+      "latencyMs": 87.37359999999899,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "poly-schlagen-1",
+      "category": "polysemy",
+      "passed": true,
+      "actualLemma": "schlagen",
+      "actualTranslation": "to beat; to hit; to knock; to strike; to punch; to hammer; to pound",
+      "resolution": "ai",
+      "latencyMs": 95.38920000000144,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "poly-schlagen-2",
+      "category": "polysemy",
+      "passed": true,
+      "actualLemma": "schlagen",
+      "actualTranslation": "to beat; to hit; to knock; to strike; to punch; to hammer; to pound",
+      "resolution": "ai",
+      "latencyMs": 92.54620000000068,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "phrase-abhangen-1",
+      "category": "phrases",
+      "passed": false,
+      "actualLemma": "hängen",
+      "actualTranslation": "to hang, to be suspended",
+      "resolution": "ai",
+      "latencyMs": 105.11809999999969,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-abhangen-2",
+      "category": "adversarial",
+      "passed": true,
+      "actualLemma": "hängen",
+      "actualTranslation": "to hang, to be suspended",
+      "resolution": "ai",
+      "latencyMs": 86.25149999999849,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-aufstehen-4",
+      "category": "separable_verbs",
+      "passed": true,
+      "actualLemma": "aufstehen",
+      "actualTranslation": "to get up, to stand up",
+      "resolution": "contextual",
+      "latencyMs": 82.81500000000233,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-aufstehen-5",
+      "category": "separable_verbs",
+      "passed": true,
+      "actualLemma": "aufstehen",
+      "actualTranslation": "to get up, to stand up",
+      "resolution": "contextual",
+      "latencyMs": 86.69940000000133,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-einkaufen-3",
+      "category": "separable_verbs",
+      "passed": true,
+      "actualLemma": "einkaufen",
+      "actualTranslation": "to shop, to buy groceries",
+      "resolution": "contextual",
+      "latencyMs": 84.75910000000295,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-einkaufen-4",
+      "category": "adversarial",
+      "passed": true,
+      "actualLemma": "Buch",
+      "actualTranslation": "book (collection of sheets of paper bound together to hinge at one edge; long work fit for publication)",
+      "resolution": "ai",
+      "latencyMs": 80.31069999999818,
+      "aiAvoided": false,
+      "isFalsePositive": false
+    },
+    {
+      "id": "adv-einkaufen-5",
+      "category": "separable_verbs",
+      "passed": true,
+      "actualLemma": "einkaufen",
+      "actualTranslation": "to shop, to buy groceries",
+      "resolution": "contextual",
+      "latencyMs": 77.46069999999963,
+      "aiAvoided": true,
+      "isFalsePositive": false
+    }
+  ]
+}

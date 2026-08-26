@@ -5,4 +5,11 @@ compatibility_date = "2024-03-20"
 # We will use the default workers.dev domain
 workers_dev = true
 
-# We will add D1 (Database) here later for cross-device syncing!
+[[d1_databases]]
+binding = "DICTIONARY_DB"
+database_name = "sprekio-dictionary"
+database_id = "09ff7041-cc58-411d-912d-c8fdd99a3384"
+
+[vars]
+AI_ENABLED = "true"
+DEFAULT_AI_PROVIDER = "nvidia"

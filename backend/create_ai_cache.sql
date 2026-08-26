@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS ai_cache (cache_key TEXT PRIMARY KEY, result TEXT NOT NULL, created_at INTEGER NOT NULL);

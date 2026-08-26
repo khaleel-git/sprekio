@@ -3,16 +3,17 @@ import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
 import '../index.css';
 
-async function fetchWordTranslation(word: string, contextSentence: string, provider: string) {
-  return new Promise((resolve) => {
-    chrome.runtime.sendMessage({ action: "translate", word, contextSentence, provider }, resolve);
-  });
+export interface SprekioTranslation {
+  text: string;
+  definition?: string;
+  confidence?: number;
 }
+import { VocabularyEngine } from './vocabulary';
 
 const SprekioOverlay: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState(false); // Default false, will sync from storage
   const [autoPause, setAutoPause] = useState(false);
-  const [provider, setProvider] = useState<"gemini" | "nvidia">("gemini");
+  const provider = "nvidia";
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [transcript, setTranscript] = useState<{start: number, end: number, deText: string, enText: string}[]>([]);
@@ -32,6 +33,7 @@ const SprekioOverlay: React.FC = () => {
   const translationTimeout = useRef<number | null>(null);
   const activeRequest = useRef("");
   const lastPausedIndex = useRef(-1);
+  const resumeGuardIndex = useRef(-1);
   const prevTimeRef = useRef(0);
   const currentLineIndexRef = useRef(-1);
 
@@ -46,6 +48,23 @@ const SprekioOverlay: React.FC = () => {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Proactively wake the MV3 service worker on mount and keep it warm every 25s.
+  // MV3 SWs sleep after ~30s idle; a sleeping SW causes the first sendMessage to fail.
+  useEffect(() => {
+    const pingServiceWorker = () => {
+      try {
+        chrome.runtime.sendMessage({ action: "ping" }, () => {
+          void chrome.runtime.lastError; // suppress unchecked lastError warning
+        });
+      } catch (e) {
+        // Extension context invalidated after reload — ignore
+      }
+    };
+    pingServiceWorker(); // Wake immediately on mount
+    const interval = setInterval(pingServiceWorker, 25000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchTranscript = async (retryCount = 0) => {
@@ -367,14 +386,12 @@ const SprekioOverlay: React.FC = () => {
   // Sync settings with chrome.storage.local
   useEffect(() => {
     try {
-      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_provider'], (result) => {
+      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause'], (result) => {
         if (result.sprekio_isEnabled !== undefined) setIsEnabled(result.sprekio_isEnabled as boolean);
         else setIsEnabled(true); // Default to true if never set
         
         if (result.sprekio_autoPause !== undefined) setAutoPause(result.sprekio_autoPause as boolean);
         
-        if (result.sprekio_provider !== undefined) setProvider(result.sprekio_provider as "gemini" | "nvidia");
-
         setHasLoadedSettings(true);
       });
     } catch (e) {
@@ -523,9 +540,16 @@ const SprekioOverlay: React.FC = () => {
           if (currentLineIndexRef.current !== currentIndex) {
             currentLineIndexRef.current = currentIndex;
             setActiveTranscriptIndex(currentIndex);
+            if (currentIndex !== resumeGuardIndex.current) {
+              resumeGuardIndex.current = -1;
+            }
             
             if (currentIndex !== -1) {
               setLiveText(transcript[currentIndex].deText);
+              
+              // Phase 5D: Rolling Subtitle Prefetch
+              const upcoming = transcript.slice(currentIndex, currentIndex + 4).map(t => ({ text: t.deText }));
+              VocabularyEngine.prefetch(upcoming);
             } else {
               setLiveText("");
             }
@@ -552,15 +576,15 @@ const SprekioOverlay: React.FC = () => {
           } else {
             let shouldPause = false;
             let newPausedIndex = -1;
-            
-            for (let i = 0; i < transcript.length; i++) {
-              const line = transcript[i];
-              if (t >= line.end - 0.15 && t < line.end + 0.2) {
-                if (lastPausedIndex.current !== i) {
-                  shouldPause = true;
-                  newPausedIndex = i;
-                  break;
-                }
+
+            const activeIndex = currentLineIndexRef.current;
+            if (activeIndex !== -1) {
+              const line = transcript[activeIndex];
+              if (t >= line.end - 0.15 && t < line.end + 0.2 &&
+                  lastPausedIndex.current !== activeIndex &&
+                  resumeGuardIndex.current !== activeIndex) {
+                shouldPause = true;
+                newPausedIndex = activeIndex;
               }
             }
             
@@ -605,10 +629,64 @@ const SprekioOverlay: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
 
+    const handleVideoPlay = () => {
+      if (!autoPause || transcript.length === 0) return;
+      const video = document.querySelector('video');
+      if (!video) return;
+      let currentIndex = transcript.findIndex(line =>
+        video.currentTime >= line.start && video.currentTime <= line.end + 0.5
+      );
+      if (currentIndex === -1) {
+        currentIndex = transcript.reduce((nearestIndex, line, index) =>
+          line.end <= video.currentTime &&
+          video.currentTime - line.end < video.currentTime - transcript[nearestIndex].end
+            ? index
+            : nearestIndex,
+          0
+        );
+      }
+      resumeGuardIndex.current = currentIndex;
+      lastPausedIndex.current = -1;
+      prevTimeRef.current = video.currentTime;
+    };
+
+    const video = document.querySelector('video');
+    video?.addEventListener('play', handleVideoPlay);
+
+    let suppressClickUntil = 0;
+    const isPlayerSurface = (event: Event) => {
+      const target = event.target as Element | null;
+      const player = target
+        ? Array.from(document.querySelectorAll('.html5-video-player')).find(candidate => candidate.contains(target))
+        : null;
+      const currentVideo = player?.querySelector('video');
+      if (!currentVideo || target?.closest('.ytp-chrome-controls, .ytp-panel, #sprekio-controls-portal, .sprekio-subtitle-interactive')) return null;
+      return { currentVideo, target };
+    };
+    const handlePlayerPointerDown = (event: Event) => {
+      const playerSurface = isPlayerSurface(event);
+      if (!playerSurface || !playerSurface.currentVideo.paused) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      suppressClickUntil = performance.now() + 500;
+      void playerSurface.currentVideo.play().catch(() => undefined);
+    };
+    const handlePlayerClick = (event: Event) => {
+      if (performance.now() < suppressClickUntil) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+    document.addEventListener('pointerdown', handlePlayerPointerDown, true);
+    document.addEventListener('click', handlePlayerClick, true);
+
     return () => {
       observer.disconnect();
       cancelAnimationFrame(reqId);
       window.removeEventListener('keydown', handleKeyDown);
+      video?.removeEventListener('play', handleVideoPlay);
+      document.removeEventListener('pointerdown', handlePlayerPointerDown, true);
+      document.removeEventListener('click', handlePlayerClick, true);
     };
   }, [isEnabled, autoPause, showSidebar, transcript]);
 
@@ -629,14 +707,14 @@ const SprekioOverlay: React.FC = () => {
     if (transcript.length > 0) {
       const strip = (str: string) => str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
       const strippedLive = strip(liveText);
-      const matchedLine = transcript.find(t => {
-        const strippedT = strip(t.deText);
-        // Match if one contains the other (since karaoke text builds up word by word)
-        return strippedT && strippedLive && (strippedT.includes(strippedLive) || strippedLive.includes(strippedT));
-      });
+      const matchedLines = activeTranscriptIndex >= 0
+        ? transcript.slice(activeTranscriptIndex, activeTranscriptIndex + 1)
+        : [];
+      const transcriptText = matchedLines.map(line => line.deText).join(" ");
 
-      if (matchedLine && matchedLine.enText) {
-        setTranslatedText(matchedLine.enText);
+      if (matchedLines.length > 0 && matchedLines.every(line => line.enText) &&
+          strip(transcriptText) === strippedLive) {
+        setTranslatedText(matchedLines.map(line => line.enText).join(" "));
         setIsTranslating(false);
         return;
       }
@@ -650,7 +728,7 @@ const SprekioOverlay: React.FC = () => {
 
     if (translationTimeout.current) clearTimeout(translationTimeout.current);
     
-    // STRONG DEBOUNCE (800ms) to prevent sending 10 API requests per sentence as YouTube adds words 1-by-1
+    // Short debounce keeps fallback DOM captions from sending one request per word.
     translationTimeout.current = window.setTimeout(() => {
       setIsTranslating(true);
       activeRequest.current = liveText;
@@ -669,7 +747,7 @@ const SprekioOverlay: React.FC = () => {
           }
         }
       });
-    }, 800);
+    }, 0);
 
     return () => {
       if (translationTimeout.current) clearTimeout(translationTimeout.current);
@@ -698,8 +776,27 @@ const SprekioOverlay: React.FC = () => {
     setWordDetails(null);
     setLoading(true);
 
-    const details = await fetchWordTranslation(word, liveText, provider);
-    wordCache.current[cacheKey] = details;
+    const details = await VocabularyEngine.lookup(word, liveText, provider, (intermediateResult) => {
+       // If we are still hovering this exact word, render the intermediate result immediately
+       setHoveredWord((current) => {
+          if (current && current.word === word) {
+             setWordDetails(intermediateResult);
+             setLoading(false);
+          }
+          return current;
+       });
+    });
+
+    // Only cache successful results — never cache errors, D1 failures, or "Network error" 
+    // so the next hover will retry the backend rather than repeatedly show a stale error.
+    const isError = !details || !details.translations || details.translations.length === 0 ||
+      (details.translations[0] as any).text === "Network error" ||
+      String((details.translations[0] as any).text).startsWith("D1_ERROR") ||
+      String((details.translations[0] as any).text).startsWith("API Error");
+    
+    if (!isError) {
+      wordCache.current[cacheKey] = details;
+    }
     
     // Check if the user is still hovering over the exact same word before updating state
     setHoveredWord((current) => {
@@ -719,7 +816,39 @@ const SprekioOverlay: React.FC = () => {
   };
 
   // 3. UI Render
-  const tokens = liveText ? liveText.split(/(\s+|[.,!?;:"'”„“()[\]])/) : [];
+  const visibleLines = activeTranscriptIndex >= 0 && transcript.length > 0
+    ? transcript.slice(activeTranscriptIndex, activeTranscriptIndex + 1)
+    : liveText
+      ? [{ deText: liveText }]
+      : [];
+
+  const renderTokens = (text: string) => text.split(/(\s+|[.,!?;:"'”„“()[\]])/).map((token, i) => {
+    if (!token.trim() || /^[.,!?;:"'”„“()[\]]+$/.test(token)) {
+      return <span key={i}>{token}</span>;
+    }
+    return (
+      <span 
+        key={i}
+        className="sprekio-subtitle-interactive"
+        onMouseEnter={(e) => handleWordEnter(token, e)}
+        onMouseLeave={handleWordLeave}
+        style={{ cursor: 'pointer', padding: '0 2px', borderRadius: '4px', transition: 'background-color 0.2s', pointerEvents: 'auto' }}
+        onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.2)'; (e.target as HTMLElement).style.color = '#93c5fd'; }}
+        onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; (e.target as HTMLElement).style.color = '#ffffff'; }}
+      >
+        {token}
+      </span>
+    );
+  });
+
+  const tooltipHalfWidth = Math.min(260, (window.innerWidth - 20) / 2);
+  const tooltipCenter = hoveredWord
+    ? hoveredWord.rect.left + hoveredWord.rect.width / 2
+    : window.innerWidth / 2;
+  const tooltipLeft = Math.min(
+    Math.max(tooltipCenter, tooltipHalfWidth + 10),
+    window.innerWidth - tooltipHalfWidth - 10
+  );
 
   return (
     <>
@@ -736,40 +865,30 @@ const SprekioOverlay: React.FC = () => {
           <div style={{
             position: 'absolute', bottom: '10%', left: '0', right: '0',
             display: 'flex', justifyContent: 'center', zIndex: 9999,
-            pointerEvents: 'none', padding: '0 40px'
+            pointerEvents: 'none', padding: '0 10px'
           }}>
-            <div style={{
-              backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-              padding: '20px 40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
-              border: '1px solid rgba(255,255,255,0.15)', textAlign: 'center', pointerEvents: 'auto',
-              maxWidth: '90%', display: 'inline-flex', flexDirection: 'column', alignItems: 'center'
+            <div className="sprekio-subtitle-box" style={{
+              backgroundColor: 'rgba(8, 12, 18, 0.82)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+              padding: '10px 18px 12px', borderRadius: '14px', boxShadow: '0 8px 24px rgba(0,0,0,0.42)',
+              border: '1px solid rgba(255,255,255,0.15)', textAlign: 'center', pointerEvents: 'none',
+              width: 'max-content', maxWidth: 'calc(100% - 20px)', margin: '0 10px', boxSizing: 'border-box',
+              display: 'inline-flex', flexDirection: 'column', alignItems: 'center'
             }}>
-              <h2 style={{
-                fontSize: '36px', fontWeight: '800', color: '#ffffff',
-                lineHeight: '1.3', textShadow: '0 2px 10px rgba(0,0,0,0.9)', margin: 0
+              <h2 className="sprekio-subtitle-text" style={{
+                fontSize: '24px', fontWeight: '750', color: '#ffffff',
+                lineHeight: '1.25', textShadow: '0 1px 5px rgba(0,0,0,0.9)', margin: 0
               }}>
-                {tokens.map((token, i) => {
-                  if (!token.trim() || /^[.,!?;:"'”„“()[\]]+$/.test(token)) {
-                    return <span key={i}>{token}</span>;
-                  }
-                  return (
-                    <span 
-                      key={i}
-                      onMouseEnter={(e) => handleWordEnter(token, e)}
-                      onMouseLeave={handleWordLeave}
-                      style={{ cursor: 'pointer', padding: '0 2px', borderRadius: '4px', transition: 'background-color 0.2s' }}
-                      onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.2)'; (e.target as HTMLElement).style.color = '#93c5fd'; }}
-                      onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; (e.target as HTMLElement).style.color = '#ffffff'; }}
-                    >
-                      {token}
-                    </span>
-                  );
-                })}
+                {visibleLines.map((line, lineIndex) => (
+                  <React.Fragment key={`${line.deText}-${lineIndex}`}>
+                    {lineIndex > 0 && ' '}
+                    {renderTokens(line.deText)}
+                  </React.Fragment>
+                ))}
               </h2>
               {(translatedText || isTranslating) && (
-                <p style={{
-                  fontSize: '24px', fontWeight: '500', marginTop: '10px', marginBottom: 0,
-                  color: '#fde047', textShadow: '0 1px 5px rgba(0,0,0,0.9)',
+                <p className="sprekio-subtitle-translation" style={{
+                  fontSize: '20px', fontWeight: '600', marginTop: '6px', marginBottom: 0,
+                  color: '#facc15', textShadow: '0 1px 4px rgba(0,0,0,0.9)',
                   opacity: isTranslating ? 0.5 : 1, transition: 'opacity 0.3s ease-in-out'
                 }}>
                   {isTranslating && !translatedText ? '...' : translatedText}
@@ -781,14 +900,16 @@ const SprekioOverlay: React.FC = () => {
       )}
 
       {/* Hover Tooltip */}
-      {isEnabled && hoveredWord && (
+      {isEnabled && hoveredWord && createPortal(
         <div 
           style={{
-            position: 'fixed', zIndex: 10000, backgroundColor: '#ffffff', color: '#111827',
+            position: 'fixed', zIndex: 2147483647, backgroundColor: '#ffffff', color: '#111827',
             borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', border: '1px solid #e5e7eb',
-            padding: '20px', minWidth: '220px', pointerEvents: 'auto',
+            padding: '20px', width: 'min(520px, calc(100vw - 20px))', maxWidth: 'calc(100vw - 20px)',
+            maxHeight: 'calc(100vh - 20px)', overflowY: 'auto', overflowX: 'hidden',
+            boxSizing: 'border-box', pointerEvents: 'auto',
             bottom: window.innerHeight - hoveredWord.rect.top + 15,
-            left: hoveredWord.rect.left + hoveredWord.rect.width / 2,
+            left: tooltipLeft,
             transform: 'translateX(-50%)'
           }}
           onMouseEnter={() => { if (hideTimeout.current) clearTimeout(hideTimeout.current); }}
@@ -797,7 +918,7 @@ const SprekioOverlay: React.FC = () => {
           {/* Invisible bridge to prevent hover loss when moving mouse from word to tooltip */}
           <div style={{ position: 'absolute', bottom: '-25px', left: '-10%', width: '120%', height: '30px', backgroundColor: 'transparent' }} />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', minWidth: 0 }}>
             <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{hoveredWord.word}</div>
             <button 
               onClick={() => {
@@ -825,12 +946,18 @@ const SprekioOverlay: React.FC = () => {
               ⏳ Translating...
             </div>
           ) : wordDetails ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ fontSize: '18px', fontWeight: '600', color: '#2563eb' }}>{wordDetails.translation}</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '12px' }}>
-                {wordDetails.type && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                {wordDetails.translations?.map((t: any, idx: number) => (
+                  <div key={idx} style={{ fontSize: idx === 0 ? '18px' : '15px', fontWeight: idx === 0 ? '600' : '500', color: idx === 0 ? '#2563eb' : '#4b5563', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                    {t.text}
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '12px', alignItems: 'center', minWidth: 0 }}>
+                {wordDetails.partOfSpeech && (
                   <span style={{ backgroundColor: '#f3f4f6', color: '#374151', padding: '2px 8px', borderRadius: '99px', fontWeight: '600' }}>
-                    {wordDetails.type}
+                    {wordDetails.partOfSpeech}
                   </span>
                 )}
                 {wordDetails.gender && (
@@ -844,11 +971,30 @@ const SprekioOverlay: React.FC = () => {
                     {wordDetails.case}
                   </span>
                 )}
+                <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, overflowWrap: 'anywhere' }}>
+                   {wordDetails.source === 'ai' ? '🤖 AI' : '📖 Dict'} {wordDetails.cached && '⚡'}
+                   {wordDetails.confidence !== undefined && (
+                     wordDetails.confidence >= 0.9 ? ' (High Confidence)' :
+                     wordDetails.confidence >= 0.7 ? ' (Likely)' : ' (Contextual Meaning)'
+                   )}
+                </span>
               </div>
               
-              {wordDetails.root && wordDetails.root !== hoveredWord.word && (
+              {wordDetails.lemma && wordDetails.lemma !== hoveredWord.word && (
                 <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
-                  Root: <span style={{ fontWeight: '500', color: '#4b5563' }}>{wordDetails.root}</span>
+                  Lemma: <span style={{ fontWeight: '500', color: '#4b5563' }}>{wordDetails.lemma}</span>
+                </div>
+              )}
+
+              {/* Phase 6C: "Why this meaning?" mechanism */}
+              {wordDetails.translations?.[0]?.evidence?.length > 0 && (
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', fontStyle: 'italic', backgroundColor: '#f9fafb', padding: '6px', borderRadius: '4px', textAlign: 'left', overflowWrap: 'anywhere' }}>
+                  💡 {wordDetails.translations[0].evidence[0].reason}
+                </div>
+              )}
+              {wordDetails.translations?.[0]?.aiReason && (
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', fontStyle: 'italic', backgroundColor: '#f9fafb', padding: '6px', borderRadius: '4px', textAlign: 'left', overflowWrap: 'anywhere' }}>
+                  💡 {wordDetails.translations[0].aiReason}
                 </div>
               )}
 
@@ -883,7 +1029,8 @@ const SprekioOverlay: React.FC = () => {
               })()}
             </div>
           ) : null}
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Floating Controls inside YouTube Player Bar */}
@@ -935,27 +1082,6 @@ const SprekioOverlay: React.FC = () => {
             </button>
           )}
 
-          {isEnabled && <select
-                value={provider}
-                onChange={(e) => setProvider(e.target.value as "gemini" | "nvidia")}
-                title="Translation AI Provider"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: '#eee',
-                  border: '1px solid #eee',
-                  borderRadius: '4px',
-                  padding: '2px 4px',
-                  fontWeight: 'bold',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  outline: 'none'
-                }}
-              >
-                <option value="gemini" style={{ color: 'black' }}>Gemini</option>
-                <option value="nvidia" style={{ color: 'black' }}>NVIDIA</option>
-              </select>
-            }
-            
             {isEnabled && (
               <button
                 onClick={() => setShowSidebar(!showSidebar)}
@@ -1073,16 +1199,3 @@ const SprekioOverlay: React.FC = () => {
   setInterval(ensureApp, 1000);
 
 
-// Custom event listener for the Web App to fetch transcripts via the extension
-const processedReqIds = new Set<string>();
-window.addEventListener('SPREKIO_FETCH_TRANSCRIPT', (e: any) => {
-  const { videoId, reqId } = e.detail;
-  if (processedReqIds.has(reqId)) return;
-  processedReqIds.add(reqId);
-  
-  chrome.runtime.sendMessage({ action: 'fetchTranscriptDirect', videoId }, (response) => {
-    window.dispatchEvent(new CustomEvent('SPREKIO_TRANSCRIPT_RESULT', {
-      detail: { reqId, response }
-    }));
-  });
-});

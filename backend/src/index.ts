@@ -1,8 +1,13 @@
-import { YoutubeTranscript } from "youtube-transcript";
+import { PhraseDetector } from './dictionary/PhraseDetector';
+import { DictionaryEngine } from './dictionary/DictionaryEngine';
+import { ContextualRanking } from './dictionary/ContextualRanking';
+import { AIResolver } from './dictionary/aiResolver';
 
 export interface Env {
-  GEMINI_API_KEY: string;
   NVIDIA_API_KEY: string;
+  DICTIONARY_DB: D1Database;
+  AI_ENABLED: string;
+  DEFAULT_AI_PROVIDER: string;
 }
 
 const corsHeaders = {
@@ -10,77 +15,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
-
-// Helper for NVIDIA API Request
-async function fetchNvidia(prompt: string, apiKey: string, isJson: boolean = false) {
-  const payload: any = {
-    model: "meta/llama-3.1-8b-instruct",
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0.1,
-    max_tokens: 1024
-  };
-  
-  if (isJson) {
-    // Some NVIDIA models support response_format for JSON, or we can just rely on the prompt instructing it.
-    // Llama 3.1 instruct usually honors the prompt well.
-    payload.response_format = { type: "json_object" };
-  }
-
-  const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`NVIDIA API Error: ${res.status} - ${errorText}`);
-  }
-
-  const data: any = await res.json();
-  const textContent = data.choices?.[0]?.message?.content || "";
-  return textContent;
-}
-
-// Helper for Gemini API Request
-async function fetchGemini(prompt: string, apiKey: string, isJson: boolean = false) {
-  const payload: any = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.1 },
-    safetySettings: [
-      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-    ]
-  };
-
-  if (isJson) {
-    payload.generationConfig.responseMimeType = "application/json";
-  }
-
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Gemini API Error: ${res.status} - ${errorText}`);
-  }
-
-  const data: any = await res.json();
-  // We need to return exactly the structure we were returning before, 
-  // which was the raw string output of the whole object! 
-  // Wait, no, previously we were returning `await geminiRes.text()`, which is a JSON containing the Gemini response structure.
-  // The Chrome extension unpacks it: `data.candidates[0].content.parts[0].text`.
-  // If we want them to share the SAME parsing on the frontend, the easiest way is to mock the Gemini response structure!
-  return data; 
-}
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -90,67 +24,250 @@ export default {
 
     const url = new URL(request.url);
 
+    // =========================================================================
+    // Sentence Translation (used for subtitle-level English translation)
+    // =========================================================================
     if (url.pathname === "/api/translate-sentence" && request.method === "POST") {
       try {
-        const { text, provider } = await request.json();
-        
-        const prompt = `Translate the following German text into English. Respond ONLY with the translation, no quotes, no conversational filler:\n\n${text}`;
-
-        let responseText = "";
-
-        if (provider === "nvidia") {
-          responseText = await fetchNvidia(prompt, env.NVIDIA_API_KEY, false);
-          // Mock Gemini response structure for the frontend
-          const mockResponse = {
-            candidates: [{ content: { parts: [{ text: responseText }] } }]
-          };
-          return new Response(JSON.stringify(mockResponse), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        } else {
-          const rawGeminiData = await fetchGemini(prompt, env.GEMINI_API_KEY, false);
-          return new Response(JSON.stringify(rawGeminiData), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const { text } = await request.json() as { text: string };
+        if (!text) {
+          return new Response(JSON.stringify({ error: "Missing text" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
+
+        if (env.AI_ENABLED === "false") {
+          return new Response(JSON.stringify({ error: "AI not available" }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const prompt = `Translate the following German text to English. Return ONLY the English translation, no quotes, no explanation:\n\n${text}`;
+
+        let translatedText = "";
+
+        const apiKey = env.NVIDIA_API_KEY;
+        if (!apiKey) throw new Error("NVIDIA_API_KEY not configured");
+        const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+            body: JSON.stringify({
+              model: "meta/llama-3.1-8b-instruct",
+              messages: [{ role: "user", content: prompt }],
+              temperature: 0.1,
+              max_tokens: 200,
+            })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({})) as any;
+          const errorMessage = String(err.message || err.detail || `NVIDIA error: ${res.status}`);
+          throw new Error(errorMessage);
+        }
+        const data = await res.json() as any;
+        translatedText = data.choices?.[0]?.message?.content?.trim() || "";
+
+        // Keep the response shape expected by the extension.
+        return new Response(JSON.stringify({
+          candidates: [{ content: { parts: [{ text: translatedText }] }, finishReason: "STOP" }]
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch (e: any) {
+        return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
+    // =========================================================================
+    // Phase 3D: Contextual Engine + AI Fallback
+    // =========================================================================
+    if (url.pathname === "/api/translate-word" && request.method === "POST") {
+      try {
+        const { word, contextSentence, apiKey } = await request.json() as any;
+        
+        const engine = new DictionaryEngine(env.DICTIONARY_DB);
+        const result = await engine.resolveSurface(word);
+
+        if (!result) {
+          console.log(JSON.stringify({ event: 'telemetry_lookup', resolution: 'not_found', surface: word }));
+          return new Response(JSON.stringify({ status: 'not_found', surface: word }), { 
+            status: 200, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          });
+        }
+
+        // Phrase Detection
+        let phraseMatch = null;
+        if (contextSentence) {
+          const detector = new PhraseDetector();
+          phraseMatch = detector.detect(result, contextSentence);
+        }
+
+        // Contextual Ranking
+        const ranker = new ContextualRanking();
+        const ranking = ranker.rank(result, phraseMatch, contextSentence || "");
+
+        let finalResolution = ranking.decision;
+        let selectedCandidate = ranking.selected;
+        let aiReason = undefined;
+        let aiCacheHit = false;
+
+        const aiKey = env.NVIDIA_API_KEY || apiKey;
+
+        // Phase 3D: AI Disambiguation
+        if (ranking.decision === "needs_ai" && contextSentence && aiKey) {
+           if (env.AI_ENABLED !== "true" && env.AI_ENABLED !== true) {
+             console.log(`[Sprekio] AI Fallback skipped for '${word}' due to AI_ENABLED=false.`);
+           } else {
+             const ai = new AIResolver(aiKey, env.DICTIONARY_DB);
+             
+             // Check if it's cached first to track metric
+             const cacheKey = await ai.generateCacheKey(result.lemma.text, contextSentence);
+             const cached = await env.DICTIONARY_DB.prepare('SELECT 1 FROM ai_cache WHERE cache_key = ?').bind(cacheKey).first();
+             if (cached) aiCacheHit = true;
+
+             const aiDecision = await ai.resolve(result.lemma.text, contextSentence, ranking.candidates);
+             if (aiDecision) {
+                const matchedSenseIndex = ranking.candidates.findIndex(c => c.sense.senseId === aiDecision.candidateSenseId);
+                if (matchedSenseIndex !== -1) {
+                   selectedCandidate = ranking.candidates[matchedSenseIndex];
+                   
+                   // Move it to the top
+                   ranking.candidates.splice(matchedSenseIndex, 1);
+                   ranking.candidates.unshift(selectedCandidate);
+
+                   aiReason = aiDecision.reason;
+                   finalResolution = "needs_ai";
+                }
+             }
+           }
+        }
+
+        // Telemetry Emission
+        console.log(JSON.stringify({
+           event: 'telemetry_lookup',
+           surface: word,
+           lemma: result.lemma.text,
+           resolution: finalResolution === 'needs_ai' ? 'ai' : 'contextual',
+           aiCacheHit,
+           phraseMatched: !!phraseMatch
+        }));
+
+        const isAiResolution = finalResolution === 'needs_ai';
+        const resolutionLabel = isAiResolution ? (aiCacheHit ? 'ai_cache' : 'ai') : 'contextual';
+
+        const finalResult = {
+          surface: result.surface,
+          normalized: result.normalized,
+          lemma: phraseMatch ? phraseMatch.lemma : result.lemma.text,
+          translations: ranking.candidates.map(c => {
+            const isSelected = c === selectedCandidate;
+            const mapped: any = {
+              text: c.sense.gloss,
+              definition: c.sense.gloss,
+              evidence: c.evidence,
+              selectedBy: isSelected ? (isAiResolution ? 'ai' : (phraseMatch ? 'phrase' : 'context')) : 'lexical'
+            };
+            
+            // Only include score if it wasn't an AI selection, since deterministic scores don't apply to AI choice
+            if (!isAiResolution || !isSelected) {
+               mapped.score = c.score;
+            }
+
+            if (isSelected && aiReason) {
+               mapped.aiReason = aiReason;
+            }
+            return mapped;
+          }),
+          partOfSpeech: result.lemma.partOfSpeech,
+          gender: result.lemma.gender,
+          resolution: resolutionLabel,
+          source: 'dictionary',
+          cached: false,
+          contextUsed: contextSentence ? true : false,
+          phraseMatch
+        };
+
+        return new Response(JSON.stringify({ status: 'found', result: finalResult }), { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        });
       } catch (e: any) {
         return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
       }
     }
 
-    if (url.pathname === "/api/translate-word" && request.method === "POST") {
+    // =========================================================================
+    // Phase 5A: Batch Dictionary API
+    // =========================================================================
+    if (url.pathname === "/api/dictionary/batch" && request.method === "POST") {
       try {
-        const { word, contextSentence, provider } = await request.json();
-        
-        const prompt = `You are a German learning dictionary. The user is reading this sentence: "${contextSentence}".
-They hovered over the word: "${word}".
-Provide the translation of the word in this specific context.
-Return ONLY a valid JSON object (no markdown, no backticks) with the following properties:
-- translation: (string) The English translation
-- type: (string) e.g., Noun, Verb, Adjective
-- gender: (string, optional) der, die, das (only for nouns)
-- case: (string, optional) Nominativ, Akkusativ, Dativ, Genitiv (if applicable in the context)
-- root: (string) The base form of the word (infinitive for verbs, singular for nouns)`;
-
-        let responseText = "";
-
-        if (provider === "nvidia") {
-          responseText = await fetchNvidia(prompt, env.NVIDIA_API_KEY, true);
-          // Mock Gemini response structure for the frontend
-          const mockResponse = {
-            candidates: [{ content: { parts: [{ text: responseText }] } }]
-          };
-          return new Response(JSON.stringify(mockResponse), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        } else {
-          const rawGeminiData = await fetchGemini(prompt, env.GEMINI_API_KEY, true);
-          return new Response(JSON.stringify(rawGeminiData), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const { words, sentence } = await request.json() as { words: string[], sentence: string };
+        if (!words || !Array.isArray(words)) {
+           return new Response("Invalid request", { status: 400, headers: corsHeaders });
         }
-      } catch (e: any) {
-        return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+
+        const engine = new DictionaryEngine(env.DICTIONARY_DB);
+        // Deduplicate and cap at 100 words
+        const uniqueWords = [...new Set(words)].slice(0, 100);
+        
+        const batchResults = await engine.resolveBatch(uniqueWords);
+        
+        const detector = new PhraseDetector();
+        const ranker = new ContextualRanking();
+        
+        const finalResults = uniqueWords.map(word => {
+           const lexical = batchResults.get(word);
+           
+           if (!lexical) {
+              return {
+                 surface: word,
+                 resolution: "not_found"
+              };
+           }
+
+           // Detect phrase
+           const phraseMatch = detector.detect(lexical, sentence || "");
+           
+           // Rank
+           const ranking = ranker.rank(lexical, phraseMatch, sentence || "");
+
+           let resolutionStr = "lexical";
+           if (ranking.decision === "needs_ai") {
+              resolutionStr = "ambiguous";
+           } else if (phraseMatch) {
+              resolutionStr = "phrase";
+           } else if (ranking.selected && ranking.selected.evidence.some(e => e.category === 'context')) {
+              resolutionStr = "contextual";
+           }
+
+           const topTranslations = ranking.candidates.slice(0, 3).map(c => ({ text: c.sense.gloss }));
+
+           return {
+              surface: word,
+              lemma: phraseMatch ? phraseMatch.lemma : lexical.lemma.text,
+              translations: topTranslations,
+              partOfSpeech: lexical.lemma.partOfSpeech,
+              gender: lexical.lemma.gender,
+              resolution: resolutionStr,
+              final: resolutionStr !== "ambiguous"
+           };
+        });
+
+        return new Response(JSON.stringify({
+           version: "sprekio-de-2026-08-04",
+           results: finalResults
+        }), { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        });
+
+      } catch (error: any) {
+        return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
       }
     }
 
     if (url.pathname === "/api/generate" && request.method === "POST") {
       try {
-        const { topic, level, dialect, wordCount, apiKey, provider = "gemini" } = await request.json();
+        const { topic, level, dialect, wordCount, apiKey, provider = "nvidia" } = await request.json();
 
-        const TARGET_API_KEY = provider === "nvidia" ? (env.NVIDIA_API_KEY || apiKey) : (env.GEMINI_API_KEY || apiKey);
+        const TARGET_API_KEY = env.NVIDIA_API_KEY || apiKey;
         
         if (!TARGET_API_KEY) {
           return new Response(JSON.stringify({ error: `${provider.toUpperCase()}_API_KEY is not configured in Cloudflare Environment Variables, and no key was provided.` }), {
@@ -230,52 +347,26 @@ Requirements:
         let response;
         let text = "";
 
-        if (provider === "nvidia") {
-          response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${TARGET_API_KEY}`
-            },
-            body: JSON.stringify({
-              model: "meta/llama-3.1-8b-instruct",
-              messages: [{ role: "user", content: prompt }],
-              temperature: 0.7,
-              top_p: 0.9,
-              max_tokens: 2000,
-            })
-          });
-          
-          if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.message || err.detail || `NVIDIA API Error: ${response.status}`);
-          }
-          const data = await response.json();
-          text = data.choices?.[0]?.message?.content || "";
-        } else {
-          const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
-          response = await fetch(`${GEMINI_API_URL}?key=${TARGET_API_KEY}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.8,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 4096,
-                responseMimeType: "application/json",
-              },
-            }),
-          });
-
-          if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.error?.message || `Gemini API Error: ${response.status}`);
-          }
-          const data = await response.json();
-          text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${TARGET_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "meta/llama-3.1-70b-instruct",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7,
+            top_p: 0.9,
+            max_tokens: 4000
+          })
+        });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({})) as any;
+          throw new Error(err.message || err.detail || `NVIDIA API Error: ${response.status}`);
         }
+        const data = await response.json() as any;
+        text = data.choices?.[0]?.message?.content || "";
 
         if (!text) {
           throw new Error("No content returned from AI");

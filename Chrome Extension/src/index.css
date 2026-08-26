@@ -1,3 +1,48 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.sprekio-subtitle-text,
+.sprekio-subtitle-translation {
+	white-space: normal;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+}
+
+.sprekio-subtitle-text {
+	font-size: 24px !important;
+}
+
+.sprekio-subtitle-translation {
+	font-size: 20px !important;
+}
+
+.sprekio-subtitle-interactive {
+	transition: background-color 120ms ease, color 120ms ease;
+}
+
+.sprekio-subtitle-interactive:hover {
+	background-color: rgba(96, 165, 250, 0.3) !important;
+	color: #bfdbfe !important;
+}
+
+@media (max-width: 700px) {
+	.sprekio-subtitle-box {
+		padding-left: 20px !important;
+		padding-right: 20px !important;
+	}
+
+	.sprekio-subtitle-text,
+	.sprekio-subtitle-translation {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+
+	.sprekio-subtitle-text {
+		font-size: 20px !important;
+	}
+
+	.sprekio-subtitle-translation {
+		font-size: 14px !important;
+	}
+}

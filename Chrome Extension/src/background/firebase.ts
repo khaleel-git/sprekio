@@ -65,14 +65,15 @@ export async function saveVocabularyWord(word: string, translationData: any, con
     // Word is new, add it with saveCount: 1
     await addDoc(userVocabRef, {
       word: word,
-      translation: translationData.translation,
-      type: translationData.type || null,
+      lemma: translationData.lemma || word,
+      translation: translationData.translations?.[0]?.text || null,
+      partOfSpeech: translationData.partOfSpeech || null,
       gender: translationData.gender || null,
       case: translationData.case || null,
-      root: translationData.root || null,
       contextSentence: contextSentence,
       videoId: videoId || null,
       videoTitle: videoTitle || null,
+      status: "new",
       saveCount: 1,
       savedAt: serverTimestamp()
     });

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "sich-freuen-auf",
+    "lemma": "sich freuen auf",
+    "type": "phrase",
+    "pattern": ["sich", "freuen", "auf"],
+    "translation": ["to look forward to"],
+    "priority": 100
+  },
+  {
+    "id": "sich-freuen-ueber",
+    "lemma": "sich freuen über",
+    "type": "phrase",
+    "pattern": ["sich", "freuen", "über"],
+    "translation": ["to be happy about"],
+    "priority": 100
+  },
+  {
+    "id": "aufstehen",
+    "lemma": "aufstehen",
+    "type": "separable_verb",
+    "base": "stehen",
+    "particle": "auf",
+    "pattern": ["auf", "stehen"],
+    "translation": ["to get up", "to stand up"],
+    "priority": 100,
+    "constraints": {
+      "particleMustBeClauseFinal": true,
+      "particleCannotBePreposition": true
+    }
+  },
+  {
+    "id": "einkaufen",
+    "lemma": "einkaufen",
+    "type": "separable_verb",
+    "base": "kaufen",
+    "particle": "ein",
+    "pattern": ["ein", "kaufen"],
+    "translation": ["to shop", "to buy groceries"],
+    "priority": 100,
+    "constraints": {
+      "particleMustBeClauseFinal": true,
+      "particleCannotBeDeterminer": true
+    }
+  },
+  {
+    "id": "angst-haben",
+    "lemma": "Angst haben",
+    "type": "phrase",
+    "pattern": ["angst", "haben"],
+    "translation": ["to be afraid", "to have fear"],
+    "priority": 90
+  },
+  {
+    "id": "abhangen-von",
+    "lemma": "abhängen von",
+    "type": "phrase",
+    "pattern": ["abhängen", "von"],
+    "translation": ["to depend on"],
+    "priority": 90
+  }
+]

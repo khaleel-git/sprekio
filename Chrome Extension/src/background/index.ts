@@ -2,10 +2,21 @@ import { loginWithGoogle, saveVocabularyWord, getVocabularyWords, auth, deleteVo
 
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 
+  // Service worker keepalive — content scripts ping to wake the SW before critical calls
+  if (request.action === "ping") {
+    sendResponse({ pong: true });
+    return true;
+  }
+
 
   if (request.action === "translate") {
     handleTranslation(request.word, request.contextSentence, request.provider).then(sendResponse);
     return true; // Keep message channel open for async response
+  }
+
+  if (request.action === "batchLookup") {
+    handleBatchLookup(request.words, request.sentence).then(sendResponse);
+    return true;
   }
   
   if (request.action === "login") {
@@ -198,7 +209,7 @@ async function handleSentenceTranslation(text: string, provider?: string) {
     const response = await fetch(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-sentence`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, provider: provider || "gemini" })
+      body: JSON.stringify({ text, provider: provider || "nvidia" })
     });
 
     const result = await response.json();
@@ -229,7 +240,7 @@ async function handleTranslation(word: string, contextSentence: string, provider
     const response = await fetch(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-word`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word, contextSentence, provider: provider || "gemini" })
+      body: JSON.stringify({ word, contextSentence, provider: provider || "nvidia" })
     });
 
     const result = await response.json();
@@ -239,30 +250,58 @@ async function handleTranslation(word: string, contextSentence: string, provider
       const errMsg = result.error?.message || result.error || "API request failed";
       if (response.status === 429 || String(errMsg).includes("Quota exceeded")) {
         return {
-          translation: "Rate Limit Exceeded (Please wait)",
-          type: "error"
+          surface: word,
+          normalized: word.toLowerCase(),
+          lemma: word,
+          translations: [{ text: "Rate Limit Exceeded (Please wait)" }],
+          source: "ai",
+          cached: false,
+          confidence: 0
         };
       }
       return {
-        translation: String(errMsg).substring(0, 50) + "...",
-        type: "error"
+        surface: word,
+        normalized: word.toLowerCase(),
+        lemma: word,
+        translations: [{ text: String(errMsg).substring(0, 50) + "..." }],
+        source: "ai",
+        cached: false,
+        confidence: 0
       };
     }
 
-    if (result.candidates?.[0]?.finishReason === 'SAFETY') {
-      return {
-        translation: "Blocked by safety filter",
-        type: "error"
-      };
-    }
-    
-    const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-    return JSON.parse(rawText);
+    return result.result || result; // Backend returns { status: 'found', result: ... }
   } catch (error: any) {
     console.error("Failed to fetch translation:", error);
     return {
-      translation: "Network error",
-      type: "error"
+      surface: word,
+      normalized: word.toLowerCase(),
+      lemma: word,
+      translations: [{ text: "Network error" }],
+      source: "ai",
+      cached: false,
+      confidence: 0
     };
+  }
+}
+
+async function handleBatchLookup(words: string[], sentence: string) {
+  try {
+    const response = await fetch(`https://sprekio-backend.khaleel-eu.workers.dev/api/dictionary/batch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ words, sentence })
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      console.error("Batch API Error:", result);
+      return { results: [] };
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error("Failed to fetch batch lookup:", error);
+    return { results: [] };
   }
 }
