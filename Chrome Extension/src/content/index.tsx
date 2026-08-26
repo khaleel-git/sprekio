@@ -931,7 +931,7 @@ const SprekioOverlay: React.FC = () => {
             position: 'fixed', zIndex: 2147483647, backgroundColor: '#ffffff', color: '#111827',
             borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', border: '1px solid #e5e7eb',
             padding: '20px', width: 'min(520px, calc(100vw - 20px))', maxWidth: 'calc(100vw - 20px)',
-            maxHeight: 'calc(100vh - 20px)', overflowY: 'auto', overflowX: 'hidden',
+            maxHeight: 'calc(100vh - 20px)', overflow: 'hidden',
             boxSizing: 'border-box', pointerEvents: 'auto',
             bottom: window.innerHeight - hoveredWord.rect.top + 15,
             left: tooltipLeft,
