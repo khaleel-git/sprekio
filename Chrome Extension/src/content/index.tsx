@@ -19,6 +19,7 @@ const SprekioOverlay: React.FC = () => {
   const [transcript, setTranscript] = useState<{start: number, end: number, deText: string, enText: string}[]>([]);
   const [activeTranscriptIndex, setActiveTranscriptIndex] = useState(-1);
   const [isFetchingTranscript, setIsFetchingTranscript] = useState(false);
+  const [captionsUnavailable, setCaptionsUnavailable] = useState(false);
   
   const [liveText, setLiveText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
@@ -89,6 +90,7 @@ const SprekioOverlay: React.FC = () => {
     if (!videoId) return;
 
     setIsFetchingTranscript(true);
+    setCaptionsUnavailable(false);
 
     // Force CC on so the native player requests transcripts
     const ccButton = document.querySelector('.ytp-subtitles-button') as HTMLButtonElement;
@@ -377,8 +379,10 @@ const SprekioOverlay: React.FC = () => {
         setTimeout(() => { setIsFetchingTranscript(false); fetchTranscript(retryCount + 1); }, 3000);
         return;
       }
+      // Retries exhausted — most likely this video simply has no captions on YouTube.
+      setCaptionsUnavailable(true);
     }
-    
+
     setIsFetchingTranscript(false);
   };
 
@@ -389,6 +393,7 @@ const SprekioOverlay: React.FC = () => {
       setActiveTranscriptIndex(-1);
       currentLineIndexRef.current = -1;
       setIsFetchingTranscript(false);
+      setCaptionsUnavailable(false);
       interceptedTranscripts.current = [];
       
       // Wait a moment for YouTube's SPA to load the new video's state
@@ -927,11 +932,13 @@ const SprekioOverlay: React.FC = () => {
       {isEnabled && (
         !liveText ? (
           <div style={{
-            position: 'absolute', top: '80px', left: '20px', backgroundColor: 'rgba(20,83,45,0.9)', 
+            position: 'absolute', top: '80px', left: '20px', backgroundColor: 'rgba(20,83,45,0.9)',
             color: 'white', padding: '10px 16px', borderRadius: '8px', zIndex: 9999,
             border: '1px solid rgba(255,255,255,0.2)', fontSize: '14px', opacity: 0.5
           }}>
-            🇩🇪 Sprekio: Connected to video. (Waiting for speech...)
+            {captionsUnavailable
+              ? '🇩🇪 Sprekio: No captions available for this video.'
+              : '🇩🇪 Sprekio: Connected to video. (Waiting for speech...)'}
           </div>
         ) : (
           <div style={{
