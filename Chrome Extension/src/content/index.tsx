@@ -28,10 +28,7 @@ const SprekioOverlay: React.FC = () => {
   
   const transcriptRef = useRef<HTMLDivElement>(null);
   const hideTimeout = useRef<number | null>(null);
-  const translationCache = useRef<Record<string, string>>({});
   const wordCache = useRef<Record<string, any>>({});
-  const translationTimeout = useRef<number | null>(null);
-  const activeRequest = useRef("");
   const lastPausedIndex = useRef(-1);
   const resumeGuardIndex = useRef(-1);
   const prevTimeRef = useRef(0);
@@ -47,6 +44,21 @@ const SprekioOverlay: React.FC = () => {
       }
     };
     window.addEventListener('message', handleMessage);
+
+    // Drain messages buffered by earlyBuffer.ts (ISOLATED world, document_start).
+    // earlyBuffer.ts listens for SPREKIO_INTERCEPTED from the moment the page starts
+    // loading, so no XHR messages are lost due to the React document_idle mount delay.
+    const buffer: any[] = (window as any).__sprekioEarlyBuffer || [];
+    if (buffer.length > 0) {
+      console.log(`[Sprekio] Draining ${buffer.length} early-buffered transcript(s)`);
+      buffer.forEach(msg => {
+        if (!interceptedTranscripts.current.some(t => t.url === msg.url)) {
+          console.log("[Sprekio] Recovered early transcript:", msg.url);
+          interceptedTranscripts.current.push(msg);
+        }
+      });
+    }
+
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
@@ -197,19 +209,22 @@ const SprekioOverlay: React.FC = () => {
              } else {
                // If no translation needed, just return the cached text directly!
                try {
-                  return isJson ? JSON.parse(intercepted.text) : parseTranscriptXml(intercepted.text);
+                  const forceJson = intercepted.url.includes('fmt=json3') || isJson;
+                  return forceJson ? JSON.parse(intercepted.text) : parseTranscriptXml(intercepted.text);
                } catch(e) {
                   console.error("[Sprekio] Error parsing intercepted text:", e);
                }
              }
           }
           
+          const forceJsonParse = fetchUrl.includes('fmt=json3') || isJson;
+
           try {
             const localRes = await fetch(fetchUrl);
             const text = await localRes.text();
             console.log(`[Sprekio] Isolated World Fetch - Status: ${localRes.status}, Content-Type: ${localRes.headers.get('content-type')}, Redirected: ${localRes.redirected}, URL: ${localRes.url}, Text (200): ${text.substring(0, 200)}`);
             if (localRes.ok && text) {
-              return isJson ? JSON.parse(text) : parseTranscriptXml(text);
+              return forceJsonParse ? JSON.parse(text) : parseTranscriptXml(text);
             }
           } catch (e) {
             console.error(`[Sprekio] Isolated World Fetch Exception:`, e);
@@ -221,7 +236,7 @@ const SprekioOverlay: React.FC = () => {
             });
             console.log(`[Sprekio] Main World Fetch - Response:`, mainRes);
             if (mainRes && !mainRes.error && mainRes.text) {
-               return isJson ? JSON.parse(mainRes.text) : parseTranscriptXml(mainRes.text);
+               return forceJsonParse ? JSON.parse(mainRes.text) : parseTranscriptXml(mainRes.text);
             }
           } catch(e) {
             console.error(`[Sprekio] Main World Fetch Exception:`, e);
@@ -232,7 +247,7 @@ const SprekioOverlay: React.FC = () => {
           });
           console.log(`[Sprekio] Background Service Fetch - Response:`, res);
           if (res && res.error) throw new Error(res.error);
-          return isJson ? JSON.parse(res.text) : parseTranscriptXml(res.text || "");
+          return forceJsonParse ? JSON.parse(res.text) : parseTranscriptXml(res.text || "");
         };
 
         try {
@@ -306,12 +321,33 @@ const SprekioOverlay: React.FC = () => {
 
       const deEvents = normalizeEvents(deData);
       const enEvents = normalizeEvents(enData);
+
+      console.log(`[Sprekio] deEvents: ${deEvents.length} total, first 3:`, deEvents.slice(0, 3));
+      console.log(`[Sprekio] enEvents: ${enEvents.length} total, first 3:`, enEvents.slice(0, 3));
       
-      const merged = deEvents.map((deEvent: any) => {
+      const merged = deEvents.map((deEvent: any, idx: number) => {
         const tStart = deEvent.start;
         const dDur = deEvent.duration;
         const deText = deEvent.text;
-        const enEvent = enEvents.find((e: any) => Math.abs(e.start - tStart) < 2000);
+        
+        let enEvent = null;
+        // YouTube's auto-translate (tlang=en) returns the exact same number of cues
+        if (deEvents.length === enEvents.length) {
+          enEvent = enEvents[idx];
+        } else {
+          // If lengths differ, find the cue with the absolute closest start time
+          let minDiff = Infinity;
+          for (const e of enEvents) {
+            const diff = Math.abs(e.start - tStart);
+            if (diff < minDiff) {
+              minDiff = diff;
+              enEvent = e;
+            }
+          }
+          // Only accept if it's reasonably close (e.g., within 2 seconds)
+          if (minDiff > 2000) enEvent = null;
+        }
+
         const enText = enEvent ? enEvent.text : "";
         return {
           start: tStart / 1000,
@@ -321,8 +357,12 @@ const SprekioOverlay: React.FC = () => {
         };
       }).filter((t: any) => t.deText.length > 0);
       
+      console.log(`[Sprekio] Merged ${merged.length} cues, first 3:`, merged.slice(0, 3));
       if (merged.length > 0) {
         setTranscript(merged);
+        // Instantly prefetch the first 20 subtitles as soon as the transcript loads
+        const initial = merged.slice(0, 20).map((t: any) => ({ text: t.deText }));
+        VocabularyEngine.prefetch(initial);
       } else {
         throw new Error("Merged transcript is empty");
       }
@@ -548,7 +588,9 @@ const SprekioOverlay: React.FC = () => {
               setLiveText(transcript[currentIndex].deText);
               
               // Phase 5D: Rolling Subtitle Prefetch
-              const upcoming = transcript.slice(currentIndex, currentIndex + 4).map(t => ({ text: t.deText }));
+              // Prefetch the current subtitle and the next 15 upcoming subtitles 
+              // so they are fully cached in the local DB before the user ever sees them.
+              const upcoming = transcript.slice(currentIndex, currentIndex + 15).map(t => ({ text: t.deText }));
               VocabularyEngine.prefetch(upcoming);
             } else {
               setLiveText("");
@@ -698,61 +740,44 @@ const SprekioOverlay: React.FC = () => {
       return;
     }
 
-    if (isFetchingTranscript && transcript.length === 0) {
-      // Don't translate partial DOM scrapes if we are actively fetching the real transcript
-      return;
-    }
-
-    // FIRST CHECK: Can we get it for free from the transcript? (Saves $$$)
+    // Use YouTube's own English subtitle track (enText) — instant, free, no AI needed.
     if (transcript.length > 0) {
       const strip = (str: string) => str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
       const strippedLive = strip(liveText);
-      const matchedLines = activeTranscriptIndex >= 0
-        ? transcript.slice(activeTranscriptIndex, activeTranscriptIndex + 1)
-        : [];
-      const transcriptText = matchedLines.map(line => line.deText).join(" ");
-
-      if (matchedLines.length > 0 && matchedLines.every(line => line.enText) &&
-          strip(transcriptText) === strippedLive) {
-        setTranslatedText(matchedLines.map(line => line.enText).join(" "));
+      
+      // 1. Try to find the exact line by text match to perfectly sync with the DOM
+      // We search near the active index first for performance and to handle duplicate lines
+      const startIndex = Math.max(0, activeTranscriptIndex - 5);
+      const MathMin = Math.min(transcript.length, activeTranscriptIndex + 5);
+      
+      let matchedCue = transcript.find((t, i) => i >= startIndex && i <= MathMin && strip(t.deText) === strippedLive);
+      
+      if (!matchedCue) {
+        // Fallback to searching the whole array if not found nearby
+        matchedCue = transcript.find(t => strip(t.deText) === strippedLive);
+      }
+      
+      if (matchedCue && matchedCue.enText) {
+        setTranslatedText(matchedCue.enText);
         setIsTranslating(false);
         return;
       }
-    }
-
-    if (translationCache.current[liveText]) {
-      setTranslatedText(translationCache.current[liveText]);
-      setIsTranslating(false);
-      return;
-    }
-
-    if (translationTimeout.current) clearTimeout(translationTimeout.current);
-    
-    // Short debounce keeps fallback DOM captions from sending one request per word.
-    translationTimeout.current = window.setTimeout(() => {
-      setIsTranslating(true);
-      activeRequest.current = liveText;
       
-      chrome.runtime.sendMessage({ action: "translateSentence", text: liveText, provider }, (res) => {
-        if (res && res.translation) {
-          translationCache.current[liveText] = res.translation;
-          if (activeRequest.current === liveText) {
-            setTranslatedText(res.translation);
-            setIsTranslating(false);
-          }
-        } else {
-          if (activeRequest.current === liveText) {
-            setTranslatedText("");
-            setIsTranslating(false);
-          }
+      // 2. Fallback to time-based index if text matching fails (e.g. DOM formatting weirdness)
+      if (activeTranscriptIndex >= 0) {
+        const cue = transcript[activeTranscriptIndex];
+        if (cue && cue.enText) {
+          setTranslatedText(cue.enText);
+          setIsTranslating(false);
+          return;
         }
-      });
-    }, 0);
+      }
+    }
 
-    return () => {
-      if (translationTimeout.current) clearTimeout(translationTimeout.current);
-    };
-  }, [liveText, isEnabled, provider, transcript]);
+    // No English subtitle available for this cue — clear any stale translation.
+    setTranslatedText("");
+    setIsTranslating(false);
+  }, [liveText, isEnabled, activeTranscriptIndex, transcript]);
 
   // 2. Hover Handlers
   const handleWordEnter = async (word: string, e: React.MouseEvent) => {

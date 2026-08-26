@@ -1,6 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sprekio - Language Reactor Clone",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsRtaHBoYzY2/YOUHt4xDKsvt3iIGOyqhvjplGTCxNGhfHDyvSb7d6kQ/9Fp0wB1lwmoai2bj7rT995PXLHp0WeMJp++jcLOolG/dZWXLMvqn4K3/yYPRi/SQBZlimBdnsLgbbeXxfIGvpptJi2ltnB05RoK0BLHu620laNyaDrcFaQOP84fhA57O/W+WlNuZiCQmK5Kr+0qY+BiUSekwcaty0U8EUJ6saUBoWzo5Cnjf9QSjvdIXFdPsy7xOoRABVLGmFOLLn7YtGLWCmpMkUqTzz8n714rxvB0uzOwUT0wlU+mDgQdPgb+k5MYFQKDCpN07g2a9P5f2WTGOV2E29wIDAQAB",
   "version": "1.0.0",
   "description": "Learn languages with dual subtitles and a hover dictionary on YouTube.",
   "action": {
@@ -11,6 +12,11 @@
     "type": "module"
   },
   "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["src/content/earlyBuffer.ts"],
+      "run_at": "document_start"
+    },
     {
       "matches": ["https://www.youtube.com/*"],
       "js": ["src/content/index.tsx"]

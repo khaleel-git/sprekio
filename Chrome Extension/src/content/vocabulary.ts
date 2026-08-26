@@ -77,17 +77,13 @@ export class VocabularyEngine {
     return `${surface.toLowerCase()}::${normalizedContext}::v1`;
   }
 
-  private static getPrefetchPriority(word: string): "NEVER" | "LOW" | "NORMAL" | "HIGH" {
-    if (word.length <= 1) return "NEVER";
+  private static getPrefetchPriority(word: string): "LOW" | "NORMAL" | "HIGH" {
+    if (word.length <= 1) return "LOW";
     
     const lower = word.toLowerCase();
-    
-    // Very frequent function words that are rarely confusing
-    const never = new Set(["der", "die", "das", "ein", "eine", "ich", "du", "er", "sie", "es", "wir", "ihr", "und", "oder"]);
-    if (never.has(lower)) return "NEVER";
 
     // Frequent words that might sometimes be important but shouldn't clog the batch API if it's full
-    const low = new Set(["aber", "zu", "von", "mit", "in", "an", "auf", "für", "aus", "bei", "nach", "als", "wie", "ist", "sind"]);
+    const low = new Set(["der", "die", "das", "ein", "eine", "ich", "du", "er", "sie", "es", "wir", "ihr", "und", "oder", "aber", "zu", "von", "mit", "in", "an", "auf", "für", "aus", "bei", "nach", "als", "wie", "ist", "sind"]);
     if (low.has(lower)) return "LOW";
     
     // Important grammatical words that change meaning
@@ -97,8 +93,8 @@ export class VocabularyEngine {
     return "NORMAL";
   }
 
-  private static shouldPrefetch(word: string): boolean {
-    return this.getPrefetchPriority(word) !== "NEVER";
+  private static shouldPrefetch(): boolean {
+    return true; // Prefetch everything so hovers are always instant
   }
 
   public static async lookup(
@@ -192,7 +188,7 @@ export class VocabularyEngine {
     // Filter
     const toPrefetch: string[] = [];
     for (const token of uniqueTokens) {
-       if (!this.shouldPrefetch(token)) continue;
+       if (!this.shouldPrefetch()) continue;
        
        const contextKey = this.getContextKey(token, fullSentence);
        const lexicalKey = this.getLexicalKey(token);
@@ -214,12 +210,12 @@ export class VocabularyEngine {
     toPrefetch.sort((a, b) => {
        const pA = this.getPrefetchPriority(a);
        const pB = this.getPrefetchPriority(b);
-       const score = { "HIGH": 3, "NORMAL": 2, "LOW": 1, "NEVER": 0 };
+       const score = { "HIGH": 3, "NORMAL": 2, "LOW": 1 };
        return score[pB] - score[pA];
     });
 
-    // Cap at 100
-    const batchWords = toPrefetch.slice(0, 100);
+    // Cap at 250 (increased from 100 to handle the larger 15-subtitle prefetch window)
+    const batchWords = toPrefetch.slice(0, 250);
 
     try {
       const response = await new Promise<any>((resolve, reject) => {

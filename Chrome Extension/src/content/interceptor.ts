@@ -1,6 +1,9 @@
 if (!(window as any).__sprekioInterceptor) {
   (window as any).__sprekioInterceptor = true;
-  
+  // Buffer for SPREKIO_INTERCEPTED messages that arrive before React mounts and
+  // registers its window.addEventListener. The content script drains this on mount.
+  (window as any).__sprekioBuffer = (window as any).__sprekioBuffer || [];
+
   console.log("[Sprekio Interceptor] Installed in MAIN world at document_start");
 
   const originalFetch = window.fetch;
@@ -16,13 +19,15 @@ if (!(window as any).__sprekioInterceptor) {
         const response = await originalFetch.apply(this, args as any);
         const clone = response.clone();
         clone.text().then(text => {
-          window.postMessage({ 
+          const msg = { 
             type: 'SPREKIO_INTERCEPTED', 
             url: urlStr, 
             text, 
             status: response.status,
             headers: [...response.headers.entries()]
-          }, '*');
+          };
+          (window as any).__sprekioBuffer.push(msg);
+          window.postMessage(msg, '*');
         }).catch(e => console.error("[Sprekio Interceptor] clone error", e));
         return response;
       } catch(e) {
@@ -38,12 +43,14 @@ if (!(window as any).__sprekioInterceptor) {
     if (urlStr.includes('/api/timedtext') || urlStr.includes('youtubei/v1/get_transcript')) {
       console.log("[Sprekio Interceptor] Caught native XHR:", urlStr);
       this.addEventListener('load', function(this: XMLHttpRequest) {
-        window.postMessage({ 
+        const msg = { 
           type: 'SPREKIO_INTERCEPTED', 
           url: urlStr, 
           text: this.responseText, 
           status: this.status 
-        }, '*');
+        };
+        (window as any).__sprekioBuffer.push(msg);
+        window.postMessage(msg, '*');
       });
     }
     return (originalOpen as any).call(this, method, url, ...rest);
