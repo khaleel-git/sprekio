@@ -65,7 +65,7 @@ Return ONLY a valid JSON object with exactly this structure:
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.apiKey}` },
           body: JSON.stringify({
-            model: "meta/llama-3.1-8b-instruct",
+            model: "openai/gpt-oss-20b",
             messages: [
               { role: "system", content: "You are a German linguistics expert. Always respond with valid JSON only." },
               { role: "user", content: prompt }

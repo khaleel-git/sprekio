@@ -92,7 +92,7 @@ Requirements:
           "Authorization": `Bearer ${TARGET_API_KEY}`
         },
         body: JSON.stringify({
-          model: "meta/llama-3.1-70b-instruct",
+          model: "openai/gpt-oss-120b",
           messages: [{ role: "user", content: prompt }],
           temperature: 0.7,
           top_p: 0.9,

@@ -48,7 +48,7 @@ export default {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
             body: JSON.stringify({
-              model: "meta/llama-3.1-8b-instruct",
+              model: "openai/gpt-oss-20b",
               messages: [{ role: "user", content: prompt }],
               temperature: 0.1,
               max_tokens: 200,
@@ -354,7 +354,7 @@ Requirements:
             "Authorization": `Bearer ${TARGET_API_KEY}`
           },
           body: JSON.stringify({
-            model: "meta/llama-3.1-70b-instruct",
+            model: "openai/gpt-oss-120b",
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
             top_p: 0.9,

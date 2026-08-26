@@ -40,7 +40,7 @@ The backend is built on Cloudflare Workers and a D1 SQLite database (hosting the
 
 1. **D1 Lexical Lookup**: Fetches all possible meanings for the word.
 2. **Deterministic Contextual Ranking**: The backend attempts to determine the correct sense based on surrounding sentence context (using a lightweight scoring algorithm) *without* invoking AI.
-3. **AI Fallback (NVIDIA Llama 3.1)**: If the word is highly ambiguous and deterministic ranking fails, the backend queries the NVIDIA API (`meta/llama-3.1-8b-instruct`) to pick the exact `candidateSenseId`. 
+3. **AI Fallback (NVIDIA)**: If the word is highly ambiguous and deterministic ranking fails, the backend queries the NVIDIA API (`openai/gpt-oss-20b`, as of 2026-08 — Meta retired the `llama-3.1-*-instruct` family on NVIDIA's hosted API) to pick the exact `candidateSenseId`. Model names here are not stable long-term; if AI calls start failing with an "end of life" error, check `https://integrate.api.nvidia.com/v1/models` (public, no auth needed) for currently available models.
 4. **AI Caching**: The AI's decision is permanently cached in D1 (`ai_cache`) keyed by a SHA-256 hash of the sentence and word. This ensures we never pay for the same sentence twice across all users.
 
 ## 4. Google OAuth & Identity
