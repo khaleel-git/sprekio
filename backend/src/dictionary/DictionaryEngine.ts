@@ -1,5 +1,21 @@
 import { CandidateSense, LexicalResult } from './types';
 
+// The Kaikki/Wiktionary import inserted some lemmas' senses more than once (identical
+// gloss text repeated, e.g. from overlapping etymology/conjugation entries in the source
+// dump), which both shows literal duplicate lines in the popup and inflates the ranker's
+// candidate count — making a word with really one distinct meaning look "ambiguous" and
+// route to the AI-disambiguation path for no reason. Dedupe by gloss text at query time
+// rather than re-running the whole dictionary build.
+function dedupeSensesByGloss<T extends { translation: string }>(rows: T[]): T[] {
+  const seen = new Set<string>();
+  return rows.filter(row => {
+    const key = row.translation.trim().toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export class DictionaryEngine {
   constructor(private db: D1Database) {}
 
@@ -45,7 +61,7 @@ export class DictionaryEngine {
       'SELECT id, translation, frequency FROM senses WHERE lemma_id = ? ORDER BY frequency DESC, id ASC LIMIT 10'
     ).bind(lemmaId).all<{ id: string, translation: string, frequency: number }>();
 
-    const senses: CandidateSense[] = sensesResult.results.map(row => ({
+    const senses: CandidateSense[] = dedupeSensesByGloss(sensesResult.results).map(row => ({
       senseId: row.id,
       lemmaId: lemmaId,
       gloss: row.translation,
@@ -116,7 +132,7 @@ export class DictionaryEngine {
         const lemma = lemmaMap.get(form.lemma_id);
         if (!lemma) return;
         
-        const rawSenses = senseMap.get(form.lemma_id) || [];
+        const rawSenses = dedupeSensesByGloss(senseMap.get(form.lemma_id) || []);
         rawSenses.sort((a, b) => b.frequency - a.frequency);
         const topSenses = rawSenses.slice(0, 10);
 
