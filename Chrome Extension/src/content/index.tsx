@@ -974,7 +974,7 @@ const SprekioOverlay: React.FC = () => {
               }}>
                 <p className="sprekio-subtitle-translation" style={{
                   fontSize: '18px', fontWeight: '600', margin: 0,
-                  color: '#f97316',
+                  color: '#facc15',
                   opacity: isTranslating ? 0.5 : 1, transition: 'opacity 0.3s ease-in-out'
                 }}>
                   {isTranslating && !translatedText ? '...' : translatedText}
