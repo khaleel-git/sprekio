@@ -16,6 +16,13 @@ const SprekioOverlay: React.FC = () => {
   const provider = "nvidia";
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<'transcript' | 'vocab' | 'quiz'>('transcript');
+  const [subtitleStyle, setSubtitleStyle] = useState<'solid' | 'transparent'>('solid');
+  const [savedWords, setSavedWords] = useState<any[]>([]);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizSelected, setQuizSelected] = useState<number | null>(null);
+  const [quizOrder, setQuizOrder] = useState<any[]>([]);
   const [transcript, setTranscript] = useState<{start: number, end: number, deText: string, enText: string}[]>([]);
   const [activeTranscriptIndex, setActiveTranscriptIndex] = useState(-1);
   const [isFetchingTranscript, setIsFetchingTranscript] = useState(false);
@@ -460,12 +467,15 @@ const SprekioOverlay: React.FC = () => {
   // Sync settings with chrome.storage.local
   useEffect(() => {
     try {
-      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause'], (result) => {
+      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_subtitleStyle'], (result) => {
         if (result.sprekio_isEnabled !== undefined) setIsEnabled(result.sprekio_isEnabled as boolean);
         else setIsEnabled(true); // Default to true if never set
-        
+
         if (result.sprekio_autoPause !== undefined) setAutoPause(result.sprekio_autoPause as boolean);
-        
+        if (result.sprekio_subtitleStyle === 'transparent' || result.sprekio_subtitleStyle === 'solid') {
+          setSubtitleStyle(result.sprekio_subtitleStyle);
+        }
+
         setHasLoadedSettings(true);
       });
     } catch (e) {
@@ -476,16 +486,17 @@ const SprekioOverlay: React.FC = () => {
   useEffect(() => {
     if (hasLoadedSettings) {
       try {
-        chrome.storage.local.set({ 
-          sprekio_isEnabled: isEnabled, 
+        chrome.storage.local.set({
+          sprekio_isEnabled: isEnabled,
           sprekio_autoPause: autoPause,
-          sprekio_provider: provider
+          sprekio_provider: provider,
+          sprekio_subtitleStyle: subtitleStyle
         });
       } catch (e) {
         console.error("Sprekio: Error saving storage. Please refresh the page.", e);
       }
     }
-  }, [isEnabled, autoPause, provider, hasLoadedSettings]);
+  }, [isEnabled, autoPause, provider, subtitleStyle, hasLoadedSettings]);
 
   // Check auth on mount
   useEffect(() => {
@@ -497,6 +508,7 @@ const SprekioOverlay: React.FC = () => {
             const set = new Set<string>();
             wordRes.words.forEach((w: any) => set.add(w.word.toLowerCase()));
             setSavedWordsSet(set);
+            setSavedWords(wordRes.words);
           }
         });
       }
@@ -535,6 +547,10 @@ const SprekioOverlay: React.FC = () => {
       if (res && res.success) {
         setSaveStatus("saved");
         setSavedWordsSet(prev => new Set(prev).add(hoveredWord.word.toLowerCase()));
+        // Refetch so the vocab tab has the real Firestore doc id (needed to delete it later)
+        chrome.runtime.sendMessage({ action: "getWords" }, (wordRes) => {
+          if (wordRes && wordRes.success) setSavedWords(wordRes.words);
+        });
         setTimeout(() => setSaveStatus("idle"), 2000);
       } else {
         setSaveStatus("error");
@@ -942,6 +958,37 @@ const SprekioOverlay: React.FC = () => {
       ? [{ deText: liveText }]
       : [];
 
+  const currentVideoId = new URLSearchParams(window.location.search).get('v') || "";
+  const videoWords = savedWords.filter(w => w.videoId === currentVideoId);
+
+  const shuffle = <T,>(arr: T[]): T[] => {
+    const copy = arr.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
+  const startQuiz = () => {
+    const shuffledWords = shuffle(videoWords);
+    const questions = shuffledWords.map(word => {
+      const correct = word.translation || word.lemma || word.word;
+      const distractorPool = videoWords
+        .filter(w => w.id !== word.id)
+        .map(w => w.translation || w.lemma)
+        .filter((t): t is string => !!t && t !== correct);
+      const distractors = shuffle(distractorPool).slice(0, 3);
+      return { word, choices: shuffle([correct, ...distractors]) };
+    });
+    setQuizOrder(questions);
+    setQuizIndex(0);
+    setQuizScore(0);
+    setQuizSelected(null);
+  };
+
+  const currentQuizQuestion = quizOrder[quizIndex] || null;
+
   const renderTokens = (text: string) => text.split(/(\s+|[.,!?;:"'”„“()[\]])/).map((token, i) => {
     if (!token.trim() || /^[.,!?;:"'”„“()[\]]+$/.test(token)) {
       return <span key={i}>{token}</span>;
@@ -952,9 +999,9 @@ const SprekioOverlay: React.FC = () => {
         className="sprekio-subtitle-interactive"
         onMouseEnter={(e) => handleWordEnter(token, e)}
         onMouseLeave={handleWordLeave}
-        style={{ cursor: 'pointer', padding: '0 2px', borderRadius: '4px', transition: 'background-color 0.2s, color 0.2s', pointerEvents: 'auto' }}
-        onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#fed7aa'; (e.target as HTMLElement).style.color = '#c2410c'; }}
-        onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; (e.target as HTMLElement).style.color = '#111827'; }}
+        style={{ cursor: 'pointer', padding: '0 2px', borderRadius: '4px', transition: 'background-color 0.2s, color 0.2s', pointerEvents: 'auto', color: 'inherit' }}
+        onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f97316'; (e.target as HTMLElement).style.color = '#ffffff'; }}
+        onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; (e.target as HTMLElement).style.color = 'inherit'; }}
       >
         {token}
       </span>
@@ -983,49 +1030,58 @@ const SprekioOverlay: React.FC = () => {
               ? '🇩🇪 Sprekio: No captions available for this video.'
               : '🇩🇪 Sprekio: Connected to video. (Waiting for speech...)'}
           </div>
-        ) : (
-          <div style={{
-            position: 'absolute', bottom: '10%', left: '0', right: '0',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 9999,
-            pointerEvents: 'none', padding: '0 10px'
-          }}>
-            <div className="sprekio-subtitle-box" style={{
-              backgroundColor: '#ffffff',
-              padding: '8px 16px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
-              textAlign: 'center', pointerEvents: 'none',
-              width: 'max-content', maxWidth: 'calc(100% - 20px)', margin: '0 10px', boxSizing: 'border-box',
-              display: 'inline-flex', flexDirection: 'column', alignItems: 'center'
+        ) : (() => {
+          const isGlassSub = subtitleStyle === 'transparent';
+          const targetStyle: React.CSSProperties = isGlassSub
+            ? { background: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(14px) saturate(160%)', WebkitBackdropFilter: 'blur(14px) saturate(160%)', border: '1px solid rgba(255,255,255,0.4)', color: '#ffffff', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }
+            : { background: '#ffffff', color: '#17120e' };
+          const translationStyle: React.CSSProperties = isGlassSub
+            ? { background: 'rgba(249,115,22,0.32)', backdropFilter: 'blur(14px) saturate(160%)', WebkitBackdropFilter: 'blur(14px) saturate(160%)', border: '1px solid rgba(249,115,22,0.6)', color: '#ffffff', textShadow: '0 1px 6px rgba(0,0,0,0.45)' }
+            : { background: '#f97316', color: '#ffffff' };
+          return (
+            <div style={{
+              position: 'absolute', bottom: '10%', left: '0', right: '0',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 9999,
+              pointerEvents: 'none', padding: '0 10px'
             }}>
-              <h2 className="sprekio-subtitle-text" style={{
-                fontSize: '22px', fontWeight: '700', color: '#111827',
-                lineHeight: '1.3', margin: 0
+              <div className="sprekio-subtitle-box" style={{
+                ...targetStyle,
+                padding: '8px 16px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                textAlign: 'center', pointerEvents: 'none',
+                width: 'max-content', maxWidth: 'calc(100% - 20px)', margin: '0 10px', boxSizing: 'border-box',
+                display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
+                transition: 'background-color 0.2s, border-color 0.2s'
               }}>
-                {visibleLines.map((line, lineIndex) => (
-                  <React.Fragment key={`${line.deText}-${lineIndex}`}>
-                    {lineIndex > 0 && ' '}
-                    {renderTokens(line.deText)}
-                  </React.Fragment>
-                ))}
-              </h2>
-            </div>
-            {(translatedText || isTranslating) && (
-              <div style={{
-                backgroundColor: '#000000',
-                padding: '6px 16px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
-                pointerEvents: 'none', width: 'max-content', maxWidth: 'calc(100% - 20px)',
-                margin: '0 10px', boxSizing: 'border-box'
-              }}>
-                <p className="sprekio-subtitle-translation" style={{
-                  fontSize: '18px', fontWeight: '600', margin: 0,
-                  color: '#facc15',
-                  opacity: isTranslating ? 0.5 : 1, transition: 'opacity 0.3s ease-in-out'
+                <h2 className="sprekio-subtitle-text" style={{
+                  fontSize: '22px', fontWeight: '700', color: 'inherit',
+                  lineHeight: '1.3', margin: 0
                 }}>
-                  {isTranslating && !translatedText ? '...' : translatedText}
-                </p>
+                  {visibleLines.map((line, lineIndex) => (
+                    <React.Fragment key={`${line.deText}-${lineIndex}`}>
+                      {lineIndex > 0 && ' '}
+                      {renderTokens(line.deText)}
+                    </React.Fragment>
+                  ))}
+                </h2>
               </div>
-            )}
-          </div>
-        )
+              {(translatedText || isTranslating) && (
+                <div style={{
+                  ...translationStyle,
+                  padding: '6px 16px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                  pointerEvents: 'none', width: 'max-content', maxWidth: 'calc(100% - 20px)',
+                  margin: '0 10px', boxSizing: 'border-box', transition: 'background-color 0.2s, border-color 0.2s'
+                }}>
+                  <p className="sprekio-subtitle-translation" style={{
+                    fontSize: '18px', fontWeight: '600', margin: 0, color: 'inherit',
+                    opacity: isTranslating ? 0.5 : 1, transition: 'opacity 0.3s ease-in-out'
+                  }}>
+                    {isTranslating && !translatedText ? '...' : translatedText}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })()
       )}
 
       {/* Hover Tooltip */}
@@ -1235,63 +1291,232 @@ const SprekioOverlay: React.FC = () => {
                 📝 Sidebar
               </button>
             )}
+
+            {isEnabled && (
+              <button
+                onClick={() => setSubtitleStyle(subtitleStyle === 'solid' ? 'transparent' : 'solid')}
+                title="Subtitle style: solid boxes or glass on the video"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: '#eee',
+                  border: '1px solid #eee',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: 0.9
+                }}
+                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
+                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
+              >
+                {subtitleStyle === 'solid' ? '◻ Solid' : '◫ Glass'}
+              </button>
+            )}
         </div>,
         controlsContainer
         )}
         
-        {isEnabled && showSidebar && sidebarContainer && createPortal(
-          <div style={{
-            backgroundColor: '#ffffff', border: '1px solid #e6e6e6',
-            borderRadius: '12px', marginBottom: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            maxHeight: 'min(70vh, 640px)', color: '#17120e', fontFamily: 'Roboto, Arial, sans-serif'
-          }}>
-            <div style={{ padding: '14px 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>Transcript</h3>
-              <button onClick={() => setShowSidebar(false)} style={{ background: 'none', border: 'none', color: '#6b5d54', cursor: 'pointer', fontSize: '18px', lineHeight: 1 }}>✕</button>
-            </div>
+        {isEnabled && showSidebar && sidebarContainer && (() => {
+          const isGlass = subtitleStyle === 'transparent';
+          const panelBg = isGlass ? 'rgba(255,255,255,0.7)' : '#fffaf5';
+          const panelBorder = isGlass ? '1px solid rgba(255,255,255,0.85)' : '1px solid #f0e6da';
+          const panelBackdrop = isGlass ? 'blur(20px) saturate(160%)' : undefined;
 
-            <div ref={transcriptRef} style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {isFetchingTranscript && transcript.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#9ca3af', marginTop: '20px' }}>Loading transcript...</div>
-              ) : transcript.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#9ca3af', marginTop: '20px' }}>No captions available for this video.</div>
-              ) : (
-                transcript.map((line, i) => {
-                  const isActive = i === activeTranscriptIndex;
-                  return (
-                    <div
-                      key={i}
-                      id={`transcript-line-${i}`}
-                      onClick={() => {
-                        const video = document.querySelector('video');
-                        if (video) video.currentTime = line.start;
-                      }}
-                      style={{
-                        padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
-                        borderLeft: isActive ? '3px solid #f97316' : '3px solid transparent',
-                        backgroundColor: isActive ? '#fff1e4' : 'transparent',
-                        transition: 'background-color 0.15s'
-                      }}
-                      onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = '#f7f0e8'; }}
-                      onMouseOut={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
-                    >
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: isActive ? '#c2410c' : '#17120e', marginBottom: '2px' }}>
-                        {line.deText}
-                      </div>
-                      {line.enText && (
-                        <div style={{ fontSize: '12px', color: '#6b5d54' }}>
-                          {line.enText}
+          const tabButton = (tab: typeof sidebarTab, label: string) => (
+            <button
+              onClick={() => setSidebarTab(tab)}
+              style={{
+                flex: 1, padding: '8px 6px', fontSize: '12px', fontWeight: 700,
+                border: 'none', borderRadius: '8px', cursor: 'pointer',
+                backgroundColor: sidebarTab === tab ? '#f97316' : 'transparent',
+                color: sidebarTab === tab ? '#ffffff' : '#8a7a6d',
+                transition: 'background-color 0.15s, color 0.15s'
+              }}
+            >
+              {label}
+            </button>
+          );
+
+          return createPortal(
+            <div style={{
+              backgroundColor: panelBg, border: panelBorder,
+              backdropFilter: panelBackdrop, WebkitBackdropFilter: panelBackdrop,
+              borderRadius: '14px', marginBottom: '16px', boxShadow: '0 2px 16px rgba(60,40,20,0.08)',
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              maxHeight: 'min(70vh, 640px)', color: '#292018', fontFamily: 'Roboto, Arial, sans-serif'
+            }}>
+              <div style={{ padding: '12px 14px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#57493f' }}>Sprekio</h3>
+                <button onClick={() => setShowSidebar(false)} style={{ background: 'none', border: 'none', color: '#a89686', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}>✕</button>
+              </div>
+
+              <div style={{ display: 'flex', gap: '4px', padding: '0 10px 10px' }}>
+                {tabButton('transcript', 'Transcript')}
+                {tabButton('vocab', `My Vocab${videoWords.length ? ` (${videoWords.length})` : ''}`)}
+                {tabButton('quiz', 'Quiz')}
+              </div>
+
+              {sidebarTab === 'transcript' && (
+                <div ref={transcriptRef} style={{ flex: 1, overflowY: 'auto', padding: '4px 10px 12px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                  {isFetchingTranscript && transcript.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#a89686', marginTop: '20px', fontSize: '13px' }}>Loading transcript...</div>
+                  ) : transcript.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#a89686', marginTop: '20px', fontSize: '13px' }}>No captions available for this video.</div>
+                  ) : (
+                    transcript.map((line, i) => {
+                      const isActive = i === activeTranscriptIndex;
+                      return (
+                        <div
+                          key={i}
+                          id={`transcript-line-${i}`}
+                          onClick={() => {
+                            const video = document.querySelector('video');
+                            if (video) video.currentTime = line.start;
+                          }}
+                          style={{
+                            padding: '7px 10px', borderRadius: '8px', cursor: 'pointer',
+                            borderLeft: isActive ? '3px solid #f97316' : '3px solid transparent',
+                            backgroundColor: isActive ? 'rgba(249,115,22,0.1)' : 'transparent',
+                            transition: 'background-color 0.15s'
+                          }}
+                          onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.035)'; }}
+                          onMouseOut={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        >
+                          <div style={{ fontSize: '13px', fontWeight: isActive ? 700 : 500, color: isActive ? '#c2410c' : '#4a3f38', marginBottom: '2px', lineHeight: 1.4 }}>
+                            {line.deText}
+                          </div>
+                          {line.enText && (
+                            <div style={{ fontSize: '12px', color: '#a89686', lineHeight: 1.4 }}>
+                              {line.enText}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })
+                      );
+                    })
+                  )}
+                </div>
               )}
-            </div>
-          </div>,
-          sidebarContainer
-        )}
+
+              {sidebarTab === 'vocab' && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '4px 10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {!user ? (
+                    <div style={{ textAlign: 'center', color: '#a89686', marginTop: '20px', fontSize: '13px' }}>Log in to save and see words from this video.</div>
+                  ) : videoWords.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#a89686', marginTop: '20px', fontSize: '13px' }}>No words saved from this video yet.<br />Hover a word in the subtitles and hit Save.</div>
+                  ) : (
+                    videoWords.map((w) => (
+                      <div key={w.id} style={{
+                        padding: '10px 12px', borderRadius: '10px',
+                        backgroundColor: isGlass ? 'rgba(255,255,255,0.55)' : '#ffffff',
+                        border: '1px solid ' + (isGlass ? 'rgba(255,255,255,0.7)' : '#f0e6da'),
+                        display: 'flex', flexDirection: 'column', gap: '4px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                          <div style={{ fontSize: '14px', fontWeight: 700, color: '#292018' }}>{w.word}</div>
+                          <button
+                            onClick={() => {
+                              chrome.runtime.sendMessage({ action: "deleteWord", id: w.id }, (res) => {
+                                if (res && res.success) setSavedWords(prev => prev.filter(x => x.id !== w.id));
+                              });
+                            }}
+                            title="Remove from vocab"
+                            style={{ background: 'none', border: 'none', color: '#c9b8a8', cursor: 'pointer', fontSize: '13px', lineHeight: 1, padding: '2px' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        {w.translation && <div style={{ fontSize: '13px', color: '#6b5d54' }}>{w.translation}</div>}
+                        {(w.partOfSpeech || w.gender) && (
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {w.partOfSpeech && <span style={{ fontSize: '11px', fontWeight: 600, color: '#c2410c', backgroundColor: '#fff1e4', padding: '1px 7px', borderRadius: '99px' }}>{w.partOfSpeech}</span>}
+                            {w.gender && <span style={{ fontSize: '11px', fontWeight: 600, color: '#c2410c', backgroundColor: '#fff1e4', padding: '1px 7px', borderRadius: '99px' }}>{w.gender}</span>}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {sidebarTab === 'quiz' && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '4px 14px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {videoWords.length < 4 ? (
+                    <div style={{ textAlign: 'center', color: '#a89686', marginTop: '20px', fontSize: '13px' }}>
+                      Save at least 4 words from this video to unlock a quiz.<br />
+                      You have {videoWords.length} so far.
+                    </div>
+                  ) : quizOrder.length === 0 ? (
+                    <div style={{ textAlign: 'center', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                      <div style={{ fontSize: '13px', color: '#6b5d54' }}>{videoWords.length} words saved from this video.</div>
+                      <button onClick={startQuiz} style={{ backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                        Start Quiz
+                      </button>
+                    </div>
+                  ) : quizIndex >= quizOrder.length ? (
+                    <div style={{ textAlign: 'center', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 700 }}>Score: {quizScore} / {quizOrder.length}</div>
+                      <button onClick={startQuiz} style={{ backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                        Retake Quiz
+                      </button>
+                    </div>
+                  ) : currentQuizQuestion && (
+                    <>
+                      <div style={{ fontSize: '12px', color: '#a89686', fontWeight: 600 }}>
+                        Question {quizIndex + 1} of {quizOrder.length}
+                      </div>
+                      <div style={{ fontSize: '20px', fontWeight: 700, textAlign: 'center' }}>
+                        {currentQuizQuestion.word.word}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {currentQuizQuestion.choices.map((choice: string, idx: number) => {
+                          const correctChoice = currentQuizQuestion.word.translation || currentQuizQuestion.word.lemma || currentQuizQuestion.word.word;
+                          const isCorrect = choice === correctChoice;
+                          const isPicked = quizSelected === idx;
+                          let bg = isGlass ? 'rgba(255,255,255,0.55)' : '#ffffff';
+                          let border = isGlass ? '1px solid rgba(255,255,255,0.7)' : '1px solid #f0e6da';
+                          let color = '#292018';
+                          if (quizSelected !== null) {
+                            if (isCorrect) { bg = '#eafaf0'; border = '1px solid #86d9a8'; color = '#1a7a44'; }
+                            else if (isPicked) { bg = '#fdeeee'; border = '1px solid #eeadaa'; color = '#b3372f'; }
+                          }
+                          return (
+                            <button
+                              key={idx}
+                              disabled={quizSelected !== null}
+                              onClick={() => {
+                                setQuizSelected(idx);
+                                if (isCorrect) setQuizScore(s => s + 1);
+                              }}
+                              style={{
+                                textAlign: 'left', padding: '10px 12px', borderRadius: '9px',
+                                backgroundColor: bg, border, color,
+                                fontSize: '13px', fontWeight: 600, cursor: quizSelected === null ? 'pointer' : 'default',
+                                transition: 'background-color 0.15s, border-color 0.15s'
+                              }}
+                            >
+                              {choice}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {quizSelected !== null && (
+                        <button
+                          onClick={() => { setQuizIndex(i => i + 1); setQuizSelected(null); }}
+                          style={{ backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', alignSelf: 'center' }}
+                        >
+                          {quizIndex + 1 === quizOrder.length ? 'See Score' : 'Next'}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>,
+            sidebarContainer
+          );
+        })()}
       </>
   );
 };

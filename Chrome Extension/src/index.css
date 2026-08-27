@@ -22,8 +22,8 @@
 }
 
 .sprekio-subtitle-interactive:hover {
-	background-color: #fed7aa !important;
-	color: #c2410c !important;
+	background-color: #f97316 !important;
+	color: #ffffff !important;
 }
 
 /* Keeps content scrollable when it exceeds the popup height, without showing a scrollbar */
