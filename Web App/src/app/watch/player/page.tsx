@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense, useMemo } from "react";
 import YouTube from "react-youtube";
 import { useSearchParams } from "next/navigation";
-import { PlayCircle, Pause, Loader2, X, BookmarkPlus } from "lucide-react";
+import { PlayCircle, Pause, Loader2, X, BookmarkPlus, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TranscriptLine {
@@ -50,9 +50,16 @@ function PlayerContent() {
   const [dictData, setDictData] = useState<DictResult | null>(null);
   const [isDictLoading, setIsDictLoading] = useState(false);
 
+  // Bumped by the "Try Again" button below to re-run the transcript-fetch effect
+  // without a full page reload. The underlying fetch races the extension's iframe
+  // relay against YouTube's own request timing, which occasionally takes longer
+  // than our timeout — a manual retry is cheap and usually succeeds immediately
+  // since the page (and the native player) are already warm.
+  const [retryKey, setRetryKey] = useState(0);
+
   const playerRef = useRef<any>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
-  
+
   // Fetch transcript
   useEffect(() => {
     if (!videoId) return;
@@ -223,7 +230,7 @@ function PlayerContent() {
     }
 
     return teardown;
-  }, [videoId]);
+  }, [videoId, retryKey]);
 
   // Sync player time and handle auto-pause
   useEffect(() => {
@@ -345,6 +352,11 @@ function PlayerContent() {
 
   const currentLine = activeIndex >= 0 ? transcript[activeIndex] : null;
 
+  // Every failure path (background bridge error, iframe relay error, backend fallback
+  // error) sets this exact sentinel shape — a single id:0/end:9999 line — so it can be
+  // distinguished from a genuinely one-line transcript without relying on text sniffing.
+  const isErrorState = transcript.length === 1 && transcript[0].id === 0 && transcript[0].end === 9999 && transcript[0].text.startsWith("Error:");
+
   const renderClickableWords = (text: string, contextSentence: string, wordClassName: string) =>
     text.split(" ").map((word, wIdx) => (
       <span
@@ -384,7 +396,7 @@ function PlayerContent() {
               lookup, just like the transcript panel below. The rest of the video
               stays click-through (pointer-events-none) so the caption bar doesn't
               swallow clicks meant for YouTube's own controls. */}
-          {currentLine && (
+          {currentLine && !isErrorState && (
             <div className="absolute inset-x-0 bottom-0 pb-14 md:pb-16 px-4 flex justify-center pointer-events-none">
               <div className="pointer-events-auto bg-black/75 backdrop-blur-sm text-white px-5 py-2.5 md:px-6 md:py-3 rounded-xl max-w-[90%] text-center text-lg md:text-2xl font-medium leading-snug">
                 {renderClickableWords(currentLine.text, currentLine.text, "hover:bg-white/20")}
@@ -429,6 +441,16 @@ function PlayerContent() {
               </div>
             ) : transcript.length === 0 ? (
               <div className="col-span-full text-center text-ink/35 py-10">No German captions found for this video.</div>
+            ) : isErrorState ? (
+              <div className="col-span-full flex flex-col items-center text-center py-10 gap-4">
+                <p className="text-red-500 font-medium max-w-md">{transcript[0].text}</p>
+                <button
+                  onClick={() => { setTranscript([]); setRetryKey((k) => k + 1); }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ink hover:bg-ink/85 text-white text-sm font-medium transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" /> Try Again
+                </button>
+              </div>
             ) : (
               transcript.map((line, i) => {
                 const isActive = i === activeIndex;
