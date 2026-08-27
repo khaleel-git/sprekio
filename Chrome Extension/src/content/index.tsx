@@ -1276,6 +1276,16 @@ const SprekioOverlay: React.FC = () => {
                     {t.text}
                   </div>
                 ))}
+                {wordDetails.translations?.length === 1 && wordDetails.translations[0].text === "No translation found" && (
+                  <a
+                    href={`https://www.google.com/search?q=${encodeURIComponent(hoveredWord.word + " (German) meaning")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'underline', width: 'fit-content' }}
+                  >
+                    🔍 Search "{hoveredWord.word}" on Google
+                  </a>
+                )}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '12px', alignItems: 'center', minWidth: 0 }}>
                 {wordDetails.partOfSpeech && (
