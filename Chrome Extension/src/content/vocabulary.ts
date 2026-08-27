@@ -145,28 +145,20 @@ export class VocabularyEngine {
        onIntermediate({ ...MEMORY_CACHE.get(contextKey)!, cached: true, source: "cache" });
     }
 
-    // 4. API Fallback — fast dictionary-only guess first, then a background AI upgrade.
-    // Most lemmas carry 2+ tied-frequency senses that the dictionary alone can't rank
-    // confidently, so this used to always block on an ~8s NVIDIA disambiguation call
-    // before showing anything. Now: ask for the instant D1-only answer (skipAi) and show
-    // it right away; only if the backend flags it as unresolved/ambiguous (final: false)
-    // do we also kick off the slower AI-backed call and silently swap in its answer once
-    // it lands, so a genuinely wrong first guess still gets corrected.
-    const isUsableResult = (res: SprekioWordResult | undefined | null) =>
-      !!res && !!res.translations && res.translations.length > 0 &&
-      !["Network error", "Timed out — try again"].includes((res.translations[0] as any)?.text);
-
-    const sendTranslate = (skipAi: boolean, retryCount: number): Promise<SprekioWordResult> =>
+    // 4. API Fallback — D1 dictionary lookup only. No AI involved: the ranker's top
+    // candidate is the final answer, occasionally the "less common" sense for a
+    // genuinely ambiguous word, but always fast and never dependent on an AI provider.
+    const sendTranslate = (retryCount: number): Promise<SprekioWordResult> =>
       new Promise((resolve) => {
         chrome.runtime.sendMessage(
-          { action: "translate", word: surface, contextSentence, provider, skipAi },
+          { action: "translate", word: surface, contextSentence, provider },
           (res: SprekioWordResult) => {
             // MV3 service workers can be asleep. If Chrome dropped the message,
             // lastError is set and res is undefined. Retry once after 400ms.
             if (chrome.runtime.lastError || !res) {
               if (retryCount < 1) {
                 console.warn("[Sprekio] Service worker wakeup — retrying in 400ms...", chrome.runtime.lastError?.message);
-                setTimeout(() => sendTranslate(skipAi, retryCount + 1).then(resolve), 400);
+                setTimeout(() => sendTranslate(retryCount + 1).then(resolve), 400);
               } else {
                 // Give up after 1 retry, return a placeholder so the UI doesn't hang
                 resolve({
@@ -174,7 +166,7 @@ export class VocabularyEngine {
                   normalized: surface.toLowerCase(),
                   lemma: surface,
                   translations: [{ text: "Network error" }],
-                  source: "ai",
+                  source: "dictionary",
                   cached: false,
                   confidence: 0,
                 });
@@ -186,34 +178,13 @@ export class VocabularyEngine {
         );
       });
 
-    const cacheIfUsable = async (res: SprekioWordResult) => {
-      if (!isUsableResult(res)) return;
-      this.cachePartOfSpeech(res);
-      MEMORY_CACHE.set(contextKey, res);
-      await this.saveToCache("contextCache", contextKey, res);
-    };
-
-    const fastResult = await sendTranslate(true, 0);
-    await cacheIfUsable(fastResult);
-
-    if (fastResult.final !== false) {
-      // Single sense, a phrase match, or a genuine context match — the dictionary answer
-      // is already authoritative, no need to wait on AI at all.
-      return fastResult;
+    const result = await sendTranslate(0);
+    if (result.translations && result.translations.length > 0 && (result.translations[0] as any).text !== "Network error") {
+      this.cachePartOfSpeech(result);
+      MEMORY_CACHE.set(contextKey, result);
+      await this.saveToCache("contextCache", contextKey, result);
     }
-
-    // Ambiguous: show the fast guess immediately, then refine in the background.
-    if (onIntermediate) onIntermediate({ ...fastResult, cached: false, source: "dictionary" });
-
-    const aiResult = await sendTranslate(false, 0);
-    if (!isUsableResult(aiResult)) {
-      // AI call failed/timed out — keep the reasonable dictionary guess rather than
-      // replacing it with an error placeholder.
-      return fastResult;
-    }
-    aiResult.final = true;
-    await cacheIfUsable(aiResult);
-    return aiResult;
+    return result;
   }
 
   public static async prefetch(subtitles: { text: string }[]): Promise<void> {

@@ -1322,11 +1322,7 @@ const SprekioOverlay: React.FC = () => {
                   </span>
                 )}
                 <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, overflowWrap: 'anywhere' }}>
-                   {wordDetails.source === 'ai' ? '🤖 AI' : '📖 Dict'} {wordDetails.cached && '⚡'}
-                   {wordDetails.confidence !== undefined && (
-                     wordDetails.confidence >= 0.9 ? ' (High Confidence)' :
-                     wordDetails.confidence >= 0.7 ? ' (Likely)' : ' (Contextual Meaning)'
-                   )}
+                   📖 Dict {wordDetails.cached && '⚡'}
                 </span>
               </div>
               
@@ -1336,15 +1332,11 @@ const SprekioOverlay: React.FC = () => {
                 </div>
               )}
 
-              {/* Phase 6C: "Why this meaning?" mechanism */}
-              {wordDetails.translations?.[0]?.evidence?.length > 0 && (
+              {/* "Why this meaning?" — only worth showing for a real phrase/context match;
+                  a plain frequency baseline isn't an explanation a user would find useful. */}
+              {wordDetails.translations?.[0]?.evidence?.some((e: any) => e.category === 'phrase' || e.category === 'context') && (
                 <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', fontStyle: 'italic', backgroundColor: '#f9fafb', padding: '6px', borderRadius: '4px', textAlign: 'left', overflowWrap: 'anywhere' }}>
-                  💡 {wordDetails.translations[0].evidence[0].reason}
-                </div>
-              )}
-              {wordDetails.translations?.[0]?.aiReason && (
-                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', fontStyle: 'italic', backgroundColor: '#f9fafb', padding: '6px', borderRadius: '4px', textAlign: 'left', overflowWrap: 'anywhere' }}>
-                  💡 {wordDetails.translations[0].aiReason}
+                  💡 {wordDetails.translations[0].evidence.find((e: any) => e.category === 'phrase' || e.category === 'context').rule}
                 </div>
               )}
 

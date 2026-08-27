@@ -1,7 +1,6 @@
 import { PhraseDetector } from './dictionary/PhraseDetector';
 import { DictionaryEngine } from './dictionary/DictionaryEngine';
 import { ContextualRanking } from './dictionary/ContextualRanking';
-import { AIResolver } from './dictionary/aiResolver';
 
 export interface Env {
   NVIDIA_API_KEY: string;
@@ -84,20 +83,26 @@ export default {
     }
 
     // =========================================================================
-    // Phase 3D: Contextual Engine + AI Fallback
+    // Contextual Dictionary Engine (D1-only — no AI call in this path anymore)
     // =========================================================================
+    // Word lookups used to fall back to an NVIDIA call to disambiguate between a word's
+    // dictionary senses whenever the (unpopulated) frequency data couldn't rank them, which
+    // was the source of most of the slowness/flakiness this endpoint saw. The dictionary's
+    // top-ranked sense is now always the final answer — occasionally the "less common" sense
+    // for a genuinely ambiguous word, but instant and never dependent on an upstream AI
+    // provider being up.
     if (url.pathname === "/api/translate-word" && request.method === "POST") {
       try {
-        const { word, contextSentence, apiKey, skipAi } = await request.json() as any;
-        
+        const { word, contextSentence } = await request.json() as any;
+
         const engine = new DictionaryEngine(env.DICTIONARY_DB);
         const result = await engine.resolveSurface(word);
 
         if (!result) {
           console.log(JSON.stringify({ event: 'telemetry_lookup', resolution: 'not_found', surface: word }));
-          return new Response(JSON.stringify({ status: 'not_found', surface: word }), { 
-            status: 200, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          return new Response(JSON.stringify({ status: 'not_found', surface: word }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
 
@@ -111,88 +116,29 @@ export default {
         // Contextual Ranking
         const ranker = new ContextualRanking();
         const ranking = ranker.rank(result, phraseMatch, contextSentence || "");
+        const selectedCandidate = ranking.selected;
 
-        let finalResolution = ranking.decision;
-        let selectedCandidate = ranking.selected;
-        let aiReason = undefined;
-        let aiCacheHit = false;
-
-        const aiKey = env.NVIDIA_API_KEY || apiKey;
-
-        // Phase 3D: AI Disambiguation
-        // Most lemmas carry 2+ dictionary senses with tied (unpopulated) frequency data,
-        // so ranking alone can't pick a winner and used to *always* block here waiting on
-        // NVIDIA (several seconds). The client now asks for the fast, D1-only answer first
-        // (skipAi) and shows it immediately, then makes a second request without skipAi to
-        // get the AI-disambiguated answer and silently upgrade the popup if it disagrees.
-        if (ranking.decision === "needs_ai" && contextSentence && aiKey && !skipAi) {
-           if (env.AI_ENABLED !== "true" && env.AI_ENABLED !== true) {
-             console.log(`[Sprekio] AI Fallback skipped for '${word}' due to AI_ENABLED=false.`);
-           } else {
-             const ai = new AIResolver(aiKey, env.DICTIONARY_DB);
-             
-             // Check if it's cached first to track metric
-             const cacheKey = await ai.generateCacheKey(result.lemma.text, contextSentence);
-             const cached = await env.DICTIONARY_DB.prepare('SELECT 1 FROM ai_cache WHERE cache_key = ?').bind(cacheKey).first();
-             if (cached) aiCacheHit = true;
-
-             const aiDecision = await ai.resolve(result.lemma.text, contextSentence, ranking.candidates);
-             if (aiDecision) {
-                const matchedSenseIndex = ranking.candidates.findIndex(c => c.sense.senseId === aiDecision.candidateSenseId);
-                if (matchedSenseIndex !== -1) {
-                   selectedCandidate = ranking.candidates[matchedSenseIndex];
-                   
-                   // Move it to the top
-                   ranking.candidates.splice(matchedSenseIndex, 1);
-                   ranking.candidates.unshift(selectedCandidate);
-
-                   aiReason = aiDecision.reason;
-                   finalResolution = "needs_ai";
-                }
-             }
-           }
-        }
-
-        // Telemetry Emission
         console.log(JSON.stringify({
            event: 'telemetry_lookup',
            surface: word,
            lemma: result.lemma.text,
-           resolution: finalResolution === 'needs_ai' ? (aiReason ? 'ai' : 'ambiguous') : 'contextual',
-           aiCacheHit,
+           resolution: ranking.decision === 'needs_ai' ? 'ambiguous' : 'contextual',
            phraseMatched: !!phraseMatch
         }));
 
-        // finalResolution stays 'needs_ai' whether or not AI actually ran (skipped, timed
-        // out, or disabled) — aiReason is only set once AI genuinely returned a pick, so
-        // use that to tell "AI answered" apart from "still just our best dictionary guess".
-        const isAiResolution = finalResolution === 'needs_ai' && !!aiReason;
-        const isAmbiguousUnresolved = finalResolution === 'needs_ai' && !aiReason;
-        const resolutionLabel = isAiResolution ? (aiCacheHit ? 'ai_cache' : 'ai') : (isAmbiguousUnresolved ? 'ambiguous' : 'contextual');
+        const resolutionLabel = ranking.decision === 'needs_ai' ? 'ambiguous' : 'contextual';
 
         const finalResult = {
           surface: result.surface,
           normalized: result.normalized,
           lemma: phraseMatch ? phraseMatch.lemma : result.lemma.text,
-          translations: ranking.candidates.map(c => {
-            const isSelected = c === selectedCandidate;
-            const mapped: any = {
-              text: c.sense.gloss,
-              definition: c.sense.gloss,
-              evidence: c.evidence,
-              selectedBy: isSelected ? (isAiResolution ? 'ai' : (phraseMatch ? 'phrase' : 'context')) : 'lexical'
-            };
-            
-            // Only include score if it wasn't an AI selection, since deterministic scores don't apply to AI choice
-            if (!isAiResolution || !isSelected) {
-               mapped.score = c.score;
-            }
-
-            if (isSelected && aiReason) {
-               mapped.aiReason = aiReason;
-            }
-            return mapped;
-          }),
+          translations: ranking.candidates.map(c => ({
+            text: c.sense.gloss,
+            definition: c.sense.gloss,
+            evidence: c.evidence,
+            score: c.score,
+            selectedBy: c === selectedCandidate ? (phraseMatch ? 'phrase' : 'context') : 'lexical'
+          })),
           partOfSpeech: result.lemma.partOfSpeech,
           gender: result.lemma.gender,
           resolution: resolutionLabel,
@@ -200,7 +146,7 @@ export default {
           cached: false,
           contextUsed: contextSentence ? true : false,
           phraseMatch,
-          final: !isAmbiguousUnresolved
+          final: true
         };
 
         return new Response(JSON.stringify({ status: 'found', result: finalResult }), { 

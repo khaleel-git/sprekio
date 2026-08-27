@@ -19,7 +19,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 
 
   if (request.action === "translate") {
-    handleTranslation(request.word, request.contextSentence, request.provider, request.skipAi).then(sendResponse);
+    handleTranslation(request.word, request.contextSentence).then(sendResponse);
     return true; // Keep message channel open for async response
   }
 
@@ -244,39 +244,27 @@ async function handleSentenceTranslation(text: string, provider?: string) {
   }
 }
 
-async function handleTranslation(word: string, contextSentence: string, provider?: string, skipAi?: boolean) {
+async function handleTranslation(word: string, contextSentence: string) {
   try {
-    // skipAi=true asks for the D1-only lexical answer (near-instant — no NVIDIA call).
-    // Give that path a short timeout since it should never legitimately take long; the
-    // full/AI-disambiguation follow-up call keeps the longer 12s budget.
+    // D1-only lexical lookup now — no AI call in this path, so this should always be
+    // fast. The timeout is just a safety net in case D1 itself is ever slow to respond.
     const response = await fetchWithTimeout(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-word`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word, contextSentence, provider: provider || "nvidia", skipAi: !!skipAi })
-    }, skipAi ? 5000 : 12000);
+      body: JSON.stringify({ word, contextSentence })
+    }, 6000);
 
     const result = await response.json();
-    
+
     if (!response.ok) {
       console.error("API Error:", result);
       const errMsg = result.error?.message || result.error || "API request failed";
-      if (response.status === 429 || String(errMsg).includes("Quota exceeded")) {
-        return {
-          surface: word,
-          normalized: word.toLowerCase(),
-          lemma: word,
-          translations: [{ text: "Rate Limit Exceeded (Please wait)" }],
-          source: "ai",
-          cached: false,
-          confidence: 0
-        };
-      }
       return {
         surface: word,
         normalized: word.toLowerCase(),
         lemma: word,
         translations: [{ text: String(errMsg).substring(0, 50) + "..." }],
-        source: "ai",
+        source: "dictionary",
         cached: false,
         confidence: 0
       };
@@ -303,7 +291,7 @@ async function handleTranslation(word: string, contextSentence: string, provider
       normalized: word.toLowerCase(),
       lemma: word,
       translations: [{ text: isTimeout ? "Timed out — try again" : "Network error" }],
-      source: "ai",
+      source: "dictionary",
       cached: false,
       confidence: 0
     };
