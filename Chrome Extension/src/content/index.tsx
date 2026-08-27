@@ -23,7 +23,7 @@ const SprekioOverlay: React.FC = () => {
   const [quizScore, setQuizScore] = useState(0);
   const [quizSelected, setQuizSelected] = useState<number | null>(null);
   const [quizOrder, setQuizOrder] = useState<any[]>([]);
-  const [transcript, setTranscript] = useState<{start: number, end: number, deText: string, enText: string}[]>([]);
+  const [transcript, setTranscript] = useState<{start: number, end: number, deText: string, enText: string, deWordTimings?: {text: string, startMs: number}[]}[]>([]);
   const [activeTranscriptIndex, setActiveTranscriptIndex] = useState(-1);
   const [isFetchingTranscript, setIsFetchingTranscript] = useState(false);
   const [captionsUnavailable, setCaptionsUnavailable] = useState(false);
@@ -321,7 +321,22 @@ const SprekioOverlay: React.FC = () => {
       }
 
       const formatJsonText = (segs: any[]) => segs?.map(s => s.utf8).join('').replace(/\n/g, ' ').trim() || "";
-      
+
+      // YouTube's JSON3 captions carry a real per-segment offset (tOffsetMs) within each
+      // cue -- close to actual per-word timing for auto-generated captions. Use it when
+      // available instead of guessing word timing from the cue's overall duration.
+      const extractWordTimings = (e: any): { text: string, startMs: number }[] => {
+        const timings: { text: string, startMs: number }[] = [];
+        for (const seg of (e.segs || [])) {
+          const segText = String(seg.utf8 || '').replace(/\n/g, ' ');
+          const segStart = (e.tStartMs || 0) + (seg.tOffsetMs || 0);
+          for (const w of segText.split(/\s+/).filter(Boolean)) {
+            timings.push({ text: w, startMs: segStart });
+          }
+        }
+        return timings;
+      };
+
       const normalizeEvents = (res: any) => {
         if (!res || !res.data) return [];
         if (res.type === 'xml') {
@@ -334,7 +349,8 @@ const SprekioOverlay: React.FC = () => {
           return (res.data.events || []).map((e: any) => ({
             text: formatJsonText(e.segs),
             start: e.tStartMs || 0,
-            duration: e.dDurationMs || 2000
+            duration: e.dDurationMs || 2000,
+            wordTimings: extractWordTimings(e)
           }));
         }
       };
@@ -376,7 +392,8 @@ const SprekioOverlay: React.FC = () => {
           start: tStart / 1000,
           end: (tStart + dDur) / 1000,
           deText,
-          enText
+          enText,
+          deWordTimings: deEvent.wordTimings as { text: string, startMs: number }[] | undefined
         };
       }).filter((t: any) => t.deText.length > 0);
       
@@ -676,11 +693,10 @@ const SprekioOverlay: React.FC = () => {
             }
           }
 
-          // Karaoke-style "currently spoken" word, estimated from progress through the cue
+          // Currently-spoken word, using real per-segment timing when the source track
+          // provided it, otherwise a rough estimate based on the cue's overall duration.
           if (currentIndex !== -1) {
-            const line = transcript[currentIndex];
-            const progress = Math.min(1, Math.max(0, (t - line.start) / ((line.end - line.start) || 1)));
-            const wordIdx = estimateActiveWordIndex(line.deText, progress);
+            const wordIdx = getActiveWordIndex(transcript[currentIndex], t);
             if (activeWordIndexRef.current !== wordIdx) {
               activeWordIndexRef.current = wordIdx;
               setActiveWordIndex(wordIdx);
@@ -1004,6 +1020,24 @@ const SprekioOverlay: React.FC = () => {
     return words.length - 1;
   };
 
+  // Prefer YouTube's real per-segment offsets (close to true word timing for
+  // auto-generated captions) when available; fall back to the character-length
+  // estimate for lines that only have a whole-cue duration (e.g. XML source, or
+  // a native, human-authored track with no per-segment breakdown).
+  const getActiveWordIndex = (line: { deText: string, start: number, end: number, deWordTimings?: { text: string, startMs: number }[] }, tSeconds: number): number => {
+    if (line.deWordTimings && line.deWordTimings.length > 0) {
+      const tMs = tSeconds * 1000;
+      let idx = -1;
+      for (let i = 0; i < line.deWordTimings.length; i++) {
+        if (line.deWordTimings[i].startMs <= tMs) idx = i;
+        else break;
+      }
+      return idx === -1 ? 0 : idx;
+    }
+    const progress = Math.min(1, Math.max(0, (tSeconds - line.start) / ((line.end - line.start) || 1)));
+    return estimateActiveWordIndex(line.deText, progress);
+  };
+
   const startQuiz = () => {
     const shuffledWords = shuffle(videoWords);
     const questions = shuffledWords.map(word => {
@@ -1032,7 +1066,8 @@ const SprekioOverlay: React.FC = () => {
       wordCounter++;
       const isSaved = savedWordsSet.has(token.toLowerCase());
       const isSpeaking = wordCounter === activeWordIndex;
-      const idleBg = isSaved ? 'rgba(249,115,22,0.22)' : 'transparent';
+      const idleBg = isSpeaking ? '#f97316' : (isSaved ? 'rgba(249,115,22,0.22)' : 'transparent');
+      const idleColor = isSpeaking ? '#ffffff' : 'inherit';
       return (
         <span
           key={i}
@@ -1041,12 +1076,11 @@ const SprekioOverlay: React.FC = () => {
           onMouseLeave={handleWordLeave}
           style={{
             cursor: 'pointer', padding: '0 2px', borderRadius: '4px',
-            transition: 'background-color 0.2s, color 0.2s, box-shadow 0.15s',
-            pointerEvents: 'auto', color: 'inherit', backgroundColor: idleBg,
-            boxShadow: isSpeaking ? 'inset 0 -2px 0 0 #f97316' : 'none'
+            transition: 'background-color 0.2s, color 0.2s',
+            pointerEvents: 'auto', color: idleColor, backgroundColor: idleBg
           }}
           onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f97316'; (e.target as HTMLElement).style.color = '#ffffff'; }}
-          onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = idleBg; (e.target as HTMLElement).style.color = 'inherit'; }}
+          onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = idleBg; (e.target as HTMLElement).style.color = idleColor; }}
         >
           {token}
         </span>
