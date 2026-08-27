@@ -27,6 +27,16 @@ const POS_COLORS: Record<string, string> = {
   phrase: '#78716c',
 };
 
+// Auto-generated German captions mark non-speech audio as a single bracketed/parenthesized
+// tag — "[Musik]", "[Applaus]", "(lacht)", etc. — with no real words to translate or
+// highlight. Treat a cue as one of these only when the ENTIRE cue is such a tag, so a
+// real sentence that happens to contain a bracket elsewhere is left untouched.
+const isNonSpeechMarker = (text: string): boolean => {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  return /^[\[(][^\])]*[\])]$/.test(trimmed);
+};
+
 const SprekioOverlay: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState(false); // Default false, will sync from storage
   const [autoPause, setAutoPause] = useState(false);
@@ -34,8 +44,9 @@ const SprekioOverlay: React.FC = () => {
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'transcript' | 'vocab' | 'quiz'>('transcript');
-  const [subtitleStyle, setSubtitleStyle] = useState<'solid' | 'transparent'>('solid');
-  const [grammarColors, setGrammarColors] = useState(true);
+  const [subtitleStyle, setSubtitleStyle] = useState<'solid' | 'transparent'>('transparent');
+  const [grammarColors, setGrammarColors] = useState(false);
+  const [translationEnabled, setTranslationEnabled] = useState(true);
   // Bumped after a prefetch resolves, purely to re-render the subtitle line so newly
   // cached part-of-speech data can be picked up by renderTokens (VocabularyEngine's
   // cache is read synchronously, not through React state).
@@ -418,7 +429,7 @@ const SprekioOverlay: React.FC = () => {
           enText,
           deWordTimings: deEvent.wordTimings as { text: string, startMs: number }[] | undefined
         };
-      }).filter((t: any) => t.deText.length > 0);
+      }).filter((t: any) => t.deText.length > 0 && !isNonSpeechMarker(t.deText));
       
       console.log(`[Sprekio] Merged ${merged.length} cues, first 3:`, merged.slice(0, 3));
       if (merged.length > 0) {
@@ -511,7 +522,7 @@ const SprekioOverlay: React.FC = () => {
   // Sync settings with chrome.storage.local
   useEffect(() => {
     try {
-      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_subtitleStyle', 'sprekio_grammarColors'], (result) => {
+      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_subtitleStyle', 'sprekio_grammarColors', 'sprekio_translationEnabled'], (result) => {
         if (result.sprekio_isEnabled !== undefined) setIsEnabled(result.sprekio_isEnabled as boolean);
         else setIsEnabled(true); // Default to true if never set
 
@@ -520,6 +531,7 @@ const SprekioOverlay: React.FC = () => {
           setSubtitleStyle(result.sprekio_subtitleStyle);
         }
         if (result.sprekio_grammarColors !== undefined) setGrammarColors(result.sprekio_grammarColors as boolean);
+        if (result.sprekio_translationEnabled !== undefined) setTranslationEnabled(result.sprekio_translationEnabled as boolean);
 
         setHasLoadedSettings(true);
       });
@@ -536,13 +548,14 @@ const SprekioOverlay: React.FC = () => {
           sprekio_autoPause: autoPause,
           sprekio_provider: provider,
           sprekio_subtitleStyle: subtitleStyle,
-          sprekio_grammarColors: grammarColors
+          sprekio_grammarColors: grammarColors,
+          sprekio_translationEnabled: translationEnabled
         });
       } catch (e) {
         console.error("Sprekio: Error saving storage. Please refresh the page.", e);
       }
     }
-  }, [isEnabled, autoPause, provider, subtitleStyle, grammarColors, hasLoadedSettings]);
+  }, [isEnabled, autoPause, provider, subtitleStyle, grammarColors, translationEnabled, hasLoadedSettings]);
 
   // Check auth on mount
   useEffect(() => {
@@ -621,13 +634,18 @@ const SprekioOverlay: React.FC = () => {
       if (style) style.remove();
     }
     
-    // FALLBACK: DOM Scraper (Only used if the internal API fails to fetch transcript)
+    // FALLBACK: DOM Scraper (Only used once we've genuinely given up on fetching a
+    // structured transcript — NOT merely while transcript.length is still 0 during the
+    // initial fetch. Gating on transcript.length alone meant this scraper (and its
+    // auto-pause) ran during the loading window too, reading the native captions we hide
+    // visually — the video would auto-pause with nothing visibly on screen because our
+    // own subtitle box had no data yet to show.
     // Auto-pause has no timestamp data to work with here, so it pauses whenever the
     // scraped caption text goes blank right after showing a line (end of a cue).
     let domLastCaptionText = "";
     let domAutoPausedAfter = "";
     const updateCaptionsFromDOM = () => {
-      if (!isEnabled || transcript.length > 0) {
+      if (!isEnabled || transcript.length > 0 || !captionsUnavailable) {
         return;
       }
 
@@ -638,7 +656,11 @@ const SprekioOverlay: React.FC = () => {
       }
 
       const segments = Array.from(document.querySelectorAll('.ytp-caption-segment'));
-      const text = segments.map(s => s.textContent).join(' ').replace(/\n/g, ' ').trim();
+      const rawText = segments.map(s => s.textContent).join(' ').replace(/\n/g, ' ').trim();
+      // Non-speech markers like "[Musik]" / "[Music]" / "(Applaus)" aren't real dialogue —
+      // treat them as if no caption was showing at all so they're never displayed,
+      // highlighted, or used to drive auto-pause.
+      const text = isNonSpeechMarker(rawText) ? "" : rawText;
       setLiveText(text);
 
       if (autoPause) {
@@ -855,7 +877,7 @@ const SprekioOverlay: React.FC = () => {
       document.removeEventListener('pointerdown', handlePlayerPointerDown, true);
       document.removeEventListener('click', handlePlayerClick, true);
     };
-  }, [isEnabled, autoPause, showSidebar, transcript]);
+  }, [isEnabled, autoPause, showSidebar, transcript, captionsUnavailable]);
 
   // Translate full sentence when liveText changes
   useEffect(() => {
@@ -866,7 +888,7 @@ const SprekioOverlay: React.FC = () => {
       sentenceTranslateTimeout.current = null;
     }
 
-    if (!isEnabled || !liveText.trim()) {
+    if (!isEnabled || !translationEnabled || !liveText.trim()) {
       setTranslatedText("");
       setIsTranslating(false);
       return;
@@ -947,7 +969,7 @@ const SprekioOverlay: React.FC = () => {
     };
 
     sentenceTranslateTimeout.current = window.setTimeout(() => sendTranslateRequest(0), 400);
-  }, [liveText, isEnabled, activeTranscriptIndex, transcript]);
+  }, [liveText, isEnabled, translationEnabled, activeTranscriptIndex, transcript]);
 
   // 2. Hover Handlers
   const handleWordEnter = async (word: string, e: React.MouseEvent) => {
@@ -1179,7 +1201,7 @@ const SprekioOverlay: React.FC = () => {
                   ))}
                 </h2>
               </div>
-              {(translatedText || isTranslating) && (
+              {translationEnabled && (translatedText || isTranslating) && (
                 <div style={{
                   ...translationStyle,
                   padding: '6px 16px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
@@ -1451,6 +1473,30 @@ const SprekioOverlay: React.FC = () => {
                 onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
               >
                 Grammar
+              </button>
+            )}
+
+            {isEnabled && (
+              <button
+                onClick={() => setTranslationEnabled(!translationEnabled)}
+                title="Show English translation, or just the German captions with word highlighting"
+                style={{
+                  backgroundColor: translationEnabled ? '#f97316' : 'transparent',
+                  color: translationEnabled ? 'white' : '#eee',
+                  border: '1px solid',
+                  borderColor: translationEnabled ? '#f97316' : '#eee',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: 0.9
+                }}
+                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
+                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
+              >
+                {translationEnabled ? '🌐 Translation' : '🇩🇪 CC Only'}
               </button>
             )}
         </div>,

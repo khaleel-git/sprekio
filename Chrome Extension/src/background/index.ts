@@ -1,5 +1,14 @@
 import { loginWithGoogle, saveVocabularyWord, getVocabularyWords, auth, deleteVocabWord, updateVocabWordStatus } from './firebase';
 
+// A hung upstream call (AI provider or D1 taking forever) would otherwise leave the
+// content script's popup stuck on "Translating..." forever, since nothing ever
+// resolves or rejects. Cap every backend call so it always settles one way or another.
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 12000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 
   // Service worker keepalive — content scripts ping to wake the SW before critical calls
@@ -206,7 +215,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 
 async function handleSentenceTranslation(text: string, provider?: string) {
   try {
-    const response = await fetch(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-sentence`, {
+    const response = await fetchWithTimeout(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-sentence`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, provider: provider || "nvidia" })
@@ -237,7 +246,7 @@ async function handleSentenceTranslation(text: string, provider?: string) {
 
 async function handleTranslation(word: string, contextSentence: string, provider?: string) {
   try {
-    const response = await fetch(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-word`, {
+    const response = await fetchWithTimeout(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-word`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ word, contextSentence, provider: provider || "nvidia" })
@@ -270,14 +279,27 @@ async function handleTranslation(word: string, contextSentence: string, provider
       };
     }
 
-    return result.result || result; // Backend returns { status: 'found', result: ... }
-  } catch (error: any) {
-    console.error("Failed to fetch translation:", error);
+    // Backend returns { status: 'found', result: ... } on a hit, or just
+    // { status: 'not_found', surface } when the word isn't in the dictionary — that shape
+    // has no `translations`, which used to render as a silent blank instead of an answer.
+    if (result.result) return result.result;
     return {
       surface: word,
       normalized: word.toLowerCase(),
       lemma: word,
-      translations: [{ text: "Network error" }],
+      translations: [{ text: "No translation found" }],
+      source: "dictionary",
+      cached: false,
+      confidence: 0
+    };
+  } catch (error: any) {
+    console.error("Failed to fetch translation:", error);
+    const isTimeout = error?.name === "AbortError";
+    return {
+      surface: word,
+      normalized: word.toLowerCase(),
+      lemma: word,
+      translations: [{ text: isTimeout ? "Timed out — try again" : "Network error" }],
       source: "ai",
       cached: false,
       confidence: 0
@@ -287,7 +309,7 @@ async function handleTranslation(word: string, contextSentence: string, provider
 
 async function handleBatchLookup(words: string[], sentence: string) {
   try {
-    const response = await fetch(`https://sprekio-backend.khaleel-eu.workers.dev/api/dictionary/batch`, {
+    const response = await fetchWithTimeout(`https://sprekio-backend.khaleel-eu.workers.dev/api/dictionary/batch`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ words, sentence })
