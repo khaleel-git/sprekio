@@ -1268,6 +1268,33 @@ const SprekioOverlay: React.FC = () => {
             <div style={{ fontSize: '14px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '8px' }}>
               ⏳ Translating...
             </div>
+          ) : wordDetails && wordDetails.translations?.length === 1 && wordDetails.translations[0].text === "No translation found" ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0, textAlign: 'center', padding: '4px 0 2px' }}>
+              <div style={{ fontSize: '34px', lineHeight: 1 }}>🕵️‍♂️</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#17120e', marginTop: '8px' }}>
+                Not in the German dictionary
+              </div>
+              <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: 1.5, marginTop: '2px' }}>
+                "{hoveredWord.word}" doesn't match any known German word — it might be a name,
+                slang, a caption typo, or a word from another language. Not a bug, just an
+                unlisted word.
+              </div>
+              <a
+                href={`https://www.google.com/search?q=${encodeURIComponent(hoveredWord.word + " (German) meaning")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  width: '100%', boxSizing: 'border-box', color: '#f97316', backgroundColor: '#fff7ed',
+                  border: '1px solid #fdba74', borderRadius: '8px', padding: '9px 0',
+                  fontSize: '14px', fontWeight: '600', textDecoration: 'none', transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#ffedd5')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#fff7ed')}
+              >
+                🔍 Search "{hoveredWord.word}" on Google
+              </a>
+            </div>
           ) : wordDetails ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
@@ -1276,16 +1303,6 @@ const SprekioOverlay: React.FC = () => {
                     {t.text}
                   </div>
                 ))}
-                {wordDetails.translations?.length === 1 && wordDetails.translations[0].text === "No translation found" && (
-                  <a
-                    href={`https://www.google.com/search?q=${encodeURIComponent(hoveredWord.word + " (German) meaning")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'underline', width: 'fit-content' }}
-                  >
-                    🔍 Search "{hoveredWord.word}" on Google
-                  </a>
-                )}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '12px', alignItems: 'center', minWidth: 0 }}>
                 {wordDetails.partOfSpeech && (
