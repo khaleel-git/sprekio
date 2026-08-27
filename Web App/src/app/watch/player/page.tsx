@@ -72,6 +72,12 @@ function PlayerContent() {
         const response = e.detail.response;
         if (response && response.xml) {
            parseXmlTranscript(response.xml);
+        } else if (response?.error?.includes("Extension bridge disconnected")) {
+           // A stale content script can't be revived from here — no point trying
+           // the (also-blocked) backend, tell the user the one thing that fixes it.
+           console.warn("Extension bridge disconnected:", response.error);
+           setTranscript([{ id: 0, start: 0, end: 9999, text: response.error }]);
+           setIsLoading(false);
         } else {
            // Extension failed, fallback to backend
            console.warn("Extension failed to fetch transcript:", response?.error);
