@@ -18,6 +18,22 @@ export interface TTSVoice {
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 let isExplicitlyStopped = false;
 
+// The browser's native onboundary event is unreliable across browsers/voices — some
+// fire per-word, some per-sentence, some not at all — which made the read-along
+// highlight freeze or jump depending on which voice happened to be selected. Same
+// problem the Chrome extension solved for YouTube captions: trust real per-word timing
+// when it's actually granular, otherwise fall back to a smooth time-based estimate so
+// the highlight always progresses steadily through the text.
+function getWordSpans(text: string): { charIndex: number; charLength: number }[] {
+  const spans: { charIndex: number; charLength: number }[] = [];
+  const re = /\S+/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    spans.push({ charIndex: m.index, charLength: m[0].length });
+  }
+  return spans;
+}
+
 export function getGermanVoices(): TTSVoice[] {
   if (typeof window === "undefined" || !window.speechSynthesis) return [];
   return window.speechSynthesis
@@ -56,20 +72,49 @@ export function speak(text: string, options: TTSOptions = {}): Promise<void> {
       utterance.voice = local || germanVoices[0];
     }
 
+    let estimateTimer: ReturnType<typeof setInterval> | null = null;
+    const stopEstimator = () => {
+      if (estimateTimer) {
+        clearInterval(estimateTimer);
+        estimateTimer = null;
+      }
+    };
+
     utterance.onend = () => {
+      stopEstimator();
       currentUtterance = null;
       resolve();
     };
-    
+
     if (options.onBoundary) {
+      let lastRealEventAt = 0;
+
       utterance.onboundary = (event) => {
-        if (event.name === 'word') {
+        if (event.name === "word") {
+          lastRealEventAt = performance.now();
           options.onBoundary!(event.charIndex, event.charLength);
         }
       };
+
+      // Smooth fallback: estimate word position from elapsed time. Real boundary
+      // events (when the browser/voice actually fires them) always win — the
+      // estimator only speaks up when none has landed in the last 250ms, so a voice
+      // with good native timing looks identical to before, and one without gets a
+      // steady highlight instead of a frozen one.
+      const spans = getWordSpans(text);
+      const msPerWord = 380 / (options.rate || 0.9);
+      const startTime = performance.now();
+      estimateTimer = setInterval(() => {
+        const now = performance.now();
+        if (now - lastRealEventAt < 250) return;
+        const wordIndex = Math.min(spans.length - 1, Math.floor((now - startTime) / msPerWord));
+        const span = spans[wordIndex];
+        if (span) options.onBoundary!(span.charIndex, span.charLength);
+      }, 90);
     }
 
     utterance.onerror = (e) => {
+      stopEstimator();
       currentUtterance = null;
       if (isExplicitlyStopped) {
         reject(new Error("Stopped explicitly"));

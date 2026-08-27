@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Story, WordAnnotation, CASE_COLORS } from "@/lib/stories";
 import { useStore } from "@/lib/store";
+import { Card } from "./ui/Card";
 import GrammarPopup from "./GrammarPopup";
 import AudioPlayer from "./AudioPlayer";
 import { cn } from "@/lib/utils";
@@ -43,9 +44,8 @@ export default function StoryReader({ story }: StoryReaderProps) {
 
   return (
     <div className="space-y-4">
-      {/* Audio Player */}
-      <AudioPlayer 
-        paragraphs={allTexts} 
+      <AudioPlayer
+        paragraphs={allTexts}
         onProgress={(pIndex, cIndex, cLen) => {
           if (pIndex === -1) setPlayingState(null);
           else setPlayingState({ paragraphIndex: pIndex, charIndex: cIndex, charLength: cLen });
@@ -53,32 +53,32 @@ export default function StoryReader({ story }: StoryReaderProps) {
       />
 
       {/* Grammar color toggle */}
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-sm flex-wrap gap-2">
         <div className="flex flex-wrap gap-3 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-red-400 rounded" />
-            <span className="text-gray-500">Nominativ</span>
+            <span className="text-ink/45">Nominativ</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-blue-400 rounded" />
-            <span className="text-gray-500">Akkusativ</span>
+            <span className="text-ink/45">Akkusativ</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-green-400 rounded" />
-            <span className="text-gray-500">Dativ</span>
+            <span className="text-ink/45">Dativ</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-purple-400 rounded" />
-            <span className="text-gray-500">Genitiv</span>
+            <span className="text-ink/45">Genitiv</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 bg-yellow-400 rounded border-dashed" style={{borderBottom: '2px dashed'}} />
-            <span className="text-gray-500">Separable verb</span>
+            <div className="w-3 h-0.5 border-b-2 border-dashed border-amber-400" />
+            <span className="text-ink/45">Separable verb</span>
           </div>
         </div>
         <button
           onClick={() => setShowGrammarColors(!showGrammarColors)}
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+          className="flex items-center gap-1 text-xs text-ink/40 hover:text-ink"
         >
           {showGrammarColors ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
           {showGrammarColors ? "Hide" : "Show"} grammar
@@ -87,9 +87,11 @@ export default function StoryReader({ story }: StoryReaderProps) {
 
       {/* Paragraphs */}
       {story.paragraphs.map((paragraph, pIndex) => (
-        <div key={paragraph.id} className={cn("bg-white rounded-2xl border p-5 shadow-sm transition-colors", playingState?.paragraphIndex === pIndex ? "border-blue-300 ring-2 ring-blue-100" : "border-gray-100")}>
-          {/* German text with clickable words */}
-          <div className="text-gray-900 leading-relaxed text-base mb-3">
+        <Card
+          key={paragraph.id}
+          className={cn("p-5 transition-colors", playingState?.paragraphIndex === pIndex && "border-brand/40 ring-2 ring-brand/10")}
+        >
+          <div className="text-ink leading-relaxed text-base mb-3">
             <AnnotatedText
               text={paragraph.text}
               words={paragraph.words}
@@ -100,10 +102,9 @@ export default function StoryReader({ story }: StoryReaderProps) {
             />
           </div>
 
-          {/* Translation toggle */}
           <button
             onClick={() => toggleTranslation(paragraph.id)}
-            className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors"
+            className="text-xs text-brand hover:text-brand-dark flex items-center gap-1 transition-colors"
           >
             {showTranslations.has(paragraph.id) ? (
               <>
@@ -117,14 +118,13 @@ export default function StoryReader({ story }: StoryReaderProps) {
           </button>
 
           {showTranslations.has(paragraph.id) && (
-            <p className="mt-2 text-sm text-gray-500 italic border-l-2 border-blue-200 pl-3 animate-fade-in">
+            <p className="mt-2 text-sm text-ink/50 italic border-l-2 border-brand/30 pl-3 animate-fade-in">
               {paragraph.translation}
             </p>
           )}
-        </div>
+        </Card>
       ))}
 
-      {/* Word popup */}
       {selectedWord && (
         <GrammarPopup
           word={selectedWord}
@@ -138,6 +138,9 @@ export default function StoryReader({ story }: StoryReaderProps) {
 }
 
 // ── Annotated text component ─────────────────────────────────────────────────
+const SPLIT_RE = /(\s+|[.,!?;:"'„"—–()[\]])/;
+const PUNCT_ONLY_RE = /^[.,!?;:"'„"—–()[\]]+$/;
+
 function AnnotatedText({
   text,
   words,
@@ -153,31 +156,36 @@ function AnnotatedText({
   savedWords: string[];
   playingCharInfo: { index: number; length: number } | null;
 }) {
-  const wordMap = new Map<string, WordAnnotation>();
-  words.forEach((w) => wordMap.set(w.word.toLowerCase(), w));
+  // Precomputed once per text/words change via a reduce (never reassigning an outer
+  // variable) so this stays a pure render, unlike the original implementation which
+  // mutated a shared char-offset counter while mapping.
+  const tokens = useMemo(() => {
+    const wordMap = new Map<string, WordAnnotation>();
+    words.forEach((w) => wordMap.set(w.word.toLowerCase(), w));
 
-  const tokens = text.split(/(\s+|[.,!?;:\"'„"—–()[\]])/);
-  let currentGlobalCharIndex = 0;
+    type Token = { token: string; startIndex: number; annotation?: WordAnnotation };
+    return text.split(SPLIT_RE).reduce<Token[]>((acc, token) => {
+      const prev = acc[acc.length - 1];
+      const startIndex = prev ? prev.startIndex + prev.token.length : 0;
+      const clean = token.replace(/[.,!?;:"'„"—–()[\]]/g, "").toLowerCase();
+      acc.push({ token, startIndex, annotation: wordMap.get(clean) });
+      return acc;
+    }, []);
+  }, [text, words]);
 
   return (
     <>
-      {tokens.map((token, i) => {
-        const tokenStartIndex = currentGlobalCharIndex;
-        currentGlobalCharIndex += token.length;
-
+      {tokens.map(({ token, startIndex, annotation }, i) => {
         const isPlaying =
-          playingCharInfo &&
-          tokenStartIndex >= playingCharInfo.index &&
-          tokenStartIndex < playingCharInfo.index + playingCharInfo.length;
+          !!playingCharInfo &&
+          startIndex >= playingCharInfo.index &&
+          startIndex < playingCharInfo.index + playingCharInfo.length;
 
-        const basePlayClass = isPlaying ? "bg-blue-600 text-white rounded px-0.5 shadow-sm" : "";
+        const basePlayClass = isPlaying ? "bg-brand text-white rounded px-0.5 shadow-sm" : "";
 
-        if (!token.trim() || /^[.,!?;:\"'„"—–()[\]]+$/.test(token)) {
+        if (!token.trim() || PUNCT_ONLY_RE.test(token)) {
           return <span key={i} className={basePlayClass}>{token}</span>;
         }
-
-        const clean = token.replace(/[.,!?;:\"'„"—–()[\]]/g, "").toLowerCase();
-        const annotation = wordMap.get(clean);
 
         if (!annotation || !showGrammarColors) {
           return (
@@ -186,7 +194,7 @@ function AnnotatedText({
               onClick={() => annotation && onWordClick(annotation)}
               className={cn(
                 basePlayClass,
-                !isPlaying && annotation ? "cursor-pointer bg-yellow-100/60 hover:bg-yellow-200 border-b-2 border-yellow-200/50 rounded px-0.5 font-medium transition-colors" : ""
+                !isPlaying && annotation ? "cursor-pointer bg-brand-light hover:bg-brand/20 border-b-2 border-brand/20 rounded px-0.5 font-medium transition-colors" : ""
               )}
             >
               {token}
@@ -202,10 +210,10 @@ function AnnotatedText({
             key={i}
             onClick={() => onWordClick(annotation)}
             className={cn(
-              isPlaying ? "bg-blue-600 text-white rounded px-0.5 shadow-sm font-bold" : "cursor-pointer bg-yellow-100/60 hover:bg-yellow-200 border-b-2 border-yellow-200/50 rounded px-0.5 font-medium transition-colors",
+              isPlaying ? "bg-brand text-white rounded px-0.5 shadow-sm font-bold" : "cursor-pointer bg-brand-light hover:bg-brand/20 border-b-2 border-brand/20 rounded px-0.5 font-medium transition-colors",
               !isPlaying && caseClass,
-              !isPlaying && annotation.separable && "decoration-dashed underline decoration-yellow-400",
-              !isPlaying && isSaved && "bg-green-50 border-green-200/50"
+              !isPlaying && annotation.separable && "decoration-dashed underline decoration-amber-400",
+              !isPlaying && isSaved && "bg-green-50 border-green-300"
             )}
             title={`${annotation.translation}${annotation.case ? ` - ${annotation.case}` : ""}`}
           >

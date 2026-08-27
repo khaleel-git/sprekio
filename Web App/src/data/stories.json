@@ -328,7 +328,7 @@
           {"word": "Als", "translation": "when / as", "type": "conjunction"},
           {"word": "Gleis", "translation": "track / platform", "type": "noun", "gender": "neuter"},
           {"word": "erreichte", "translation": "reached", "type": "verb", "base": "erreichen"},
-          {"word": "fuhr ab", "translation": "departed", "type": "verb", "base": "abfahren", "separable": true},
+          {"word": "fuhr", "translation": "departed (fuhr ab)", "type": "verb", "base": "abfahren", "separable": true},
           {"word": "gerade", "translation": "just (now)", "type": "adverb"},
           {"word": "hilflos", "translation": "helpless / helplessly", "type": "adjective"}
         ]
@@ -338,7 +338,7 @@
         "text": "Er rief sofort bei der Bahn an und fragte nach dem nächsten Zug nach Hamburg. Der Mitarbeiter erklärte ihm, dass es in einer halben Stunde einen Zug gäbe, allerdings mit einmal Umsteigen.",
         "translation": "He immediately called the railway and asked about the next train to Hamburg. The employee explained that there would be a train in half an hour, but with one change.",
         "words": [
-          {"word": "rief an", "translation": "called (on the phone)", "type": "verb", "base": "anrufen", "separable": true},
+          {"word": "rief", "translation": "called (rief an)", "type": "verb", "base": "anrufen", "separable": true},
           {"word": "sofort", "translation": "immediately", "type": "adverb"},
           {"word": "fragte nach", "translation": "asked about", "type": "verb", "base": "nachfragen"},
           {"word": "Mitarbeiter", "translation": "employee / colleague", "type": "noun", "gender": "masculine"},
@@ -352,7 +352,7 @@
         "text": "Jonas atmete erleichtert auf. Er hatte noch genug Zeit, um einen Kaffee zu holen und seine Unterlagen nochmals zu überprüfen.",
         "translation": "Jonas breathed a sigh of relief. He still had enough time to get a coffee and check his documents once more.",
         "words": [
-          {"word": "atmete auf", "translation": "breathed (a sigh of relief)", "type": "verb", "separable": true},
+          {"word": "atmete", "translation": "breathed (a sigh of relief) (atmete auf)", "type": "verb", "base": "aufatmen", "separable": true},
           {"word": "erleichtert", "translation": "relieved", "type": "adjective"},
           {"word": "genug", "translation": "enough", "type": "adverb"},
           {"word": "Unterlagen", "translation": "documents / papers", "type": "noun"},
@@ -367,7 +367,7 @@
         "words": [
           {"word": "pünktlich", "translation": "on time / punctual", "type": "adjective"},
           {"word": "Vorstellungsgespräch", "translation": "job interview", "type": "noun", "gender": "neuter"},
-          {"word": "ankam", "translation": "arrived", "type": "verb", "base": "ankommen", "separable": true},
+          {"word": "kam", "translation": "arrived (kam an)", "type": "verb", "base": "ankommen", "separable": true},
           {"word": "beeindruckt", "translation": "impressed", "type": "adjective"},
           {"word": "Ruhe", "translation": "calmness / quiet", "type": "noun", "gender": "feminine"},
           {"word": "ahnte", "translation": "suspected / sensed", "type": "verb", "base": "ahnen"},
@@ -437,7 +437,7 @@
         "text": "Sophie nahm den Rat an und investierte eine Woche darin, maßgeschneiderte Bewerbungen zu verfassen. Schon bald meldeten sich mehrere Unternehmen bei ihr.",
         "translation": "Sophie took the advice and invested a week into writing tailored applications. Before long, several companies got in touch with her.",
         "words": [
-          {"word": "nahm an", "translation": "accepted / took up", "type": "verb", "base": "annehmen", "separable": true},
+          {"word": "nahm", "translation": "accepted / took up (nahm an)", "type": "verb", "base": "annehmen", "separable": true},
           {"word": "investierte", "translation": "invested", "type": "verb", "base": "investieren"},
           {"word": "maßgeschneidert", "translation": "tailor-made / customized", "type": "adjective"},
           {"word": "verfassen", "translation": "to write / compose", "type": "verb"},
@@ -452,7 +452,7 @@
         "words": [
           {"word": "entscheidend", "translation": "decisive / crucial", "type": "adjective"},
           {"word": "mittelständisch", "translation": "medium-sized (business)", "type": "adjective"},
-          {"word": "stattfand", "translation": "took place", "type": "verb", "base": "stattfinden", "separable": true},
+          {"word": "fand", "translation": "took place (fand statt)", "type": "verb", "base": "stattfinden", "separable": true},
           {"word": "vorbereitet", "translation": "prepared", "type": "adjective"},
           {"word": "überzeugend", "translation": "convincingly", "type": "adjective"},
           {"word": "darlegen", "translation": "to demonstrate / explain", "type": "verb", "separable": true},
@@ -470,7 +470,7 @@
           {"word": "entsprach", "translation": "matched / corresponded to", "type": "verb", "base": "entsprechen"},
           {"word": "Vorstellungen", "translation": "expectations / ideas", "type": "noun"},
           {"word": "klangen", "translation": "sounded", "type": "verb", "base": "klingen"},
-          {"word": "sagte zu", "translation": "accepted / agreed", "type": "verb", "base": "zusagen", "separable": true}
+          {"word": "sagte", "translation": "accepted / agreed (sagte zu)", "type": "verb", "base": "zusagen", "separable": true}
         ]
       }
     ],
@@ -520,7 +520,7 @@
       },
       {
         "id": "p2",
-        "text": "In der Festzelt war's schon brechend voll. \"Hoid amoi!\", rief ein Kellner. \"Ihr kriagts glei an Tisch!\"",
+        "text": "Im Festzelt war's schon brechend voll. \"Hoid amoi!\", rief ein Kellner. \"Ihr kriagts glei an Tisch!\"",
         "translation": "In the festival tent it was already packed. \"Wait a moment!\", called a waiter. \"You'll get a table soon!\" [Hoid amoi = Halt mal (wait a moment), kriagts = kriegt ihr (you get), glei = gleich (soon)]",
         "words": [
           {"word": "Festzelt", "translation": "festival tent (at Oktoberfest)", "type": "noun", "gender": "neuter"},
@@ -540,7 +540,7 @@
           {"word": "Des", "translation": "Das (that/this) — Bayerisch", "type": "article"},
           {"word": "fei", "translation": "wirklich / echt (really / quite) — Bayerisch", "type": "adverb"},
           {"word": "guad", "translation": "gut (good) — Bayerisch", "type": "adjective"},
-          {"word": "leckte ab", "translation": "licked off", "type": "verb", "base": "ablecken", "separable": true}
+          {"word": "leckte", "translation": "licked (leckte ab)", "type": "verb", "base": "ablecken", "separable": true}
         ]
       },
       {
@@ -551,7 +551,6 @@
           {"word": "no", "translation": "noch (still / also) — Bayerisch", "type": "adverb"},
           {"word": "zuaschaut", "translation": "zugeschaut (watched) — Bayerisch", "type": "verb"},
           {"word": "Kapell", "translation": "Kapelle (band / orchestra) — Bayerisch", "type": "noun"},
-          {"word": "Oans, zwoa, gsuffa", "translation": "Eins, zwei, gesoffen! (Oktoberfest chant: One, two, drink!) — Bayerisch", "type": "phrase"},
           {"word": "Menge", "translation": "crowd", "type": "noun", "gender": "feminine"}
         ]
       }
@@ -723,7 +722,7 @@
         "text": "Gregor sann darüber nach, wie er aus dem Bett kommen könnte. Er hatte noch nie versucht, auf dem Rücken zu liegen, und konnte sich nicht vorstellen, wie er sich dabei umdrehen sollte.",
         "translation": "Gregor pondered how he might get out of bed. He had never tried to lie on his back before, and could not imagine how he was supposed to turn himself over in that position.",
         "words": [
-          {"word": "sann nach", "translation": "pondered / reflected", "type": "verb", "base": "nachsinnen", "separable": true},
+          {"word": "sann", "translation": "pondered / reflected (sann nach)", "type": "verb", "base": "nachsinnen", "separable": true},
           {"word": "darüber", "translation": "about it / over that", "type": "adverb"},
           {"word": "könnte", "translation": "could (Konjunktiv II)", "type": "verb", "base": "können"},
           {"word": "vorstellen", "translation": "to imagine", "type": "verb", "separable": true},
@@ -745,6 +744,1277 @@
       {"question": "In was ist Gregor Samsa verwandelt?", "options": ["In einen Vogel", "In ein Ungeziefer", "In einen Hund", "In eine Pflanze"], "correct": 1},
       {"question": "Ist es ein Traum?", "options": ["Ja, es ist ein Alptraum", "Nein, es ist kein Traum", "Das wird nicht klar", "Er weiß es nicht"], "correct": 1},
       {"question": "Wovor hat Gregor Angst?", "options": ["Vor seiner Familie", "Vor der Arbeit", "Aus dem Bett zu kommen", "Vor dem Spiegel"], "correct": 2}
+    ]
+  },
+  {
+    "id": "9",
+    "title": "Meine Familie",
+    "titleEn": "My Family",
+    "level": "A1",
+    "topic": "Family",
+    "dialect": null,
+    "duration": 3,
+    "imageEmoji": "👨‍👩‍👧‍👦",
+    "color": "from-green-400 to-emerald-500",
+    "description": "Anna stellt ihre Familie vor: ihre Eltern, ihren Bruder und ihre Schwester.",
+    "descriptionEn": "Anna introduces her family: her parents, her brother, and her sister.",
+    "upvotes": 24,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Ich heiße Anna. Ich bin zwanzig Jahre alt. Ich komme aus Hamburg.",
+        "translation": "My name is Anna. I am twenty years old. I come from Hamburg.",
+        "words": [
+          {"word": "heiße", "translation": "am called", "type": "verb", "base": "heißen"},
+          {"word": "zwanzig", "translation": "twenty", "type": "number"},
+          {"word": "Jahre", "translation": "years", "type": "noun", "gender": "neuter"},
+          {"word": "alt", "translation": "old", "type": "adjective"},
+          {"word": "komme", "translation": "come", "type": "verb", "base": "kommen"},
+          {"word": "aus", "translation": "from", "type": "preposition"},
+          {"word": "Hamburg", "translation": "Hamburg", "type": "noun"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Meine Mutter heißt Petra. Sie ist Lehrerin. Mein Vater heißt Thomas. Er ist Arzt.",
+        "translation": "My mother's name is Petra. She is a teacher. My father's name is Thomas. He is a doctor.",
+        "words": [
+          {"word": "Meine", "translation": "my", "type": "pronoun"},
+          {"word": "Mutter", "translation": "mother", "type": "noun", "gender": "feminine"},
+          {"word": "Lehrerin", "translation": "teacher (female)", "type": "noun", "gender": "feminine"},
+          {"word": "Mein", "translation": "my", "type": "pronoun"},
+          {"word": "Vater", "translation": "father", "type": "noun", "gender": "masculine"},
+          {"word": "Arzt", "translation": "doctor", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Ich habe einen Bruder und eine Schwester. Mein Bruder heißt Paul. Meine Schwester heißt Lisa.",
+        "translation": "I have a brother and a sister. My brother's name is Paul. My sister's name is Lisa.",
+        "words": [
+          {"word": "habe", "translation": "have", "type": "verb", "base": "haben"},
+          {"word": "einen", "translation": "a", "type": "article", "case": "Akkusativ"},
+          {"word": "Bruder", "translation": "brother", "type": "noun", "case": "Akkusativ", "gender": "masculine"},
+          {"word": "eine", "translation": "a", "type": "article", "case": "Akkusativ"},
+          {"word": "Schwester", "translation": "sister", "type": "noun", "case": "Akkusativ", "gender": "feminine"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Am Wochenende besuchen wir unsere Großeltern. Wir essen zusammen und spielen Karten. Das macht viel Spaß!",
+        "translation": "On the weekend we visit our grandparents. We eat together and play cards. That's a lot of fun!",
+        "words": [
+          {"word": "Wochenende", "translation": "weekend", "type": "noun", "gender": "neuter"},
+          {"word": "besuchen", "translation": "visit", "type": "verb"},
+          {"word": "unsere", "translation": "our", "type": "pronoun"},
+          {"word": "Großeltern", "translation": "grandparents", "type": "noun"},
+          {"word": "essen", "translation": "eat", "type": "verb"},
+          {"word": "zusammen", "translation": "together", "type": "adverb"},
+          {"word": "spielen", "translation": "play", "type": "verb"},
+          {"word": "Spaß", "translation": "fun", "type": "noun", "gender": "masculine"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "die Familie", "translation": "the family", "example": "Meine Familie ist groß."},
+      {"word": "der Bruder", "translation": "the brother", "example": "Mein Bruder ist zehn Jahre alt."},
+      {"word": "die Schwester", "translation": "the sister", "example": "Meine Schwester wohnt in Berlin."},
+      {"word": "die Großeltern", "translation": "the grandparents", "example": "Meine Großeltern sind sehr nett."},
+      {"word": "besuchen", "translation": "to visit", "example": "Wir besuchen unsere Oma."},
+      {"word": "zusammen", "translation": "together", "example": "Wir essen zusammen."}
+    ],
+    "grammarFocus": "Possessive pronouns (mein/meine), Present tense, Family vocabulary",
+    "quiz": [
+      {"question": "Wie alt ist Anna?", "options": ["Achtzehn", "Zwanzig", "Dreißig", "Fünfzehn"], "correct": 1},
+      {"question": "Was ist Annas Mutter von Beruf?", "options": ["Ärztin", "Lehrerin", "Verkäuferin", "Ingenieurin"], "correct": 1},
+      {"question": "Was machen sie am Wochenende?", "options": ["Sie arbeiten", "Sie besuchen die Großeltern", "Sie reisen nach Hamburg", "Sie schlafen"], "correct": 1}
+    ]
+  },
+  {
+    "id": "10",
+    "title": "Einkaufen im Supermarkt",
+    "titleEn": "Shopping at the Supermarket",
+    "level": "A1",
+    "topic": "Daily Life",
+    "dialect": null,
+    "duration": 3,
+    "imageEmoji": "🛒",
+    "color": "from-green-400 to-emerald-500",
+    "description": "Tim geht in den Supermarkt und kauft ein, was er für sein Abendessen braucht.",
+    "descriptionEn": "Tim goes to the supermarket and buys what he needs for his dinner.",
+    "upvotes": 19,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Tim geht heute in den Supermarkt. Er braucht Brot, Milch und Käse.",
+        "translation": "Tim is going to the supermarket today. He needs bread, milk, and cheese.",
+        "words": [
+          {"word": "geht", "translation": "goes", "type": "verb", "base": "gehen"},
+          {"word": "heute", "translation": "today", "type": "adverb"},
+          {"word": "Supermarkt", "translation": "supermarket", "type": "noun", "case": "Akkusativ", "gender": "masculine"},
+          {"word": "braucht", "translation": "needs", "type": "verb", "base": "brauchen"},
+          {"word": "Brot", "translation": "bread", "type": "noun", "gender": "neuter"},
+          {"word": "Milch", "translation": "milk", "type": "noun", "gender": "feminine"},
+          {"word": "Käse", "translation": "cheese", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Im Supermarkt gibt es viele Regale. Tim sucht das Brot. Es kostet zwei Euro.",
+        "translation": "In the supermarket there are many shelves. Tim looks for the bread. It costs two euros.",
+        "words": [
+          {"word": "gibt", "translation": "there is/are (es gibt)", "type": "verb", "base": "geben"},
+          {"word": "viele", "translation": "many", "type": "adjective"},
+          {"word": "Regale", "translation": "shelves", "type": "noun", "gender": "neuter"},
+          {"word": "sucht", "translation": "looks for", "type": "verb", "base": "suchen"},
+          {"word": "kostet", "translation": "costs", "type": "verb", "base": "kosten"},
+          {"word": "Euro", "translation": "euros", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "An der Kasse bezahlt Tim mit seiner Karte. Die Verkäuferin lächelt und sagt: \"Schönen Tag noch!\"",
+        "translation": "At the checkout, Tim pays with his card. The cashier smiles and says: \"Have a nice day!\"",
+        "words": [
+          {"word": "Kasse", "translation": "checkout / register", "type": "noun", "case": "Dativ", "gender": "feminine"},
+          {"word": "bezahlt", "translation": "pays", "type": "verb", "base": "bezahlen"},
+          {"word": "seiner", "translation": "his", "type": "pronoun", "case": "Dativ"},
+          {"word": "Karte", "translation": "card", "type": "noun", "gender": "feminine"},
+          {"word": "Verkäuferin", "translation": "saleswoman", "type": "noun", "gender": "feminine"},
+          {"word": "lächelt", "translation": "smiles", "type": "verb", "base": "lächeln"},
+          {"word": "sagt", "translation": "says", "type": "verb", "base": "sagen"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Zu Hause kocht Tim das Abendessen. Er macht ein Käsebrot. Es schmeckt sehr lecker.",
+        "translation": "At home Tim cooks dinner. He makes a cheese sandwich. It tastes very delicious.",
+        "words": [
+          {"word": "Zu Hause", "translation": "at home", "type": "phrase"},
+          {"word": "kocht", "translation": "cooks", "type": "verb", "base": "kochen"},
+          {"word": "Abendessen", "translation": "dinner", "type": "noun", "gender": "neuter"},
+          {"word": "macht", "translation": "makes", "type": "verb", "base": "machen"},
+          {"word": "Käsebrot", "translation": "cheese sandwich", "type": "noun", "gender": "neuter"},
+          {"word": "schmeckt", "translation": "tastes", "type": "verb", "base": "schmecken"},
+          {"word": "lecker", "translation": "delicious", "type": "adjective"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "der Supermarkt", "translation": "the supermarket", "example": "Der Supermarkt ist groß."},
+      {"word": "brauchen", "translation": "to need", "example": "Ich brauche Milch."},
+      {"word": "die Kasse", "translation": "the checkout", "example": "Die Kasse ist links."},
+      {"word": "bezahlen", "translation": "to pay", "example": "Ich bezahle mit Karte."},
+      {"word": "die Verkäuferin", "translation": "the saleswoman", "example": "Die Verkäuferin ist freundlich."},
+      {"word": "lecker", "translation": "delicious", "example": "Das Essen ist lecker."}
+    ],
+    "grammarFocus": "Accusative case with 'brauchen', Shopping vocabulary, Simple present tense",
+    "quiz": [
+      {"question": "Was braucht Tim?", "options": ["Obst und Gemüse", "Brot, Milch und Käse", "Fleisch und Fisch", "Nur Wasser"], "correct": 1},
+      {"question": "Wie bezahlt Tim?", "options": ["Mit Bargeld", "Mit seiner Karte", "Er bezahlt nicht", "Mit einem Scheck"], "correct": 1},
+      {"question": "Was kocht Tim zu Hause?", "options": ["Suppe", "Ein Käsebrot", "Pizza", "Nudeln"], "correct": 1}
+    ]
+  },
+  {
+    "id": "11",
+    "title": "Ein Tag im Park",
+    "titleEn": "A Day in the Park",
+    "level": "A1",
+    "topic": "Daily Life",
+    "dialect": null,
+    "duration": 3,
+    "imageEmoji": "🌳",
+    "color": "from-green-400 to-emerald-500",
+    "description": "Lisa und Max verbringen einen sonnigen Tag im Park – mit Eis, Fußball und einem freundlichen Hund.",
+    "descriptionEn": "Lisa and Max spend a sunny day in the park – with ice cream, soccer, and a friendly dog.",
+    "upvotes": 17,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Es ist Sommer. Die Sonne scheint. Lisa und Max gehen in den Park.",
+        "translation": "It is summer. The sun is shining. Lisa and Max go to the park.",
+        "words": [
+          {"word": "Sommer", "translation": "summer", "type": "noun", "gender": "masculine"},
+          {"word": "Sonne", "translation": "sun", "type": "noun", "gender": "feminine"},
+          {"word": "scheint", "translation": "shines", "type": "verb", "base": "scheinen"},
+          {"word": "Park", "translation": "park", "type": "noun", "case": "Akkusativ", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Im Park spielen viele Kinder Fußball. Lisa und Max setzen sich auf eine Bank und essen ein Eis.",
+        "translation": "In the park, many children are playing soccer. Lisa and Max sit down on a bench and eat ice cream.",
+        "words": [
+          {"word": "spielen", "translation": "play", "type": "verb"},
+          {"word": "Kinder", "translation": "children", "type": "noun", "gender": "neuter"},
+          {"word": "Fußball", "translation": "soccer", "type": "noun", "gender": "masculine"},
+          {"word": "setzen", "translation": "sit down (sich setzen)", "type": "verb", "base": "sich setzen"},
+          {"word": "Bank", "translation": "bench", "type": "noun", "case": "Akkusativ", "gender": "feminine"},
+          {"word": "essen", "translation": "eat", "type": "verb"},
+          {"word": "Eis", "translation": "ice cream", "type": "noun", "gender": "neuter"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Ein Hund läuft zu ihnen und bellt fröhlich. Max streichelt den Hund. Der Hund gehört einer alten Frau.",
+        "translation": "A dog runs to them and barks happily. Max pets the dog. The dog belongs to an old woman.",
+        "words": [
+          {"word": "Hund", "translation": "dog", "type": "noun", "gender": "masculine"},
+          {"word": "läuft", "translation": "runs", "type": "verb", "base": "laufen"},
+          {"word": "bellt", "translation": "barks", "type": "verb", "base": "bellen"},
+          {"word": "fröhlich", "translation": "happily", "type": "adverb"},
+          {"word": "streichelt", "translation": "pets", "type": "verb", "base": "streicheln"},
+          {"word": "gehört", "translation": "belongs to", "type": "verb", "base": "gehören"},
+          {"word": "Frau", "translation": "woman", "type": "noun", "case": "Dativ", "gender": "feminine"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Am Abend gehen Lisa und Max nach Hause. Der Tag im Park war wunderschön.",
+        "translation": "In the evening, Lisa and Max go home. The day in the park was wonderful.",
+        "words": [
+          {"word": "Abend", "translation": "evening", "type": "noun", "gender": "masculine"},
+          {"word": "nach Hause", "translation": "home(ward)", "type": "phrase"},
+          {"word": "Tag", "translation": "day", "type": "noun", "gender": "masculine"},
+          {"word": "war", "translation": "was", "type": "verb", "base": "sein"},
+          {"word": "wunderschön", "translation": "wonderful", "type": "adjective"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "der Park", "translation": "the park", "example": "Wir gehen in den Park."},
+      {"word": "spielen", "translation": "to play", "example": "Die Kinder spielen Fußball."},
+      {"word": "der Hund", "translation": "the dog", "example": "Der Hund bellt."},
+      {"word": "streicheln", "translation": "to pet / stroke", "example": "Ich streichle die Katze."},
+      {"word": "gehören", "translation": "to belong to", "example": "Das Buch gehört mir."},
+      {"word": "wunderschön", "translation": "wonderful / beautiful", "example": "Der Tag war wunderschön."}
+    ],
+    "grammarFocus": "Reflexive verbs (sich setzen), Dative with 'gehören', Present tense",
+    "quiz": [
+      {"question": "Wo spielen die Kinder Fußball?", "options": ["Im Park", "In der Schule", "Zu Hause", "Am Strand"], "correct": 0},
+      {"question": "Was machen Lisa und Max auf der Bank?", "options": ["Sie schlafen", "Sie essen ein Eis", "Sie lesen", "Sie singen"], "correct": 1},
+      {"question": "Wem gehört der Hund?", "options": ["Lisa", "Max", "Einer alten Frau", "Niemandem"], "correct": 2}
+    ]
+  },
+  {
+    "id": "12",
+    "title": "Der Umzug in eine neue Wohnung",
+    "titleEn": "Moving to a New Apartment",
+    "level": "A2",
+    "topic": "Daily Life",
+    "dialect": null,
+    "duration": 4,
+    "imageEmoji": "📦",
+    "color": "from-emerald-500 to-teal-600",
+    "description": "Sabine zieht in eine neue Wohnung um, und ihre Freunde helfen ihr beim Tragen und Einräumen.",
+    "descriptionEn": "Sabine moves into a new apartment, and her friends help her carry and unpack.",
+    "upvotes": 22,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Sabine zieht in eine neue Wohnung um. Die Wohnung hat zwei Zimmer, eine Küche und ein Bad.",
+        "translation": "Sabine is moving into a new apartment. The apartment has two rooms, a kitchen, and a bathroom.",
+        "words": [
+          {"word": "zieht", "translation": "moves (umziehen)", "type": "verb", "base": "umziehen", "separable": true},
+          {"word": "Wohnung", "translation": "apartment", "type": "noun", "case": "Akkusativ", "gender": "feminine"},
+          {"word": "Zimmer", "translation": "rooms", "type": "noun", "gender": "neuter"},
+          {"word": "Küche", "translation": "kitchen", "type": "noun", "gender": "feminine"},
+          {"word": "Bad", "translation": "bathroom", "type": "noun", "gender": "neuter"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Ihre Freunde helfen ihr beim Umzug. Sie tragen Kisten und Möbel die Treppe hinauf.",
+        "translation": "Her friends help her with the move. They carry boxes and furniture up the stairs.",
+        "words": [
+          {"word": "Freunde", "translation": "friends", "type": "noun"},
+          {"word": "helfen", "translation": "help", "type": "verb"},
+          {"word": "Umzug", "translation": "move / relocation", "type": "noun", "gender": "masculine"},
+          {"word": "tragen", "translation": "carry", "type": "verb"},
+          {"word": "Kisten", "translation": "boxes", "type": "noun", "gender": "feminine"},
+          {"word": "Möbel", "translation": "furniture", "type": "noun", "gender": "neuter"},
+          {"word": "Treppe", "translation": "stairs", "type": "noun", "gender": "feminine"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Nach der Arbeit bestellen sie Pizza und trinken kaltes Bier. Alle sind müde, aber glücklich.",
+        "translation": "After the work, they order pizza and drink cold beer. Everyone is tired but happy.",
+        "words": [
+          {"word": "Arbeit", "translation": "work", "type": "noun", "case": "Dativ", "gender": "feminine"},
+          {"word": "bestellen", "translation": "order", "type": "verb"},
+          {"word": "trinken", "translation": "drink", "type": "verb"},
+          {"word": "kaltes", "translation": "cold", "type": "adjective"},
+          {"word": "müde", "translation": "tired", "type": "adjective"},
+          {"word": "glücklich", "translation": "happy", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Am nächsten Tag räumt Sabine ihre Sachen ein. Endlich fühlt sich die neue Wohnung wie zu Hause an.",
+        "translation": "The next day, Sabine unpacks her things. Finally, the new apartment feels like home.",
+        "words": [
+          {"word": "räumt", "translation": "unpacks (einräumen)", "type": "verb", "base": "einräumen", "separable": true},
+          {"word": "Sachen", "translation": "things", "type": "noun"},
+          {"word": "Endlich", "translation": "finally", "type": "adverb"},
+          {"word": "fühlt", "translation": "feels (sich anfühlen)", "type": "verb", "base": "sich anfühlen", "separable": true}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "umziehen", "translation": "to move house", "example": "Wir ziehen nächsten Monat um."},
+      {"word": "die Wohnung", "translation": "the apartment", "example": "Die Wohnung ist sehr hell."},
+      {"word": "helfen", "translation": "to help", "example": "Kannst du mir helfen?"},
+      {"word": "die Kiste", "translation": "the box", "example": "Die Kiste ist schwer."},
+      {"word": "müde", "translation": "tired", "example": "Ich bin heute sehr müde."},
+      {"word": "sich anfühlen", "translation": "to feel", "example": "Das fühlt sich gut an."}
+    ],
+    "grammarFocus": "Separable verbs (umziehen, einräumen), Dative verbs (helfen), Adjective endings",
+    "quiz": [
+      {"question": "Wie viele Zimmer hat die neue Wohnung?", "options": ["Ein Zimmer", "Zwei Zimmer", "Drei Zimmer", "Vier Zimmer"], "correct": 1},
+      {"question": "Wer hilft Sabine beim Umzug?", "options": ["Ihre Familie", "Ihre Freunde", "Niemand", "Eine Firma"], "correct": 1},
+      {"question": "Was bestellen sie nach der Arbeit?", "options": ["Sushi", "Pizza", "Pasta", "Döner"], "correct": 1}
+    ]
+  },
+  {
+    "id": "13",
+    "title": "Beim Arzt",
+    "titleEn": "At the Doctor's",
+    "level": "A2",
+    "topic": "Health",
+    "dialect": null,
+    "duration": 4,
+    "imageEmoji": "🩺",
+    "color": "from-emerald-500 to-teal-600",
+    "description": "Markus fühlt sich krank und geht zur Ärztin. Zum Glück ist es nur eine Erkältung.",
+    "descriptionEn": "Markus feels sick and goes to the doctor. Luckily, it's just a cold.",
+    "upvotes": 15,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Markus fühlt sich nicht gut. Er hat Kopfschmerzen und Fieber. Er ruft beim Arzt an.",
+        "translation": "Markus doesn't feel well. He has a headache and a fever. He calls the doctor.",
+        "words": [
+          {"word": "fühlt", "translation": "feels (sich fühlen)", "type": "verb", "base": "sich fühlen"},
+          {"word": "Kopfschmerzen", "translation": "headache", "type": "noun"},
+          {"word": "Fieber", "translation": "fever", "type": "noun", "gender": "neuter"},
+          {"word": "ruft", "translation": "calls (anrufen)", "type": "verb", "base": "anrufen", "separable": true}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "In der Praxis wartet Markus zwanzig Minuten. Dann untersucht ihn die Ärztin sorgfältig.",
+        "translation": "At the practice, Markus waits twenty minutes. Then the doctor examines him carefully.",
+        "words": [
+          {"word": "Praxis", "translation": "medical practice", "type": "noun", "case": "Dativ", "gender": "feminine"},
+          {"word": "wartet", "translation": "waits", "type": "verb", "base": "warten"},
+          {"word": "Minuten", "translation": "minutes", "type": "noun"},
+          {"word": "untersucht", "translation": "examines", "type": "verb", "base": "untersuchen"},
+          {"word": "Ärztin", "translation": "doctor (female)", "type": "noun", "gender": "feminine"},
+          {"word": "sorgfältig", "translation": "carefully", "type": "adverb"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Die Ärztin sagt, dass Markus eine Erkältung hat. Sie verschreibt ihm Medikamente und Bettruhe.",
+        "translation": "The doctor says that Markus has a cold. She prescribes him medication and bed rest.",
+        "words": [
+          {"word": "sagt", "translation": "says", "type": "verb"},
+          {"word": "Erkältung", "translation": "cold / flu", "type": "noun", "gender": "feminine"},
+          {"word": "verschreibt", "translation": "prescribes", "type": "verb", "base": "verschreiben"},
+          {"word": "Medikamente", "translation": "medication", "type": "noun"},
+          {"word": "Bettruhe", "translation": "bed rest", "type": "noun", "gender": "feminine"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Markus geht nach Hause und schläft den ganzen Nachmittag. Am nächsten Tag fühlt er sich schon besser.",
+        "translation": "Markus goes home and sleeps the entire afternoon. The next day he already feels better.",
+        "words": [
+          {"word": "schläft", "translation": "sleeps", "type": "verb", "base": "schlafen"},
+          {"word": "ganzen", "translation": "whole / entire", "type": "adjective"},
+          {"word": "Nachmittag", "translation": "afternoon", "type": "noun", "case": "Akkusativ", "gender": "masculine"},
+          {"word": "besser", "translation": "better", "type": "adjective"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "die Kopfschmerzen", "translation": "headache", "example": "Ich habe Kopfschmerzen."},
+      {"word": "das Fieber", "translation": "fever", "example": "Er hat hohes Fieber."},
+      {"word": "die Erkältung", "translation": "cold / flu", "example": "Ich habe eine Erkältung."},
+      {"word": "verschreiben", "translation": "to prescribe", "example": "Der Arzt verschreibt Medikamente."},
+      {"word": "die Bettruhe", "translation": "bed rest", "example": "Bettruhe hilft bei einer Erkältung."},
+      {"word": "sich fühlen", "translation": "to feel", "example": "Wie fühlst du dich?"}
+    ],
+    "grammarFocus": "Reflexive verbs (sich fühlen), Health vocabulary, Subordinate clauses with 'dass'",
+    "quiz": [
+      {"question": "Was für Symptome hat Markus?", "options": ["Bauchschmerzen", "Kopfschmerzen und Fieber", "Nur Husten", "Zahnschmerzen"], "correct": 1},
+      {"question": "Was verschreibt die Ärztin?", "options": ["Nichts", "Medikamente und Bettruhe", "Nur Tee", "Eine Operation"], "correct": 1},
+      {"question": "Wie fühlt sich Markus am nächsten Tag?", "options": ["Schlechter", "Genauso schlecht", "Besser", "Er ist wieder krank"], "correct": 2}
+    ]
+  },
+  {
+    "id": "14",
+    "title": "Ein Ausflug an den See",
+    "titleEn": "A Trip to the Lake",
+    "level": "A2",
+    "topic": "Travel",
+    "dialect": null,
+    "duration": 4,
+    "imageEmoji": "🏖️",
+    "color": "from-emerald-500 to-teal-600",
+    "description": "Nina und ihre Freunde machen ein Picknick am See – bis unerwarteter Regen alle nach Hause treibt.",
+    "descriptionEn": "Nina and her friends have a picnic at the lake – until unexpected rain sends everyone home.",
+    "upvotes": 18,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Am Samstag fahren Nina und ihre Freunde an den See. Das Wetter ist warm und sonnig.",
+        "translation": "On Saturday, Nina and her friends drive to the lake. The weather is warm and sunny.",
+        "words": [
+          {"word": "Samstag", "translation": "Saturday", "type": "noun", "gender": "masculine"},
+          {"word": "fahren", "translation": "drive / travel", "type": "verb"},
+          {"word": "See", "translation": "lake", "type": "noun", "case": "Akkusativ", "gender": "masculine"},
+          {"word": "Wetter", "translation": "weather", "type": "noun", "gender": "neuter"},
+          {"word": "warm", "translation": "warm", "type": "adjective"},
+          {"word": "sonnig", "translation": "sunny", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Sie packen ein Picknick ein: Brot, Obst und kalte Getränke. Am See schwimmen sie und spielen Volleyball.",
+        "translation": "They pack a picnic: bread, fruit, and cold drinks. At the lake they swim and play volleyball.",
+        "words": [
+          {"word": "packen", "translation": "pack (einpacken)", "type": "verb", "base": "einpacken", "separable": true},
+          {"word": "Picknick", "translation": "picnic", "type": "noun", "gender": "neuter"},
+          {"word": "Obst", "translation": "fruit", "type": "noun", "gender": "neuter"},
+          {"word": "Getränke", "translation": "drinks", "type": "noun", "gender": "neuter"},
+          {"word": "schwimmen", "translation": "swim", "type": "verb"},
+          {"word": "spielen", "translation": "play", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Am Nachmittag wird der Himmel dunkel. Es beginnt zu regnen, und alle laufen schnell zum Auto.",
+        "translation": "In the afternoon the sky turns dark. It starts to rain, and everyone runs quickly to the car.",
+        "words": [
+          {"word": "Himmel", "translation": "sky", "type": "noun", "gender": "masculine"},
+          {"word": "dunkel", "translation": "dark", "type": "adjective"},
+          {"word": "beginnt", "translation": "begins", "type": "verb", "base": "beginnen"},
+          {"word": "regnen", "translation": "to rain", "type": "verb"},
+          {"word": "laufen", "translation": "run", "type": "verb"},
+          {"word": "Auto", "translation": "car", "type": "noun", "gender": "neuter"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Trotz des Regens war der Tag sehr schön. Nina lacht: \"Nächstes Mal nehmen wir Regenschirme mit!\"",
+        "translation": "Despite the rain, the day was very nice. Nina laughs: \"Next time we'll bring umbrellas!\"",
+        "words": [
+          {"word": "Trotz", "translation": "despite", "type": "preposition"},
+          {"word": "Regens", "translation": "rain (genitive)", "type": "noun", "case": "Genitiv", "gender": "masculine"},
+          {"word": "war", "translation": "was", "type": "verb", "base": "sein"},
+          {"word": "lacht", "translation": "laughs", "type": "verb", "base": "lachen"},
+          {"word": "Regenschirme", "translation": "umbrellas", "type": "noun", "gender": "masculine"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "der See", "translation": "the lake", "example": "Der See ist sehr groß."},
+      {"word": "das Picknick", "translation": "the picnic", "example": "Wir machen ein Picknick."},
+      {"word": "schwimmen", "translation": "to swim", "example": "Ich schwimme gern."},
+      {"word": "der Himmel", "translation": "the sky", "example": "Der Himmel ist blau."},
+      {"word": "regnen", "translation": "to rain", "example": "Es regnet stark."},
+      {"word": "der Regenschirm", "translation": "the umbrella", "example": "Nimm deinen Regenschirm mit!"}
+    ],
+    "grammarFocus": "Genitive with 'trotz', Weather vocabulary, Separable verbs",
+    "quiz": [
+      {"question": "Wie ist das Wetter am Anfang?", "options": ["Kalt und windig", "Warm und sonnig", "Regnerisch", "Neblig"], "correct": 1},
+      {"question": "Was machen sie am See?", "options": ["Sie lesen Bücher", "Sie schwimmen und spielen Volleyball", "Sie angeln", "Sie schlafen"], "correct": 1},
+      {"question": "Was passiert am Nachmittag?", "options": ["Die Sonne scheint stärker", "Es beginnt zu regnen", "Sie fahren nach Hause", "Nichts Besonderes"], "correct": 1}
+    ]
+  },
+  {
+    "id": "15",
+    "title": "Ein Praktikum in Berlin",
+    "titleEn": "An Internship in Berlin",
+    "level": "B1",
+    "topic": "Work",
+    "dialect": null,
+    "duration": 5,
+    "imageEmoji": "💻",
+    "color": "from-teal-500 to-blue-600",
+    "description": "Elena beginnt ein Praktikum bei einer Marketingfirma in Berlin und wächst schnell über sich hinaus.",
+    "descriptionEn": "Elena starts an internship at a marketing firm in Berlin and quickly grows beyond herself.",
+    "upvotes": 31,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Elena hat ein dreimonatiges Praktikum bei einer Marketingfirma in Berlin bekommen. Sie freut sich sehr, aber ist auch ein bisschen nervös.",
+        "translation": "Elena got a three-month internship at a marketing firm in Berlin. She is very excited, but also a bit nervous.",
+        "words": [
+          {"word": "dreimonatiges", "translation": "three-month", "type": "adjective"},
+          {"word": "Praktikum", "translation": "internship", "type": "noun", "case": "Akkusativ", "gender": "neuter"},
+          {"word": "Marketingfirma", "translation": "marketing firm", "type": "noun", "gender": "feminine"},
+          {"word": "bekommen", "translation": "gotten / received", "type": "verb", "base": "bekommen"},
+          {"word": "freut", "translation": "is happy (sich freuen)", "type": "verb", "base": "sich freuen"},
+          {"word": "nervös", "translation": "nervous", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Am ersten Arbeitstag lernt sie ihre Kollegen kennen. Ihr Chef erklärt ihr die wichtigsten Aufgaben und stellt ihr einen Mentor zur Seite.",
+        "translation": "On her first workday, she meets her colleagues. Her boss explains the most important tasks to her and assigns her a mentor.",
+        "words": [
+          {"word": "Arbeitstag", "translation": "workday", "type": "noun", "gender": "masculine"},
+          {"word": "lernt", "translation": "gets to know (kennenlernen)", "type": "verb", "base": "kennenlernen", "separable": true},
+          {"word": "Kollegen", "translation": "colleagues", "type": "noun"},
+          {"word": "Chef", "translation": "boss", "type": "noun", "gender": "masculine"},
+          {"word": "erklärt", "translation": "explains", "type": "verb", "base": "erklären"},
+          {"word": "Aufgaben", "translation": "tasks", "type": "noun"},
+          {"word": "Mentor", "translation": "mentor", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "In den ersten Wochen muss Elena viel lernen. Sie schreibt Berichte, nimmt an Meetings teil und übt, professionelle E-Mails zu verfassen.",
+        "translation": "In the first weeks, Elena has to learn a lot. She writes reports, participates in meetings, and practices writing professional emails.",
+        "words": [
+          {"word": "muss", "translation": "must / has to", "type": "verb", "base": "müssen"},
+          {"word": "Berichte", "translation": "reports", "type": "noun"},
+          {"word": "nimmt", "translation": "participates (teilnehmen)", "type": "verb", "base": "teilnehmen", "separable": true},
+          {"word": "Meetings", "translation": "meetings", "type": "noun"},
+          {"word": "übt", "translation": "practices", "type": "verb", "base": "üben"},
+          {"word": "verfassen", "translation": "to write / compose", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Nach zwei Monaten fühlt sich Elena viel sicherer. Ihr Chef lobt ihre Fortschritte und fragt, ob sie danach fest bei der Firma bleiben möchte.",
+        "translation": "After two months, Elena feels much more confident. Her boss praises her progress and asks whether she would like to stay with the company permanently afterwards.",
+        "words": [
+          {"word": "sicherer", "translation": "more confident", "type": "adjective"},
+          {"word": "lobt", "translation": "praises", "type": "verb", "base": "loben"},
+          {"word": "Fortschritte", "translation": "progress", "type": "noun"},
+          {"word": "fragt", "translation": "asks", "type": "verb", "base": "fragen"},
+          {"word": "fest", "translation": "permanently", "type": "adverb"},
+          {"word": "möchte", "translation": "would like", "type": "verb", "base": "mögen"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "das Praktikum", "translation": "the internship", "example": "Ich mache ein Praktikum in München."},
+      {"word": "der Kollege / die Kollegin", "translation": "the colleague", "example": "Meine Kollegin ist sehr hilfsbereit."},
+      {"word": "kennenlernen", "translation": "to get to know", "example": "Ich lerne neue Leute kennen."},
+      {"word": "teilnehmen", "translation": "to participate", "example": "Ich nehme am Meeting teil."},
+      {"word": "der Fortschritt", "translation": "the progress", "example": "Sie macht große Fortschritte."},
+      {"word": "loben", "translation": "to praise", "example": "Der Chef lobt die Arbeit."}
+    ],
+    "grammarFocus": "Separable verbs (kennenlernen, teilnehmen), Modal verbs (müssen, möchte), Comparative adjectives",
+    "quiz": [
+      {"question": "Wie lange dauert Elenas Praktikum?", "options": ["Einen Monat", "Drei Monate", "Sechs Monate", "Ein Jahr"], "correct": 1},
+      {"question": "Was macht Elena in den ersten Wochen?", "options": ["Sie macht Urlaub", "Sie schreibt Berichte und nimmt an Meetings teil", "Sie reist viel", "Sie arbeitet nicht"], "correct": 1},
+      {"question": "Was fragt der Chef nach zwei Monaten?", "options": ["Ob sie kündigen möchte", "Ob sie fest bleiben möchte", "Ob sie Urlaub braucht", "Nichts Besonderes"], "correct": 1}
+    ]
+  },
+  {
+    "id": "16",
+    "title": "Die Digitalisierung des Handwerks",
+    "titleEn": "The Digitalization of Skilled Trades",
+    "level": "B2",
+    "topic": "Technology",
+    "dialect": null,
+    "duration": 6,
+    "imageEmoji": "🔨",
+    "color": "from-blue-600 to-indigo-700",
+    "description": "Ein erfahrener Schreinermeister modernisiert seine Werkstatt und findet einen neuen Weg zwischen Tradition und Technik.",
+    "descriptionEn": "An experienced master carpenter modernizes his workshop and finds a new path between tradition and technology.",
+    "upvotes": 27,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Herr Bauer betreibt seit fünfzehn Jahren eine Schreinerei in einer Kleinstadt. Lange Zeit verließ er sich ausschließlich auf traditionelle Handwerkstechniken.",
+        "translation": "Mr. Bauer has been running a carpentry workshop in a small town for fifteen years. For a long time, he relied exclusively on traditional craftsmanship techniques.",
+        "words": [
+          {"word": "betreibt", "translation": "runs / operates", "type": "verb", "base": "betreiben"},
+          {"word": "Schreinerei", "translation": "carpentry workshop", "type": "noun", "gender": "feminine"},
+          {"word": "Kleinstadt", "translation": "small town", "type": "noun", "gender": "feminine"},
+          {"word": "verließ", "translation": "relied (sich verlassen)", "type": "verb", "base": "sich verlassen"},
+          {"word": "ausschließlich", "translation": "exclusively", "type": "adverb"},
+          {"word": "Handwerkstechniken", "translation": "craftsmanship techniques", "type": "noun"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Als jedoch immer mehr Kunden individuelle 3D-Entwürfe verlangten, erkannte er, dass er seine Arbeitsweise modernisieren musste.",
+        "translation": "However, as more and more customers demanded individual 3D designs, he realized that he had to modernize his way of working.",
+        "words": [
+          {"word": "jedoch", "translation": "however", "type": "adverb"},
+          {"word": "Kunden", "translation": "customers", "type": "noun"},
+          {"word": "Entwürfe", "translation": "designs / drafts", "type": "noun"},
+          {"word": "verlangten", "translation": "demanded", "type": "verb", "base": "verlangen"},
+          {"word": "erkannte", "translation": "realized", "type": "verb", "base": "erkennen"},
+          {"word": "Arbeitsweise", "translation": "way of working", "type": "noun", "gender": "feminine"},
+          {"word": "modernisieren", "translation": "to modernize", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Er investierte in eine CNC-Fräse und ließ sich von seinem Sohn im Umgang mit Design-Software schulen. Anfangs fiel ihm die Umstellung schwer.",
+        "translation": "He invested in a CNC milling machine and had his son train him in using design software. At first, the transition was difficult for him.",
+        "words": [
+          {"word": "investierte", "translation": "invested", "type": "verb", "base": "investieren"},
+          {"word": "Fräse", "translation": "milling machine", "type": "noun", "gender": "feminine"},
+          {"word": "Umgang", "translation": "handling / use", "type": "noun", "gender": "masculine"},
+          {"word": "Anfangs", "translation": "at first", "type": "adverb"},
+          {"word": "Umstellung", "translation": "transition", "type": "noun", "gender": "feminine"},
+          {"word": "schwer", "translation": "difficult", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Heute kombiniert seine Werkstatt traditionelles Handwerk mit modernster Technik. Die Kundenzufriedenheit ist gestiegen, und er beschäftigt inzwischen zwei zusätzliche Mitarbeiter.",
+        "translation": "Today his workshop combines traditional craftsmanship with the most modern technology. Customer satisfaction has increased, and he now employs two additional staff members.",
+        "words": [
+          {"word": "kombiniert", "translation": "combines", "type": "verb", "base": "kombinieren"},
+          {"word": "Werkstatt", "translation": "workshop", "type": "noun", "gender": "feminine"},
+          {"word": "modernster", "translation": "most modern", "type": "adjective"},
+          {"word": "Kundenzufriedenheit", "translation": "customer satisfaction", "type": "noun", "gender": "feminine"},
+          {"word": "gestiegen", "translation": "risen / increased", "type": "verb", "base": "steigen"},
+          {"word": "zusätzliche", "translation": "additional", "type": "adjective"},
+          {"word": "Mitarbeiter", "translation": "employees", "type": "noun"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "die Schreinerei", "translation": "the carpentry workshop", "example": "Die Schreinerei stellt Möbel her."},
+      {"word": "sich verlassen auf", "translation": "to rely on", "example": "Ich verlasse mich auf dich."},
+      {"word": "modernisieren", "translation": "to modernize", "example": "Die Firma modernisiert die Produktion."},
+      {"word": "die Umstellung", "translation": "the transition / changeover", "example": "Die Umstellung war schwierig."},
+      {"word": "die Kundenzufriedenheit", "translation": "customer satisfaction", "example": "Kundenzufriedenheit ist wichtig."},
+      {"word": "zusätzlich", "translation": "additional", "example": "Wir brauchen zusätzliche Mitarbeiter."}
+    ],
+    "grammarFocus": "Reflexive verbs with dative (sich verlassen auf), Subordinate clauses (als, dass), Superlatives",
+    "quiz": [
+      {"question": "Worauf verließ sich Herr Bauer lange Zeit?", "options": ["Auf digitale Werkzeuge", "Auf traditionelle Handwerkstechniken", "Auf seine Mitarbeiter", "Auf günstige Preise"], "correct": 1},
+      {"question": "Wer schult ihn im Umgang mit Design-Software?", "options": ["Ein externer Berater", "Sein Sohn", "Ein Kunde", "Niemand"], "correct": 1},
+      {"question": "Wie hat sich die Situation der Werkstatt entwickelt?", "options": ["Sie musste schließen", "Kundenzufriedenheit stieg, mehr Mitarbeiter", "Nichts hat sich geändert", "Es gibt weniger Aufträge"], "correct": 1}
+    ]
+  },
+  {
+    "id": "17",
+    "title": "Nachhaltiger Konsum im Alltag",
+    "titleEn": "Sustainable Consumption in Everyday Life",
+    "level": "B2",
+    "topic": "Environment",
+    "dialect": null,
+    "duration": 6,
+    "imageEmoji": "♻️",
+    "color": "from-blue-600 to-indigo-700",
+    "description": "Julia hat ihren Lebensstil grundlegend verändert, um nachhaltiger zu leben – und stellt fest, dass es sich lohnt.",
+    "descriptionEn": "Julia has fundamentally changed her lifestyle to live more sustainably – and finds it worthwhile.",
+    "upvotes": 29,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Immer mehr Menschen in Deutschland versuchen, ihren ökologischen Fußabdruck zu verringern. Julia gehört zu denjenigen, die ihren Lebensstil grundlegend verändert haben.",
+        "translation": "More and more people in Germany are trying to reduce their ecological footprint. Julia is one of those who have fundamentally changed their lifestyle.",
+        "words": [
+          {"word": "versuchen", "translation": "try", "type": "verb"},
+          {"word": "ökologischen", "translation": "ecological", "type": "adjective"},
+          {"word": "Fußabdruck", "translation": "footprint", "type": "noun", "gender": "masculine"},
+          {"word": "verringern", "translation": "to reduce", "type": "verb"},
+          {"word": "Lebensstil", "translation": "lifestyle", "type": "noun", "gender": "masculine"},
+          {"word": "grundlegend", "translation": "fundamentally", "type": "adverb"},
+          {"word": "verändert", "translation": "changed", "type": "verb", "base": "verändern"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Sie kauft mittlerweile fast ausschließlich regionales und saisonales Gemüse auf dem Wochenmarkt ein. Plastikverpackungen versucht sie konsequent zu vermeiden.",
+        "translation": "She now buys almost exclusively regional and seasonal vegetables at the weekly market. She consistently tries to avoid plastic packaging.",
+        "words": [
+          {"word": "kauft", "translation": "buys (einkaufen)", "type": "verb", "base": "einkaufen", "separable": true},
+          {"word": "mittlerweile", "translation": "by now / meanwhile", "type": "adverb"},
+          {"word": "regionales", "translation": "regional", "type": "adjective"},
+          {"word": "Wochenmarkt", "translation": "weekly market", "type": "noun", "gender": "masculine"},
+          {"word": "Plastikverpackungen", "translation": "plastic packaging", "type": "noun"},
+          {"word": "konsequent", "translation": "consistently", "type": "adverb"},
+          {"word": "vermeiden", "translation": "to avoid", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Statt jedes Jahr neue Kleidung zu kaufen, tauscht Julia mit Freundinnen oder besucht Secondhand-Läden. Das spart nicht nur Geld, sondern auch wertvolle Ressourcen.",
+        "translation": "Instead of buying new clothes every year, Julia swaps with friends or visits second-hand shops. This not only saves money but also valuable resources.",
+        "words": [
+          {"word": "Statt", "translation": "instead of", "type": "conjunction"},
+          {"word": "Kleidung", "translation": "clothing", "type": "noun", "gender": "feminine"},
+          {"word": "tauscht", "translation": "swaps / exchanges", "type": "verb", "base": "tauschen"},
+          {"word": "spart", "translation": "saves", "type": "verb", "base": "sparen"},
+          {"word": "wertvolle", "translation": "valuable", "type": "adjective"},
+          {"word": "Ressourcen", "translation": "resources", "type": "noun"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Julia gibt zu, dass ein nachhaltiger Lebensstil manchmal mit Verzicht verbunden ist. Dennoch überwiegen für sie die Vorteile: ein gutes Gewissen und eine gesündere Umwelt für kommende Generationen.",
+        "translation": "Julia admits that a sustainable lifestyle is sometimes associated with sacrifice. Nevertheless, for her the advantages outweigh this: a good conscience and a healthier environment for future generations.",
+        "words": [
+          {"word": "gibt", "translation": "admits (zugeben)", "type": "verb", "base": "zugeben", "separable": true},
+          {"word": "nachhaltiger", "translation": "sustainable", "type": "adjective"},
+          {"word": "Verzicht", "translation": "renunciation / sacrifice", "type": "noun", "gender": "masculine"},
+          {"word": "Dennoch", "translation": "nevertheless", "type": "adverb"},
+          {"word": "überwiegen", "translation": "outweigh", "type": "verb"},
+          {"word": "Gewissen", "translation": "conscience", "type": "noun", "gender": "neuter"},
+          {"word": "Generationen", "translation": "generations", "type": "noun"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "der Fußabdruck", "translation": "the footprint", "example": "Der ökologische Fußabdruck ist wichtig."},
+      {"word": "nachhaltig", "translation": "sustainable", "example": "Wir leben nachhaltig."},
+      {"word": "vermeiden", "translation": "to avoid", "example": "Ich vermeide Plastik."},
+      {"word": "der Verzicht", "translation": "renunciation / sacrifice", "example": "Verzicht fällt manchmal schwer."},
+      {"word": "das Gewissen", "translation": "conscience", "example": "Ich habe ein gutes Gewissen."},
+      {"word": "die Ressource", "translation": "the resource", "example": "Wir sparen Ressourcen."}
+    ],
+    "grammarFocus": "Infinitive clauses with 'zu' (versuchen zu, statt...zu), Complex noun phrases, Coordinating adverbs",
+    "quiz": [
+      {"question": "Was kauft Julia auf dem Wochenmarkt?", "options": ["Importiertes Obst", "Regionales und saisonales Gemüse", "Fertiggerichte", "Fleisch aus dem Ausland"], "correct": 1},
+      {"question": "Wie beschafft sich Julia neue Kleidung?", "options": ["Sie kauft immer neu", "Sie tauscht oder kauft Secondhand", "Sie näht selbst", "Sie kauft nie neue Kleidung"], "correct": 1},
+      {"question": "Was gibt Julia über den nachhaltigen Lebensstil zu?", "options": ["Er ist immer einfach", "Er ist manchmal mit Verzicht verbunden", "Er kostet zu viel Zeit", "Er funktioniert nicht"], "correct": 1}
+    ]
+  },
+  {
+    "id": "18",
+    "title": "Fernbeziehung in Zeiten des Internets",
+    "titleEn": "Long-Distance Relationship in the Age of the Internet",
+    "level": "B2",
+    "topic": "Relationships",
+    "dialect": null,
+    "duration": 5,
+    "imageEmoji": "💌",
+    "color": "from-blue-600 to-indigo-700",
+    "description": "Marie und Jonas führen seit einem Jahr eine Fernbeziehung zwischen Köln und Barcelona – mit allen Höhen und Tiefen.",
+    "descriptionEn": "Marie and Jonas have been in a long-distance relationship between Cologne and Barcelona for a year – with all its ups and downs.",
+    "upvotes": 24,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Marie und Jonas führen seit einem Jahr eine Fernbeziehung. Marie lebt in Köln, während Jonas beruflich nach Barcelona gezogen ist.",
+        "translation": "Marie and Jonas have been in a long-distance relationship for a year. Marie lives in Cologne, while Jonas moved to Barcelona for work.",
+        "words": [
+          {"word": "führen", "translation": "have (a relationship)", "type": "verb"},
+          {"word": "Fernbeziehung", "translation": "long-distance relationship", "type": "noun", "case": "Akkusativ", "gender": "feminine"},
+          {"word": "lebt", "translation": "lives", "type": "verb", "base": "leben"},
+          {"word": "während", "translation": "while", "type": "conjunction"},
+          {"word": "beruflich", "translation": "for work / professionally", "type": "adverb"},
+          {"word": "gezogen", "translation": "moved (past participle)", "type": "verb", "base": "ziehen"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Dank Videoanrufen und Messenger-Apps fühlen sie sich trotz der Entfernung nah beieinander. Jeden Abend erzählen sie sich, wie ihr Tag verlaufen ist.",
+        "translation": "Thanks to video calls and messenger apps, they feel close to each other despite the distance. Every evening they tell each other how their day went.",
+        "words": [
+          {"word": "Dank", "translation": "thanks to", "type": "preposition"},
+          {"word": "Videoanrufen", "translation": "video calls", "type": "noun", "case": "Dativ"},
+          {"word": "Entfernung", "translation": "distance", "type": "noun", "gender": "feminine"},
+          {"word": "nah", "translation": "close", "type": "adjective"},
+          {"word": "beieinander", "translation": "close to each other", "type": "adverb"},
+          {"word": "erzählen", "translation": "tell", "type": "verb"},
+          {"word": "verlaufen", "translation": "went / proceeded", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Trotzdem vermissen beide die kleinen Alltagsmomente, die man nur teilen kann, wenn man zusammen ist. Ab und zu kommt Eifersucht oder Frustration auf.",
+        "translation": "Nevertheless, both miss the small everyday moments that can only be shared when you are together. Occasionally, jealousy or frustration arises.",
+        "words": [
+          {"word": "vermissen", "translation": "miss", "type": "verb"},
+          {"word": "Alltagsmomente", "translation": "everyday moments", "type": "noun"},
+          {"word": "teilen", "translation": "share", "type": "verb"},
+          {"word": "Eifersucht", "translation": "jealousy", "type": "noun", "gender": "feminine"},
+          {"word": "Frustration", "translation": "frustration", "type": "noun", "gender": "feminine"},
+          {"word": "kommt", "translation": "arises (aufkommen)", "type": "verb", "base": "aufkommen", "separable": true}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Um die Beziehung zu stärken, planen sie regelmäßige Besuche und setzen sich gemeinsame Ziele für die Zukunft. Beide sind überzeugt, dass sich die Mühe lohnt.",
+        "translation": "To strengthen the relationship, they plan regular visits and set common goals for the future together. Both are convinced that the effort is worth it.",
+        "words": [
+          {"word": "stärken", "translation": "strengthen", "type": "verb"},
+          {"word": "planen", "translation": "plan", "type": "verb"},
+          {"word": "regelmäßige", "translation": "regular", "type": "adjective"},
+          {"word": "gemeinsame", "translation": "common / shared", "type": "adjective"},
+          {"word": "Ziele", "translation": "goals", "type": "noun"},
+          {"word": "überzeugt", "translation": "convinced", "type": "adjective"},
+          {"word": "lohnt", "translation": "is worth it (sich lohnen)", "type": "verb", "base": "sich lohnen"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "die Fernbeziehung", "translation": "the long-distance relationship", "example": "Fernbeziehungen sind eine Herausforderung."},
+      {"word": "die Entfernung", "translation": "the distance", "example": "Die Entfernung ist groß."},
+      {"word": "vermissen", "translation": "to miss", "example": "Ich vermisse dich."},
+      {"word": "die Eifersucht", "translation": "jealousy", "example": "Eifersucht kann Beziehungen belasten."},
+      {"word": "stärken", "translation": "to strengthen", "example": "Wir stärken unsere Beziehung."},
+      {"word": "sich lohnen", "translation": "to be worth it", "example": "Die Mühe lohnt sich."}
+    ],
+    "grammarFocus": "Conjunctions (während, trotzdem), Reflexive verbs (sich lohnen, sich fühlen), Purpose clauses (um...zu)",
+    "quiz": [
+      {"question": "Wo lebt Marie?", "options": ["In Barcelona", "In Köln", "In Berlin", "In Madrid"], "correct": 1},
+      {"question": "Was vermissen beide an der Beziehung?", "options": ["Nichts", "Die kleinen Alltagsmomente", "Das Reisen", "Ihre Freunde"], "correct": 1},
+      {"question": "Was planen sie, um die Beziehung zu stärken?", "options": ["Sie trennen sich", "Regelmäßige Besuche und gemeinsame Ziele", "Sie ziehen sofort zusammen", "Sie schreiben sich nie"], "correct": 1}
+    ]
+  },
+  {
+    "id": "19",
+    "title": "Künstliche Intelligenz und der Arbeitsmarkt",
+    "titleEn": "Artificial Intelligence and the Labor Market",
+    "level": "C1",
+    "topic": "Technology",
+    "dialect": null,
+    "duration": 7,
+    "imageEmoji": "🤖",
+    "color": "from-indigo-600 to-purple-700",
+    "description": "Wie verändert künstliche Intelligenz die Arbeitswelt – und wer trägt die Verantwortung für einen fairen Übergang?",
+    "descriptionEn": "How is artificial intelligence changing the world of work – and who bears responsibility for a fair transition?",
+    "upvotes": 33,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Die rasante Entwicklung künstlicher Intelligenz wirft grundlegende Fragen über die Zukunft der Arbeit auf. Während manche Ökonomen vor einem massiven Stellenabbau warnen, sehen andere in der Technologie vor allem eine Chance.",
+        "translation": "The rapid development of artificial intelligence raises fundamental questions about the future of work. While some economists warn of massive job cuts, others see the technology primarily as an opportunity.",
+        "words": [
+          {"word": "rasante", "translation": "rapid", "type": "adjective"},
+          {"word": "Entwicklung", "translation": "development", "type": "noun", "gender": "feminine"},
+          {"word": "wirft", "translation": "raises (aufwerfen)", "type": "verb", "base": "aufwerfen", "separable": true},
+          {"word": "grundlegende", "translation": "fundamental", "type": "adjective"},
+          {"word": "Ökonomen", "translation": "economists", "type": "noun"},
+          {"word": "Stellenabbau", "translation": "job cuts", "type": "noun", "gender": "masculine"},
+          {"word": "warnen", "translation": "warn", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Studien zufolge werden zwar zahlreiche Routinetätigkeiten wegfallen, gleichzeitig entstehen jedoch neue Berufsfelder, die heute noch kaum vorstellbar sind.",
+        "translation": "According to studies, numerous routine tasks will indeed disappear, but at the same time new occupational fields are emerging that are barely conceivable today.",
+        "words": [
+          {"word": "zahlreiche", "translation": "numerous", "type": "adjective"},
+          {"word": "Routinetätigkeiten", "translation": "routine tasks", "type": "noun"},
+          {"word": "wegfallen", "translation": "to disappear / cease", "type": "verb", "separable": true},
+          {"word": "gleichzeitig", "translation": "at the same time", "type": "adverb"},
+          {"word": "entstehen", "translation": "emerge / arise", "type": "verb"},
+          {"word": "Berufsfelder", "translation": "occupational fields", "type": "noun"},
+          {"word": "vorstellbar", "translation": "conceivable", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Entscheidend wird sein, inwiefern es gelingt, Arbeitnehmer frühzeitig für den digitalen Wandel zu qualifizieren. Bildungspolitik und Unternehmen stehen hier gleichermaßen in der Verantwortung.",
+        "translation": "What will be decisive is the extent to which it is possible to qualify employees early on for digital transformation. Education policy and companies are equally responsible here.",
+        "words": [
+          {"word": "Entscheidend", "translation": "decisive", "type": "adjective"},
+          {"word": "inwiefern", "translation": "to what extent", "type": "adverb"},
+          {"word": "gelingt", "translation": "succeeds / manages to", "type": "verb", "base": "gelingen"},
+          {"word": "Arbeitnehmer", "translation": "employees", "type": "noun"},
+          {"word": "frühzeitig", "translation": "early / timely", "type": "adverb"},
+          {"word": "qualifizieren", "translation": "to qualify / train", "type": "verb"},
+          {"word": "Verantwortung", "translation": "responsibility", "type": "noun", "gender": "feminine"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Letztlich hängt der gesellschaftliche Umgang mit dieser Umwälzung nicht nur von technologischen, sondern vor allem von politischen Weichenstellungen ab.",
+        "translation": "Ultimately, society's approach to this upheaval depends not only on technological but above all on political policy decisions.",
+        "words": [
+          {"word": "Letztlich", "translation": "ultimately", "type": "adverb"},
+          {"word": "gesellschaftliche", "translation": "societal", "type": "adjective"},
+          {"word": "Umgang", "translation": "handling / approach", "type": "noun", "gender": "masculine"},
+          {"word": "Umwälzung", "translation": "upheaval", "type": "noun", "gender": "feminine"},
+          {"word": "technologischen", "translation": "technological", "type": "adjective"},
+          {"word": "Weichenstellungen", "translation": "policy decisions", "type": "noun"},
+          {"word": "hängt", "translation": "depends (abhängen)", "type": "verb", "base": "abhängen", "separable": true}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "künstliche Intelligenz", "translation": "artificial intelligence", "example": "Künstliche Intelligenz verändert die Arbeitswelt."},
+      {"word": "der Stellenabbau", "translation": "job cuts", "example": "Der Stellenabbau betrifft viele Branchen."},
+      {"word": "entstehen", "translation": "to emerge / arise", "example": "Neue Berufe entstehen."},
+      {"word": "qualifizieren", "translation": "to qualify / train", "example": "Wir müssen Mitarbeiter qualifizieren."},
+      {"word": "die Verantwortung", "translation": "responsibility", "example": "Unternehmen tragen Verantwortung."},
+      {"word": "abhängen von", "translation": "to depend on", "example": "Der Erfolg hängt von der Bildung ab."}
+    ],
+    "grammarFocus": "Nominalization, Extended attributes, Constructions with 'gelingt', Academic connectors",
+    "quiz": [
+      {"question": "Was befürchten manche Ökonomen?", "options": ["Höhere Löhne", "Massiven Stellenabbau", "Weniger Regulierung", "Mehr Freizeit"], "correct": 1},
+      {"question": "Was entsteht laut Studien gleichzeitig?", "options": ["Nichts Neues", "Neue Berufsfelder", "Weniger Technologie", "Mehr Arbeitslosigkeit"], "correct": 1},
+      {"question": "Wovon hängt der gesellschaftliche Umgang mit der Umwälzung ab?", "options": ["Nur von der Technologie", "Von technologischen und politischen Faktoren", "Nur vom Zufall", "Von gar nichts"], "correct": 1}
+    ]
+  },
+  {
+    "id": "20",
+    "title": "Die Rolle der Erinnerungskultur in Deutschland",
+    "titleEn": "The Role of Remembrance Culture in Germany",
+    "level": "C1",
+    "topic": "History",
+    "dialect": null,
+    "duration": 8,
+    "imageEmoji": "🕯️",
+    "color": "from-indigo-600 to-purple-700",
+    "description": "Gedenkstätten und Bildungsprogramme sollen die Erinnerung wachhalten – doch wie erreicht man Generationen ohne direkten Bezug zur Vergangenheit?",
+    "descriptionEn": "Memorial sites and educational programs aim to keep memory alive – but how do you reach generations without a direct connection to the past?",
+    "upvotes": 21,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Kaum ein Land hat einen derart intensiven öffentlichen Diskurs über die Aufarbeitung seiner Vergangenheit geführt wie Deutschland. Die Erinnerungskultur gilt vielen als integraler Bestandteil der nationalen Identität.",
+        "translation": "Hardly any country has conducted such an intensive public discourse about coming to terms with its past as Germany. Remembrance culture is considered by many to be an integral part of national identity.",
+        "words": [
+          {"word": "derart", "translation": "such / to such a degree", "type": "adverb"},
+          {"word": "Diskurs", "translation": "discourse", "type": "noun", "gender": "masculine"},
+          {"word": "Aufarbeitung", "translation": "coming to terms with", "type": "noun", "gender": "feminine"},
+          {"word": "Vergangenheit", "translation": "the past", "type": "noun", "gender": "feminine"},
+          {"word": "Erinnerungskultur", "translation": "remembrance culture", "type": "noun", "gender": "feminine"},
+          {"word": "integraler", "translation": "integral", "type": "adjective"},
+          {"word": "Bestandteil", "translation": "component / part", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Gedenkstätten, Museen und Bildungsprogramme sollen sicherstellen, dass die Verbrechen des Nationalsozialismus nicht in Vergessenheit geraten. Zugleich wird kontrovers diskutiert, wie diese Erinnerung zeitgemäß vermittelt werden kann.",
+        "translation": "Memorial sites, museums, and educational programs are meant to ensure that the crimes of National Socialism do not fall into oblivion. At the same time, there is controversial debate about how this remembrance can be conveyed in a contemporary way.",
+        "words": [
+          {"word": "Gedenkstätten", "translation": "memorial sites", "type": "noun"},
+          {"word": "sicherstellen", "translation": "to ensure", "type": "verb", "separable": true},
+          {"word": "Verbrechen", "translation": "crimes", "type": "noun", "gender": "neuter"},
+          {"word": "Vergessenheit", "translation": "oblivion", "type": "noun", "gender": "feminine"},
+          {"word": "geraten", "translation": "to fall into / end up", "type": "verb"},
+          {"word": "zeitgemäß", "translation": "contemporary / up-to-date", "type": "adjective"},
+          {"word": "vermittelt", "translation": "conveyed", "type": "verb", "base": "vermitteln"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Insbesondere jüngere Generationen, die zunehmend zeitlichen Abstand zu den Ereignissen haben, stellen die Frage, wie Erinnerungsarbeit ohne direkten familiären Bezug funktionieren kann.",
+        "translation": "Especially younger generations, who increasingly have temporal distance from the events, ask the question of how remembrance work can function without direct familial connection.",
+        "words": [
+          {"word": "Insbesondere", "translation": "especially", "type": "adverb"},
+          {"word": "zunehmend", "translation": "increasingly", "type": "adverb"},
+          {"word": "Abstand", "translation": "distance", "type": "noun", "gender": "masculine"},
+          {"word": "Ereignissen", "translation": "events", "type": "noun", "case": "Dativ"},
+          {"word": "Erinnerungsarbeit", "translation": "remembrance work", "type": "noun", "gender": "feminine"},
+          {"word": "familiären", "translation": "familial", "type": "adjective"},
+          {"word": "Bezug", "translation": "connection / reference", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Kritiker warnen zudem davor, dass ritualisiertes Gedenken seine Wirkung verlieren könnte, während Befürworter betonen, dass gerade die kontinuierliche Auseinandersetzung Wiederholung verhindert.",
+        "translation": "Critics also warn that ritualized commemoration could lose its effect, while proponents emphasize that it is precisely the continuous engagement that prevents repetition.",
+        "words": [
+          {"word": "Kritiker", "translation": "critics", "type": "noun"},
+          {"word": "zudem", "translation": "also / moreover", "type": "adverb"},
+          {"word": "ritualisiertes", "translation": "ritualized", "type": "adjective"},
+          {"word": "Gedenken", "translation": "commemoration", "type": "noun", "gender": "neuter"},
+          {"word": "Wirkung", "translation": "effect", "type": "noun", "gender": "feminine"},
+          {"word": "Befürworter", "translation": "proponents", "type": "noun"},
+          {"word": "betonen", "translation": "emphasize", "type": "verb"},
+          {"word": "Auseinandersetzung", "translation": "engagement / examination", "type": "noun", "gender": "feminine"},
+          {"word": "verhindert", "translation": "prevents", "type": "verb", "base": "verhindern"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "die Erinnerungskultur", "translation": "culture of remembrance", "example": "Die Erinnerungskultur ist Teil der Identität."},
+      {"word": "die Gedenkstätte", "translation": "the memorial site", "example": "Die Gedenkstätte zieht viele Besucher an."},
+      {"word": "die Vergangenheit", "translation": "the past", "example": "Wir müssen aus der Vergangenheit lernen."},
+      {"word": "in Vergessenheit geraten", "translation": "to fall into oblivion", "example": "Das Ereignis darf nicht in Vergessenheit geraten."},
+      {"word": "die Auseinandersetzung", "translation": "engagement / confrontation", "example": "Eine kritische Auseinandersetzung ist wichtig."},
+      {"word": "verhindern", "translation": "to prevent", "example": "Wir wollen Wiederholung verhindern."}
+    ],
+    "grammarFocus": "Extended participial attributes, Subjunctive II (könnte), Complex nominal style, Genitive constructions",
+    "quiz": [
+      {"question": "Was gilt vielen als Teil der deutschen Identität?", "options": ["Der Fußball", "Die Erinnerungskultur", "Die Wirtschaft", "Die Sprache"], "correct": 1},
+      {"question": "Was stellen jüngere Generationen infrage?", "options": ["Ob Erinnerung ohne familiären Bezug funktioniert", "Ob Geschichte wichtig ist", "Ob Museen nötig sind", "Nichts"], "correct": 0},
+      {"question": "Wovor warnen Kritiker?", "options": ["Vor zu viel Erinnerung", "Davor, dass ritualisiertes Gedenken seine Wirkung verliert", "Vor Gedenkstätten generell", "Vor gar nichts"], "correct": 1}
+    ]
+  },
+  {
+    "id": "21",
+    "title": "Der Wert des Schlafs in der Leistungsgesellschaft",
+    "titleEn": "The Value of Sleep in a Performance-Driven Society",
+    "level": "C1",
+    "topic": "Health",
+    "dialect": null,
+    "duration": 7,
+    "imageEmoji": "😴",
+    "color": "from-indigo-600 to-purple-700",
+    "description": "Warum Schlaf in einer auf Produktivität ausgerichteten Gesellschaft unter Druck gerät – und was Wissenschaftler dagegen fordern.",
+    "descriptionEn": "Why sleep is under pressure in a society oriented towards productivity – and what scientists demand in response.",
+    "upvotes": 19,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "In einer Gesellschaft, die Produktivität und ständige Erreichbarkeit glorifiziert, gerät der Schlaf zunehmend unter Druck. Viele Berufstätige betrachten ausreichend Schlaf als verzichtbaren Luxus.",
+        "translation": "In a society that glorifies productivity and constant availability, sleep is increasingly under pressure. Many working people regard sufficient sleep as a dispensable luxury.",
+        "words": [
+          {"word": "Produktivität", "translation": "productivity", "type": "noun", "gender": "feminine"},
+          {"word": "Erreichbarkeit", "translation": "availability / reachability", "type": "noun", "gender": "feminine"},
+          {"word": "glorifiziert", "translation": "glorifies", "type": "verb", "base": "glorifizieren"},
+          {"word": "gerät", "translation": "gets into (geraten)", "type": "verb", "base": "geraten"},
+          {"word": "Berufstätige", "translation": "working people", "type": "noun"},
+          {"word": "verzichtbaren", "translation": "dispensable", "type": "adjective"},
+          {"word": "Luxus", "translation": "luxury", "type": "noun", "gender": "masculine"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Dabei belegen zahlreiche wissenschaftliche Studien, dass chronischer Schlafmangel nicht nur die kognitive Leistungsfähigkeit beeinträchtigt, sondern auch das Risiko für Herz-Kreislauf-Erkrankungen erheblich erhöht.",
+        "translation": "Yet numerous scientific studies prove that chronic sleep deprivation not only impairs cognitive performance but also significantly increases the risk of cardiovascular diseases.",
+        "words": [
+          {"word": "belegen", "translation": "prove / document", "type": "verb"},
+          {"word": "Schlafmangel", "translation": "sleep deprivation", "type": "noun", "gender": "masculine"},
+          {"word": "kognitive", "translation": "cognitive", "type": "adjective"},
+          {"word": "Leistungsfähigkeit", "translation": "performance capacity", "type": "noun", "gender": "feminine"},
+          {"word": "beeinträchtigt", "translation": "impairs", "type": "verb", "base": "beeinträchtigen"},
+          {"word": "erheblich", "translation": "significantly", "type": "adverb"},
+          {"word": "erhöht", "translation": "increases", "type": "verb", "base": "erhöhen"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Schlafforscher plädieren daher zunehmend dafür, gesellschaftliche Strukturen wie Arbeitszeiten und Schulbeginn an den natürlichen Biorhythmus des Menschen anzupassen, anstatt ihn ständig zu missachten.",
+        "translation": "Sleep researchers are therefore increasingly advocating for adapting social structures such as working hours and school start times to the natural biorhythm of humans, instead of constantly disregarding it.",
+        "words": [
+          {"word": "Schlafforscher", "translation": "sleep researchers", "type": "noun"},
+          {"word": "plädieren", "translation": "advocate / plead", "type": "verb"},
+          {"word": "Strukturen", "translation": "structures", "type": "noun"},
+          {"word": "Biorhythmus", "translation": "biorhythm", "type": "noun", "gender": "masculine"},
+          {"word": "anzupassen", "translation": "to adapt", "type": "verb", "base": "anpassen"},
+          {"word": "anstatt", "translation": "instead of", "type": "conjunction"},
+          {"word": "missachten", "translation": "to disregard", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Einige progressive Unternehmen experimentieren bereits mit flexibleren Arbeitszeitmodellen und sogenannten Nickerchen-Räumen. Ob sich dieser Wandel gesamtgesellschaftlich durchsetzen wird, bleibt jedoch abzuwarten.",
+        "translation": "Some progressive companies are already experimenting with more flexible working time models and so-called nap rooms. However, whether this change will become established across society as a whole remains to be seen.",
+        "words": [
+          {"word": "progressive", "translation": "progressive", "type": "adjective"},
+          {"word": "experimentieren", "translation": "experiment", "type": "verb"},
+          {"word": "flexibleren", "translation": "more flexible", "type": "adjective"},
+          {"word": "Arbeitszeitmodellen", "translation": "working time models", "type": "noun"},
+          {"word": "sogenannten", "translation": "so-called", "type": "adjective"},
+          {"word": "durchsetzen", "translation": "to become established", "type": "verb", "separable": true},
+          {"word": "abzuwarten", "translation": "to be seen / awaited", "type": "verb", "base": "abwarten"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "der Schlafmangel", "translation": "sleep deprivation", "example": "Schlafmangel ist ungesund."},
+      {"word": "die Leistungsfähigkeit", "translation": "performance capacity", "example": "Schlaf verbessert die Leistungsfähigkeit."},
+      {"word": "beeinträchtigen", "translation": "to impair", "example": "Stress beeinträchtigt die Gesundheit."},
+      {"word": "der Biorhythmus", "translation": "biorhythm", "example": "Jeder hat einen eigenen Biorhythmus."},
+      {"word": "anpassen", "translation": "to adapt", "example": "Wir müssen uns anpassen."},
+      {"word": "sich durchsetzen", "translation": "to become established / prevail", "example": "Die Idee wird sich durchsetzen."}
+    ],
+    "grammarFocus": "Extended infinitive constructions (anstatt...zu), Nominal compounds, Speculative constructions (bleibt abzuwarten), Academic register",
+    "quiz": [
+      {"question": "Wie behandeln viele Berufstätige den Schlaf?", "options": ["Als wichtigste Priorität", "Als verzichtbaren Luxus", "Als Pflicht", "Als Hobby"], "correct": 1},
+      {"question": "Was zeigen wissenschaftliche Studien über Schlafmangel?", "options": ["Er ist harmlos", "Er beeinträchtigt Leistung und erhöht Krankheitsrisiko", "Er verbessert die Konzentration", "Er hat keine Effekte"], "correct": 1},
+      {"question": "Was fordern Schlafforscher?", "options": ["Mehr Arbeitszeit", "Anpassung der Gesellschaft an den Biorhythmus", "Abschaffung des Schlafs", "Weniger Forschung"], "correct": 1}
+    ]
+  },
+  {
+    "id": "22",
+    "title": "Die Kunst des Verzichts",
+    "titleEn": "The Art of Renunciation",
+    "level": "C2",
+    "topic": "Culture",
+    "dialect": null,
+    "duration": 8,
+    "imageEmoji": "🕊️",
+    "color": "from-purple-700 to-rose-700",
+    "description": "Ein philosophischer Essay über bewussten Verzicht als Form der Selbstermächtigung in einer Konsumgesellschaft.",
+    "descriptionEn": "A philosophical essay on conscious renunciation as a form of self-empowerment in a consumer society.",
+    "upvotes": 16,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "In einer Zeit, in der grenzenloser Konsum als Ausdruck individueller Freiheit gefeiert wird, erscheint der bewusste Verzicht vielen als anachronistisches Relikt vergangener, entbehrungsreicherer Epochen.",
+        "translation": "In an age in which limitless consumption is celebrated as an expression of individual freedom, conscious renunciation appears to many as an anachronistic relic of past, more deprivation-laden eras.",
+        "words": [
+          {"word": "grenzenloser", "translation": "limitless", "type": "adjective"},
+          {"word": "Konsum", "translation": "consumption", "type": "noun", "gender": "masculine"},
+          {"word": "Ausdruck", "translation": "expression", "type": "noun", "gender": "masculine"},
+          {"word": "individueller", "translation": "individual", "type": "adjective"},
+          {"word": "anachronistisches", "translation": "anachronistic", "type": "adjective"},
+          {"word": "Relikt", "translation": "relic", "type": "noun", "gender": "neuter"},
+          {"word": "Epochen", "translation": "eras", "type": "noun"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Und doch mehren sich die Stimmen, die im maßvollen Umgang mit materiellen Gütern nicht Mangel, sondern eine Form der Selbstermächtigung erblicken – ein bewusstes Sich-Entziehen aus den Zwängen eines auf permanentes Wachstum ausgerichteten Wirtschaftssystems.",
+        "translation": "And yet the voices are multiplying that see in the moderate handling of material goods not scarcity, but a form of self-empowerment – a conscious withdrawal from the constraints of an economic system geared towards permanent growth.",
+        "words": [
+          {"word": "mehren", "translation": "multiply (sich mehren)", "type": "verb", "base": "sich mehren"},
+          {"word": "maßvollen", "translation": "moderate", "type": "adjective"},
+          {"word": "materiellen", "translation": "material", "type": "adjective"},
+          {"word": "Mangel", "translation": "scarcity / lack", "type": "noun", "gender": "masculine"},
+          {"word": "Selbstermächtigung", "translation": "self-empowerment", "type": "noun", "gender": "feminine"},
+          {"word": "erblicken", "translation": "to perceive / see", "type": "verb"},
+          {"word": "Zwängen", "translation": "constraints", "type": "noun", "case": "Dativ"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Die Philosophin Hannah Arendt verwies bereits in ihrem Spätwerk darauf, dass wahre Freiheit sich nicht in der grenzenlosen Verfügbarkeit von Optionen erschöpfe, sondern vielmehr in der Fähigkeit begründe, bewusst Grenzen zu setzen.",
+        "translation": "The philosopher Hannah Arendt already pointed out in her late work that true freedom does not exhaust itself in the limitless availability of options, but rather is grounded in the ability to consciously set boundaries.",
+        "words": [
+          {"word": "Philosophin", "translation": "philosopher (female)", "type": "noun", "gender": "feminine"},
+          {"word": "verwies", "translation": "pointed out (verweisen)", "type": "verb", "base": "verweisen"},
+          {"word": "Spätwerk", "translation": "late work", "type": "noun", "gender": "neuter"},
+          {"word": "erschöpfe", "translation": "exhausts itself (subjunctive)", "type": "verb", "base": "sich erschöpfen"},
+          {"word": "begründe", "translation": "is grounded in (subjunctive)", "type": "verb", "base": "sich begründen"},
+          {"word": "Fähigkeit", "translation": "ability", "type": "noun", "gender": "feminine"},
+          {"word": "Grenzen", "translation": "boundaries / limits", "type": "noun"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Ob der Verzicht letztlich als Befreiung oder als Entbehrung empfunden wird, hängt somit weniger vom Objekt des Verzichts selbst ab als von der inneren Haltung, mit der ihm begegnet wird.",
+        "translation": "Whether renunciation is ultimately experienced as liberation or as deprivation therefore depends less on the object of renunciation itself than on the inner attitude with which it is met.",
+        "words": [
+          {"word": "Befreiung", "translation": "liberation", "type": "noun", "gender": "feminine"},
+          {"word": "Entbehrung", "translation": "deprivation", "type": "noun", "gender": "feminine"},
+          {"word": "empfunden", "translation": "experienced / felt", "type": "verb", "base": "empfinden"},
+          {"word": "Objekt", "translation": "object", "type": "noun", "gender": "neuter"},
+          {"word": "inneren", "translation": "inner", "type": "adjective"},
+          {"word": "Haltung", "translation": "attitude / stance", "type": "noun", "gender": "feminine"},
+          {"word": "begegnet", "translation": "is met / encountered", "type": "verb", "base": "begegnen"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "der Verzicht", "translation": "renunciation", "example": "Verzicht kann befreiend sein."},
+      {"word": "die Selbstermächtigung", "translation": "self-empowerment", "example": "Verzicht als Selbstermächtigung."},
+      {"word": "sich erschöpfen", "translation": "to exhaust itself", "example": "Die Möglichkeiten erschöpfen sich nicht."},
+      {"word": "die Haltung", "translation": "attitude / stance", "example": "Ihre Haltung ist bewundernswert."},
+      {"word": "die Entbehrung", "translation": "deprivation", "example": "Er ertrug die Entbehrung."},
+      {"word": "die Befreiung", "translation": "liberation", "example": "Sie empfand den Verzicht als Befreiung."}
+    ],
+    "grammarFocus": "Subjunctive I in indirect discourse (erschöpfe, begründe), Nominal style, Complex genitive attributes, Literary/philosophical register",
+    "quiz": [
+      {"question": "Wie wird Verzicht oft heute wahrgenommen?", "options": ["Als modern", "Als anachronistisches Relikt", "Als Notwendigkeit", "Als Trend"], "correct": 1},
+      {"question": "Was sah Hannah Arendt in wahrer Freiheit?", "options": ["Grenzenlose Optionen", "Die Fähigkeit, bewusst Grenzen zu setzen", "Materiellen Reichtum", "Politische Macht"], "correct": 1},
+      {"question": "Wovon hängt ab, ob Verzicht als Befreiung empfunden wird?", "options": ["Vom Objekt des Verzichts", "Von der inneren Haltung", "Vom Einkommen", "Von der Gesellschaft"], "correct": 1}
+    ]
+  },
+  {
+    "id": "23",
+    "title": "Sprache als Spiegel des Denkens",
+    "titleEn": "Language as a Mirror of Thought",
+    "level": "C2",
+    "topic": "Culture",
+    "dialect": null,
+    "duration": 8,
+    "imageEmoji": "💭",
+    "color": "from-purple-700 to-rose-700",
+    "description": "Bestimmt die Sprache, die wir sprechen, wie wir die Welt wahrnehmen? Ein Essay über sprachlichen Relativismus.",
+    "descriptionEn": "Does the language we speak determine how we perceive the world? An essay on linguistic relativism.",
+    "upvotes": 14,
+    "isPublic": true,
+    "paragraphs": [
+      {
+        "id": "p1",
+        "text": "Die Frage, inwiefern die Sprache, die wir sprechen, unsere Wahrnehmung der Welt determiniert, beschäftigt Linguisten und Philosophen seit Jahrhunderten – von Wilhelm von Humboldts Sprachphilosophie bis zur modernen kognitiven Linguistik.",
+        "translation": "The question of the extent to which the language we speak determines our perception of the world has occupied linguists and philosophers for centuries – from Wilhelm von Humboldt's philosophy of language to modern cognitive linguistics.",
+        "words": [
+          {"word": "inwiefern", "translation": "to what extent", "type": "adverb"},
+          {"word": "Wahrnehmung", "translation": "perception", "type": "noun", "gender": "feminine"},
+          {"word": "determiniert", "translation": "determines", "type": "verb", "base": "determinieren"},
+          {"word": "beschäftigt", "translation": "occupies / concerns", "type": "verb", "base": "beschäftigen"},
+          {"word": "Linguisten", "translation": "linguists", "type": "noun"},
+          {"word": "Sprachphilosophie", "translation": "philosophy of language", "type": "noun", "gender": "feminine"},
+          {"word": "kognitiven", "translation": "cognitive", "type": "adjective"}
+        ]
+      },
+      {
+        "id": "p2",
+        "text": "Die als sprachlicher Relativismus bekannte Hypothese besagt, dass grammatische und lexikalische Strukturen einer Sprache das Denken ihrer Sprecher in bestimmte Bahnen lenken, ohne es jedoch vollständig zu determinieren.",
+        "translation": "The hypothesis known as linguistic relativism states that the grammatical and lexical structures of a language guide the thinking of its speakers into certain channels, without, however, completely determining it.",
+        "words": [
+          {"word": "Relativismus", "translation": "relativism", "type": "noun", "gender": "masculine"},
+          {"word": "Hypothese", "translation": "hypothesis", "type": "noun", "gender": "feminine"},
+          {"word": "besagt", "translation": "states", "type": "verb", "base": "besagen"},
+          {"word": "lexikalische", "translation": "lexical", "type": "adjective"},
+          {"word": "Sprecher", "translation": "speakers", "type": "noun"},
+          {"word": "Bahnen", "translation": "channels / tracks", "type": "noun"},
+          {"word": "lenken", "translation": "guide / steer", "type": "verb"}
+        ]
+      },
+      {
+        "id": "p3",
+        "text": "Empirische Untersuchungen an Sprachen, die etwa Raumrelationen grundlegend anders kodieren als das Deutsche, liefern hierfür aufschlussreiche, wenngleich keineswegs unumstrittene Belege.",
+        "translation": "Empirical studies of languages that encode, for example, spatial relations fundamentally differently from German provide enlightening, though by no means uncontroversial, evidence for this.",
+        "words": [
+          {"word": "Empirische", "translation": "empirical", "type": "adjective"},
+          {"word": "Untersuchungen", "translation": "studies / investigations", "type": "noun"},
+          {"word": "Raumrelationen", "translation": "spatial relations", "type": "noun"},
+          {"word": "kodieren", "translation": "encode", "type": "verb"},
+          {"word": "aufschlussreiche", "translation": "enlightening", "type": "adjective"},
+          {"word": "wenngleich", "translation": "although / albeit", "type": "conjunction"},
+          {"word": "Belege", "translation": "evidence", "type": "noun"}
+        ]
+      },
+      {
+        "id": "p4",
+        "text": "Unabhängig davon, wie stark dieser Einfluss letztlich zu gewichten ist, verdeutlicht die Debatte, dass Sprache weit mehr ist als ein neutrales Kommunikationsmittel: Sie ist zugleich ein Instrument, das unser Denken formt und begrenzt.",
+        "translation": "Regardless of how strongly this influence is ultimately to be weighted, the debate makes clear that language is far more than a neutral means of communication: it is at the same time an instrument that shapes and limits our thinking.",
+        "words": [
+          {"word": "Unabhängig", "translation": "independent / regardless", "type": "adjective"},
+          {"word": "gewichten", "translation": "to weight / assess", "type": "verb"},
+          {"word": "verdeutlicht", "translation": "makes clear", "type": "verb", "base": "verdeutlichen"},
+          {"word": "neutrales", "translation": "neutral", "type": "adjective"},
+          {"word": "Kommunikationsmittel", "translation": "means of communication", "type": "noun", "gender": "neuter"},
+          {"word": "formt", "translation": "shapes", "type": "verb", "base": "formen"},
+          {"word": "begrenzt", "translation": "limits", "type": "verb", "base": "begrenzen"}
+        ]
+      }
+    ],
+    "vocabulary": [
+      {"word": "der Relativismus", "translation": "relativism", "example": "Sprachlicher Relativismus ist umstritten."},
+      {"word": "determinieren", "translation": "to determine", "example": "Sprache determiniert das Denken nicht vollständig."},
+      {"word": "die Wahrnehmung", "translation": "perception", "example": "Unsere Wahrnehmung ist subjektiv."},
+      {"word": "aufschlussreich", "translation": "enlightening / revealing", "example": "Die Studie ist aufschlussreich."},
+      {"word": "unumstritten", "translation": "uncontroversial", "example": "Die These ist nicht unumstritten."},
+      {"word": "das Kommunikationsmittel", "translation": "means of communication", "example": "Sprache ist ein Kommunikationsmittel."}
+    ],
+    "grammarFocus": "Extended participial and adjectival attributes, Complex subordinate clause chains, Passive and impersonal constructions, Academic linguistic register",
+    "quiz": [
+      {"question": "Was besagt die Hypothese des sprachlichen Relativismus?", "options": ["Sprache hat keinen Einfluss auf das Denken", "Sprache lenkt das Denken, ohne es vollständig zu bestimmen", "Alle Sprachen sind identisch", "Denken bestimmt die Sprache vollständig"], "correct": 1},
+      {"question": "Woher kommen die empirischen Belege im Text?", "options": ["Aus der Chemie", "Aus Untersuchungen an Sprachen mit anderen Raumrelationen", "Aus der Mathematik", "Aus der Biologie"], "correct": 1},
+      {"question": "Was macht die Debatte laut Text deutlich?", "options": ["Sprache ist unwichtig", "Sprache ist mehr als ein neutrales Kommunikationsmittel", "Es gibt keine Debatte", "Alle Linguisten sind sich einig"], "correct": 1}
     ]
   }
 ]

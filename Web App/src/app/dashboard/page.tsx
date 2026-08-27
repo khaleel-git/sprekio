@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatPill } from "@/components/ui/StatPill";
 import {
-  Volume2, Trash2, Inbox, Video, Target, LayoutDashboard, Layers,
+  Volume2, Trash2, Inbox, Video, Target, LayoutDashboard, Layers, PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -167,6 +167,23 @@ function VocabularyVault({
   const learnedWords = words.filter((w) => w.status === "learned");
   const displayedWords = filter === "all" ? words : filter === "learning" ? learningWords : learnedWords;
 
+  // Group by source video — a word without a videoId (e.g. saved some other way)
+  // falls into a final "Other words" bucket instead of being dropped.
+  type Group = { videoId: string | null; videoTitle: string; lastSavedMs: number; words: FirestoreVocabWord[] };
+  const groups = new Map<string, Group>();
+  for (const w of displayedWords) {
+    const key = w.videoId || "__none__";
+    const timeMs = w.savedAt?.seconds ? w.savedAt.seconds * 1000 : 0;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.words.push(w);
+      if (timeMs > existing.lastSavedMs) existing.lastSavedMs = timeMs;
+    } else {
+      groups.set(key, { videoId: w.videoId || null, videoTitle: w.videoTitle || "Unknown Video", lastSavedMs: timeMs, words: [w] });
+    }
+  }
+  const orderedGroups = Array.from(groups.values()).sort((a, b) => b.lastSavedMs - a.lastSavedMs);
+
   return (
     <div className="space-y-5">
       <div className="flex justify-end">
@@ -186,73 +203,101 @@ function VocabularyVault({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {displayedWords.map((w) => {
-          const genderColor = w.gender ? GENDER_TONE[w.gender.toLowerCase()]?.color : undefined;
-          return (
-            <Card key={w.id} className="group p-5 flex flex-col h-full">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge color={genderColor}>{w.gender || w.partOfSpeech || "Word"}</Badge>
-                  <Badge tone={w.status === "learned" ? "success" : "warning"}>
-                    {w.status === "learned" ? "Learned" : "Learning"}
-                  </Badge>
-                </div>
-
-                <div className="flex items-start justify-between gap-3 mb-1">
-                  <h2 className="text-xl font-display font-semibold text-ink break-words flex-1 min-w-0 leading-tight">
-                    {w.word}
-                  </h2>
-                  <button
-                    onClick={() => playAudio(w.word)}
-                    className="opacity-0 group-hover:opacity-100 text-brand bg-brand-light hover:bg-brand hover:text-white p-1.5 rounded-lg transition-all"
-                    title="Play audio"
-                  >
-                    <Volume2 className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-base font-semibold text-brand-dark break-words leading-tight">{w.translation}</p>
-              </div>
-
-              <div className="mt-auto pt-4 border-t border-black/5">
-                {w.contextSentence && (
-                  <p className="text-sm text-ink/60 italic line-clamp-3">&quot;{w.contextSentence}&quot;</p>
-                )}
-                {w.videoTitle && (
-                  <div className="text-xs font-semibold text-ink/35 flex items-center gap-1.5 mt-3">
-                    <span className="text-red-500">▶</span>
-                    <span className="truncate">{w.videoTitle}</span>
+      <div className="space-y-8">
+        {orderedGroups.map((group) => (
+          <div key={group.videoId || "none"}>
+            {/* Video header — click to watch it inside Sprekio, with the same subtitle/word-highlighter experience */}
+            {group.videoId ? (
+              <Link
+                href={`/watch/player?v=${group.videoId}`}
+                className="group/vid flex items-center gap-3 mb-3 hover:opacity-90 transition-opacity"
+              >
+                <div className="w-20 h-12 rounded-lg overflow-hidden bg-black/5 shrink-0 relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image loader */}
+                  <img
+                    src={`https://img.youtube.com/vi/${group.videoId}/mqdefault.jpg`}
+                    alt={group.videoTitle}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/vid:opacity-100 transition-opacity">
+                    <PlayCircle className="w-6 h-6 text-white" />
                   </div>
-                )}
-
-                <div className="flex gap-2 mt-3 h-0 overflow-hidden group-hover:h-9 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  {w.status === "learned" ? (
-                    <button
-                      onClick={() => handleUpdateStatus(w.id, "learning")}
-                      className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-xl border border-amber-200"
-                    >
-                      Mark as Learning
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleUpdateStatus(w.id, "learned")}
-                      className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-bold rounded-xl border border-green-200"
-                    >
-                      Mark as Learned
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(w.id)}
-                    className="w-9 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl border border-red-200 flex items-center justify-center shrink-0"
-                    title="Delete completely"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold text-ink truncate group-hover/vid:text-brand transition-colors">
+                    {group.videoTitle}
+                  </h3>
+                  <p className="text-xs text-ink/40">{group.words.length} word{group.words.length !== 1 ? "s" : ""} saved · watch again</p>
+                </div>
+              </Link>
+            ) : (
+              <h3 className="text-sm font-semibold text-ink/50 mb-3">Other words</h3>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {group.words.map((w) => {
+                const genderColor = w.gender ? GENDER_TONE[w.gender.toLowerCase()]?.color : undefined;
+                return (
+                  <Card key={w.id} className="group p-5 flex flex-col h-full">
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge color={genderColor}>{w.gender || w.partOfSpeech || "Word"}</Badge>
+                        <Badge tone={w.status === "learned" ? "success" : "warning"}>
+                          {w.status === "learned" ? "Learned" : "Learning"}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <h2 className="text-xl font-display font-semibold text-ink break-words flex-1 min-w-0 leading-tight">
+                          {w.word}
+                        </h2>
+                        <button
+                          onClick={() => playAudio(w.word)}
+                          className="opacity-0 group-hover:opacity-100 text-brand bg-brand-light hover:bg-brand hover:text-white p-1.5 rounded-lg transition-all"
+                          title="Play audio"
+                        >
+                          <Volume2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <p className="text-base font-semibold text-brand-dark break-words leading-tight">{w.translation}</p>
+                    </div>
+
+                    <div className="mt-auto pt-4 border-t border-black/5">
+                      {w.contextSentence && (
+                        <p className="text-sm text-ink/60 italic line-clamp-3">&quot;{w.contextSentence}&quot;</p>
+                      )}
+
+                      <div className="flex gap-2 mt-3 h-0 overflow-hidden group-hover:h-9 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        {w.status === "learned" ? (
+                          <button
+                            onClick={() => handleUpdateStatus(w.id, "learning")}
+                            className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-xl border border-amber-200"
+                          >
+                            Mark as Learning
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleUpdateStatus(w.id, "learned")}
+                            className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-bold rounded-xl border border-green-200"
+                          >
+                            Mark as Learned
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(w.id)}
+                          className="w-9 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl border border-red-200 flex items-center justify-center shrink-0"
+                          title="Delete completely"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/useAuth";
 import { loginWithGoogle, logout } from "@/lib/firebase";
-import StreakWidget from "./StreakWidget";
 import { BookOpen, Brain, User, PlayCircle, LayoutDashboard, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -86,7 +85,7 @@ function AuthBlock({ compact }: { compact?: boolean }) {
 
 export default function Nav() {
   const pathname = usePathname();
-  const { progress, loadFromStorage } = useStore();
+  const { loadFromStorage } = useStore();
 
   useEffect(() => {
     loadFromStorage();
@@ -97,11 +96,10 @@ export default function Nav() {
       {/* Desktop Sidebar Nav */}
       <aside className="hidden md:flex flex-col w-64 bg-surface-card border-r border-black/5 fixed inset-y-0 left-0 z-40">
         <div className="p-6 pb-2">
-          <Link href="/" className="flex items-center gap-2 mb-6">
+          <Link href="/" className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-brand" />
             <span className="font-display text-ink font-semibold text-2xl tracking-tight">Sprekio</span>
           </Link>
-          <StreakWidget streak={progress.streak} xp={progress.xp} />
         </div>
 
         <nav className="flex-1 px-4 space-y-8 overflow-y-auto mt-2">
@@ -169,7 +167,6 @@ export default function Nav() {
             <span className="font-display text-ink font-semibold text-lg tracking-tight">Sprekio</span>
           </Link>
           <div className="flex items-center gap-2 min-w-0">
-            <StreakWidget streak={progress.streak} xp={progress.xp} />
             <AuthBlock compact />
           </div>
         </div>

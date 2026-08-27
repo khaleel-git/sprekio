@@ -95,16 +95,19 @@ export const CEFR_DESCRIPTIONS: Record<CEFRLevel, string> = {
   C2: "Mastery",
 };
 
+// Kept in sync with the Chrome extension's POS_COLORS (src/lib/grammarColors.ts /
+// Chrome Extension/src/content/index.tsx) so a word's grammar color means the same
+// thing in the extension, the story reader, and the vocab vault.
 export const WORD_TYPE_COLORS: Record<string, string> = {
   noun: "text-blue-700",
-  verb: "text-green-700",
-  adjective: "text-orange-700",
+  verb: "text-red-700",
+  adjective: "text-green-700",
   adverb: "text-purple-700",
-  preposition: "text-gray-600",
-  conjunction: "text-gray-600",
-  pronoun: "text-pink-700",
-  article: "text-gray-500",
-  phrase: "text-teal-700",
+  preposition: "text-pink-700",
+  conjunction: "text-slate-600",
+  pronoun: "text-teal-700",
+  article: "text-cyan-700",
+  phrase: "text-stone-600",
 };
 
 export const CASE_COLORS: Record<string, string> = {
