@@ -909,9 +909,9 @@ const SprekioOverlay: React.FC = () => {
         className="sprekio-subtitle-interactive"
         onMouseEnter={(e) => handleWordEnter(token, e)}
         onMouseLeave={handleWordLeave}
-        style={{ cursor: 'pointer', padding: '0 2px', borderRadius: '4px', transition: 'background-color 0.2s', pointerEvents: 'auto' }}
-        onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.2)'; (e.target as HTMLElement).style.color = '#93c5fd'; }}
-        onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; (e.target as HTMLElement).style.color = '#ffffff'; }}
+        style={{ cursor: 'pointer', padding: '0 2px', borderRadius: '4px', transition: 'background-color 0.2s, color 0.2s', pointerEvents: 'auto' }}
+        onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#fed7aa'; (e.target as HTMLElement).style.color = '#c2410c'; }}
+        onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; (e.target as HTMLElement).style.color = '#111827'; }}
       >
         {token}
       </span>
@@ -943,19 +943,19 @@ const SprekioOverlay: React.FC = () => {
         ) : (
           <div style={{
             position: 'absolute', bottom: '10%', left: '0', right: '0',
-            display: 'flex', justifyContent: 'center', zIndex: 9999,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 9999,
             pointerEvents: 'none', padding: '0 10px'
           }}>
             <div className="sprekio-subtitle-box" style={{
-              backgroundColor: 'rgba(8, 12, 18, 0.82)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-              padding: '10px 18px 12px', borderRadius: '14px', boxShadow: '0 8px 24px rgba(0,0,0,0.42)',
-              border: '1px solid rgba(255,255,255,0.15)', textAlign: 'center', pointerEvents: 'none',
+              backgroundColor: '#ffffff',
+              padding: '8px 16px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+              textAlign: 'center', pointerEvents: 'none',
               width: 'max-content', maxWidth: 'calc(100% - 20px)', margin: '0 10px', boxSizing: 'border-box',
               display: 'inline-flex', flexDirection: 'column', alignItems: 'center'
             }}>
               <h2 className="sprekio-subtitle-text" style={{
-                fontSize: '24px', fontWeight: '750', color: '#ffffff',
-                lineHeight: '1.25', textShadow: '0 1px 5px rgba(0,0,0,0.9)', margin: 0
+                fontSize: '22px', fontWeight: '700', color: '#111827',
+                lineHeight: '1.3', margin: 0
               }}>
                 {visibleLines.map((line, lineIndex) => (
                   <React.Fragment key={`${line.deText}-${lineIndex}`}>
@@ -964,16 +964,23 @@ const SprekioOverlay: React.FC = () => {
                   </React.Fragment>
                 ))}
               </h2>
-              {(translatedText || isTranslating) && (
+            </div>
+            {(translatedText || isTranslating) && (
+              <div style={{
+                backgroundColor: '#000000',
+                padding: '6px 16px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                pointerEvents: 'none', width: 'max-content', maxWidth: 'calc(100% - 20px)',
+                margin: '0 10px', boxSizing: 'border-box'
+              }}>
                 <p className="sprekio-subtitle-translation" style={{
-                  fontSize: '20px', fontWeight: '600', marginTop: '6px', marginBottom: 0,
-                  color: '#facc15', textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+                  fontSize: '18px', fontWeight: '600', margin: 0,
+                  color: '#f97316',
                   opacity: isTranslating ? 0.5 : 1, transition: 'opacity 0.3s ease-in-out'
                 }}>
                   {isTranslating && !translatedText ? '...' : translatedText}
                 </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )
       )}
@@ -1029,7 +1036,7 @@ const SprekioOverlay: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                 {wordDetails.translations?.map((t: any, idx: number) => (
-                  <div key={idx} style={{ fontSize: idx === 0 ? '18px' : '15px', fontWeight: idx === 0 ? '600' : '500', color: idx === 0 ? '#2563eb' : '#4b5563', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                  <div key={idx} style={{ fontSize: idx === 0 ? '18px' : '15px', fontWeight: idx === 0 ? '600' : '500', color: idx === 0 ? '#ea580c' : '#4b5563', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                     {t.text}
                   </div>
                 ))}
@@ -1081,7 +1088,7 @@ const SprekioOverlay: React.FC = () => {
               {(() => {
                 const isAlreadySaved = savedWordsSet.has(hoveredWord.word.toLowerCase());
                 const buttonDisabled = saveStatus === "saving" || saveStatus === "saved" || isAlreadySaved;
-                let buttonBg = '#2563eb';
+                let buttonBg = '#f97316';
                 if (saveStatus === "saved" || isAlreadySaved) buttonBg = '#10b981';
                 else if (saveStatus === "error") buttonBg = '#ef4444';
 
@@ -1097,8 +1104,8 @@ const SprekioOverlay: React.FC = () => {
                       transition: 'background-color 0.2s',
                       opacity: buttonDisabled ? 0.9 : 1
                     }}
-                    onMouseOver={(e) => { if (!buttonDisabled) (e.target as HTMLElement).style.backgroundColor = '#1d4ed8'; }}
-                    onMouseOut={(e) => { if (!buttonDisabled) (e.target as HTMLElement).style.backgroundColor = '#2563eb'; }}
+                    onMouseOver={(e) => { if (!buttonDisabled) (e.target as HTMLElement).style.backgroundColor = '#c2410c'; }}
+                    onMouseOut={(e) => { if (!buttonDisabled) (e.target as HTMLElement).style.backgroundColor = '#f97316'; }}
                   >
                     {!user ? "Login to Save" : 
                      isAlreadySaved ? "✓ Saved in Vocab" : 
