@@ -25,7 +25,7 @@ export default function StoryCard({ story }: StoryCardProps) {
 
   return (
     <Link href={`/story/${story.id}`}>
-      <Card interactive className="overflow-hidden group">
+      <Card interactive className="overflow-hidden group relative">
         {/* Level-coded header — color tells you the difficulty at a glance */}
         <div className={cn("bg-gradient-to-br p-5 text-white relative", CEFR_GRADIENTS[story.level])}>
           <div className="text-4xl mb-2">{story.imageEmoji}</div>
