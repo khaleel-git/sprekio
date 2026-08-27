@@ -10,8 +10,8 @@ export interface SprekioTranslation {
 }
 import { VocabularyEngine } from './vocabulary';
 
-// Grammar-coloring accent per part of speech, shown as an underline under each word.
-// Distinct from the app's white/orange chrome — orange is reserved for hover, saved
+// Grammar-coloring accent per part of speech, shown as a colored underline under each
+// word. Distinct from the app's white/orange chrome — orange is reserved for hover, saved
 // words, and the currently-spoken word, so it's deliberately not reused here.
 const POS_COLORS: Record<string, string> = {
   noun: '#3b82f6',
@@ -25,6 +25,20 @@ const POS_COLORS: Record<string, string> = {
   num: '#6366f1',
   intj: '#84cc16',
   phrase: '#78716c',
+};
+
+const POS_LABELS: Record<string, string> = {
+  noun: 'Noun',
+  verb: 'Verb',
+  adj: 'Adjective',
+  adv: 'Adverb',
+  pron: 'Pronoun',
+  prep: 'Preposition',
+  conj: 'Conjunction',
+  det: 'Article / Determiner',
+  num: 'Number',
+  intj: 'Interjection',
+  phrase: 'Phrase',
 };
 
 // Auto-generated German captions mark non-speech audio as a single bracketed/parenthesized
@@ -46,6 +60,8 @@ const SprekioOverlay: React.FC = () => {
   const [sidebarTab, setSidebarTab] = useState<'transcript' | 'vocab' | 'quiz'>('transcript');
   const [subtitleStyle, setSubtitleStyle] = useState<'solid' | 'transparent'>('transparent');
   const [grammarColors, setGrammarColors] = useState(false);
+  const [showGrammarLegend, setShowGrammarLegend] = useState(false);
+  const [grammarLegendAnchor, setGrammarLegendAnchor] = useState<{ left: number, bottom: number } | null>(null);
   const [translationEnabled, setTranslationEnabled] = useState(true);
   // Bumped after a prefetch resolves, purely to re-render the subtitle line so newly
   // cached part-of-speech data can be picked up by renderTokens (VocabularyEngine's
@@ -556,6 +572,19 @@ const SprekioOverlay: React.FC = () => {
       }
     }
   }, [isEnabled, autoPause, provider, subtitleStyle, grammarColors, translationEnabled, hasLoadedSettings]);
+
+  // Dismiss the grammar-color legend on an outside click, like any other popover
+  useEffect(() => {
+    if (!showGrammarLegend) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.sprekio-grammar-legend') && !target.closest('.sprekio-grammar-legend-btn')) {
+        setShowGrammarLegend(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside, true);
+    return () => document.removeEventListener('mousedown', handleClickOutside, true);
+  }, [showGrammarLegend]);
 
   // Check auth on mount
   useEffect(() => {
@@ -1127,14 +1156,19 @@ const SprekioOverlay: React.FC = () => {
         <span
           key={i}
           className="sprekio-subtitle-interactive"
-          title={pos}
+          title={pos ? POS_LABELS[pos] || pos : undefined}
           onMouseEnter={(e) => handleWordEnter(token, e)}
           onMouseLeave={handleWordLeave}
           style={{
-            cursor: 'pointer', padding: '0 2px 2px', borderRadius: '4px',
+            cursor: 'pointer', padding: '0 2px', borderRadius: '4px',
             transition: 'background-color 0.2s, color 0.2s',
             pointerEvents: 'auto', color: idleColor, backgroundColor: idleBg,
-            borderBottom: posColor ? `2px solid ${posColor}` : '2px solid transparent'
+            // A colored text-decoration underline (rather than a border) avoids the
+            // rounded-corner "tab" artifact a bottom border picks up from borderRadius.
+            textDecorationLine: posColor ? 'underline' : 'none',
+            textDecorationColor: posColor,
+            textDecorationThickness: '2.5px',
+            textUnderlineOffset: '3px'
           }}
           onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f97316'; (e.target as HTMLElement).style.color = '#ffffff'; }}
           onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = idleBg; (e.target as HTMLElement).style.color = idleColor; }}
@@ -1473,14 +1507,18 @@ const SprekioOverlay: React.FC = () => {
 
             {isEnabled && (
               <button
-                onClick={() => setGrammarColors(!grammarColors)}
+                onClick={() => {
+                  const next = !grammarColors;
+                  setGrammarColors(next);
+                  if (!next) setShowGrammarLegend(false);
+                }}
                 title="Underline words by part of speech (noun, verb, adjective...)"
                 style={{
                   backgroundColor: grammarColors ? '#f97316' : 'transparent',
                   color: grammarColors ? 'white' : '#eee',
                   border: '1px solid',
                   borderColor: grammarColors ? '#f97316' : '#eee',
-                  borderRadius: '4px',
+                  borderRadius: grammarColors ? '4px 0 0 4px' : '4px',
                   padding: '4px 8px',
                   fontWeight: 'bold',
                   fontSize: '12px',
@@ -1492,6 +1530,36 @@ const SprekioOverlay: React.FC = () => {
                 onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
               >
                 Grammar
+              </button>
+            )}
+
+            {isEnabled && grammarColors && (
+              <button
+                onClick={(e) => {
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setGrammarLegendAnchor({ left: rect.left, bottom: window.innerHeight - rect.top + 8 });
+                  setShowGrammarLegend(v => !v);
+                }}
+                title="What do the colors mean?"
+                className="sprekio-grammar-legend-btn"
+                style={{
+                  backgroundColor: showGrammarLegend ? '#c2410c' : '#f97316',
+                  color: 'white',
+                  border: '1px solid #f97316',
+                  borderLeft: '1px solid rgba(255,255,255,0.4)',
+                  borderRadius: '0 4px 4px 0',
+                  padding: '4px 7px',
+                  fontWeight: 'bold',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: 0.9,
+                  marginLeft: '-1px'
+                }}
+                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
+                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
+              >
+                ⓘ
               </button>
             )}
 
@@ -1521,7 +1589,45 @@ const SprekioOverlay: React.FC = () => {
         </div>,
         controlsContainer
         )}
-        
+
+        {isEnabled && grammarColors && showGrammarLegend && grammarLegendAnchor && createPortal(
+          <div
+            className="sprekio-grammar-legend"
+            style={{
+              position: 'fixed', left: grammarLegendAnchor.left, bottom: grammarLegendAnchor.bottom,
+              zIndex: 2147483647, backgroundColor: '#ffffff', color: '#17120e',
+              borderRadius: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.25)', border: '1px solid #f0e6da',
+              padding: '14px 16px', width: '220px', boxSizing: 'border-box'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '700' }}>Grammar colors</div>
+              <button
+                onClick={() => setShowGrammarLegend(false)}
+                aria-label="Close"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '14px', lineHeight: 1, padding: 0 }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+              {Object.entries(POS_LABELS).map(([code, label]) => (
+                <div key={code} style={{ display: 'flex', alignItems: 'center', gap: '9px', fontSize: '12.5px' }}>
+                  <span style={{
+                    display: 'inline-block', width: '11px', height: '11px', borderRadius: '50%',
+                    backgroundColor: POS_COLORS[code], flexShrink: 0
+                  }} />
+                  <span style={{ color: '#4b5563' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #f3f4f6' }}>
+              Underline color = word's part of speech
+            </div>
+          </div>,
+          document.body
+        )}
+
         {isEnabled && showSidebar && sidebarContainer && (() => {
           const isGlass = subtitleStyle === 'transparent';
           const panelBg = isGlass ? 'rgba(255,255,255,0.7)' : '#fffaf5';
