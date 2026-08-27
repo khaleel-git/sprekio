@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import { fetchVocabWords, FirestoreVocabWord } from "@/lib/vocab";
@@ -13,7 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatPill } from "@/components/ui/StatPill";
 import {
-  Volume2, Trash2, Inbox, Video, Target, LayoutDashboard, Layers, PlayCircle,
+  Volume2, Trash2, Inbox, Video, Target, LayoutDashboard, Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -206,30 +205,24 @@ function VocabularyVault({
       <div className="space-y-8">
         {orderedGroups.map((group) => (
           <div key={group.videoId || "none"}>
-            {/* Video header — click to watch it inside Sprekio, with the same subtitle/word-highlighter experience */}
+            {/* Video header — the source video these words were saved from */}
             {group.videoId ? (
-              <Link
-                href={`/watch/player?v=${group.videoId}`}
-                className="group/vid flex items-center gap-3 mb-3 hover:opacity-90 transition-opacity"
-              >
-                <div className="w-20 h-12 rounded-lg overflow-hidden bg-black/5 shrink-0 relative">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-20 h-12 rounded-lg overflow-hidden bg-black/5 shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image loader */}
                   <img
                     src={`https://img.youtube.com/vi/${group.videoId}/mqdefault.jpg`}
                     alt={group.videoTitle}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/vid:opacity-100 transition-opacity">
-                    <PlayCircle className="w-6 h-6 text-white" />
-                  </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-ink truncate group-hover/vid:text-brand transition-colors">
+                  <h3 className="text-sm font-semibold text-ink truncate">
                     {group.videoTitle}
                   </h3>
-                  <p className="text-xs text-ink/40">{group.words.length} word{group.words.length !== 1 ? "s" : ""} saved · watch again</p>
+                  <p className="text-xs text-ink/40">{group.words.length} word{group.words.length !== 1 ? "s" : ""} saved</p>
                 </div>
-              </Link>
+              </div>
             ) : (
               <h3 className="text-sm font-semibold text-ink/50 mb-3">Other words</h3>
             )}
@@ -334,26 +327,24 @@ function VideoTracker({ words }: { words: FirestoreVocabWord[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {videos.map((v) => (
-        <Link href={`/watch/player?v=${v.id}`} key={v.id}>
-          <Card interactive className="group overflow-hidden flex">
-            <div className="w-32 md:w-40 shrink-0 bg-black/5 relative overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image loader */}
-              <img
-                src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
-                alt={v.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-4 flex flex-col justify-center min-w-0">
-              <h2 className="text-sm font-semibold text-ink leading-tight mb-2 group-hover:text-brand transition-colors line-clamp-2">
-                {v.title}
-              </h2>
-              <Badge tone="neutral" className="self-start">
-                {v.count} word{v.count > 1 ? "s" : ""} learned
-              </Badge>
-            </div>
-          </Card>
-        </Link>
+        <Card key={v.id} className="overflow-hidden flex">
+          <div className="w-32 md:w-40 shrink-0 bg-black/5">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image loader */}
+            <img
+              src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
+              alt={v.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="p-4 flex flex-col justify-center min-w-0">
+            <h2 className="text-sm font-semibold text-ink leading-tight mb-2 line-clamp-2">
+              {v.title}
+            </h2>
+            <Badge tone="neutral" className="self-start">
+              {v.count} word{v.count > 1 ? "s" : ""} learned
+            </Badge>
+          </div>
+        </Card>
       ))}
     </div>
   );

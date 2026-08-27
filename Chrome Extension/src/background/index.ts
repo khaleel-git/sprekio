@@ -102,6 +102,9 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     return true;
   }
   
+  // Master fallback for content/index.tsx's own on-YouTube dual-subtitle fetch:
+  // used when both the isolated-world and main-world caption fetches fail. Not
+  // related to the website's (removed) embedded player.
   if (request.action === "fetchTranscriptDirect") {
     (async () => {
       try {
@@ -111,13 +114,13 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           },
           credentials: "include"
         });
-        
+
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
-        
+
         const html = await res.text();
-        
+
         let data;
         const match = html.match(/ytInitialPlayerResponse\s*=\s*({.+?})\s*;/);
         if (match) {
@@ -130,19 +133,19 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
             throw new Error("Could not find ytInitialPlayerResponse in HTML. Video might be age-restricted or unavailable.");
           }
         }
-        
+
         const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
         if (!tracks || !tracks.length) {
           throw new Error("Transcript is disabled on this video (or it does not exist).");
         }
-        
+
         let track = tracks.find((t: any) => t.languageCode === (request.lang || 'de')) || tracks[0];
         let url = track.baseUrl;
-        
+
         if (request.forceLang) {
           url += "&tlang=" + request.forceLang;
         }
-        
+
         // A service worker's fetch carries none of a real tab's page context, and
         // YouTube's caption CDN has been observed silently returning an empty 200
         // body (not an HTTP error) for requests that don't look like they came from

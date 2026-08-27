@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/useAuth";
 import { loginWithGoogle, logout } from "@/lib/firebase";
-import { BookOpen, Brain, User, PlayCircle, LayoutDashboard, LogOut } from "lucide-react";
+import { BookOpen, Brain, User, LayoutDashboard, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const mainNavItems = [
@@ -16,22 +16,19 @@ const mainNavItems = [
 const learnNavItems = [
   { href: "/", icon: BookOpen, label: "Stories" },
   { href: "/vocab", icon: Brain, label: "Vocab Review" },
-  { href: "/watch", icon: PlayCircle, label: "YouTube Player" },
   { href: "/profile", icon: User, label: "Profile" },
 ];
 
-// Five pages total now — all fit directly in the mobile bottom bar, no "More" overflow needed.
+// Four pages total — all fit directly in the mobile bottom bar, no "More" overflow needed.
 const mobilePrimary = [
   { href: "/", icon: BookOpen, label: "Stories" },
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/vocab", icon: Brain, label: "Review" },
-  { href: "/watch", icon: PlayCircle, label: "Watch" },
   { href: "/profile", icon: User, label: "Profile" },
 ];
 
-// /watch/player is a sub-route of /watch and should still highlight the "Watch" link.
 function isActive(pathname: string, href: string) {
-  return pathname === href || (href === "/watch" && pathname.startsWith("/watch"));
+  return pathname === href;
 }
 
 function AuthBlock({ compact }: { compact?: boolean }) {

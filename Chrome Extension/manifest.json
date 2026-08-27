@@ -23,19 +23,10 @@
       "js": ["src/content/index.tsx"]
     },
     {
-      "matches": ["https://sprekio.khaleel.eu/*", "http://localhost:3000/*", "http://localhost:5173/*"],
-      "js": ["src/content/bridge.ts"]
-    },
-    {
       "matches": ["https://www.youtube.com/*"],
       "js": ["src/content/interceptor.ts"],
       "world": "MAIN",
       "run_at": "document_start",
-      "all_frames": true
-    },
-    {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["src/content/transcriptRelay.ts"],
       "all_frames": true
     }
   ],
@@ -54,13 +45,6 @@
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"
-    ]
-  },
-  "externally_connectable": {
-    "matches": [
-      "https://sprekio.khaleel.eu/*",
-      "http://localhost:3000/*",
-      "http://localhost:5173/*"
     ]
   }
 }
