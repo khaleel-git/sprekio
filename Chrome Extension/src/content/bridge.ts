@@ -20,6 +20,14 @@ window.addEventListener('SPREKIO_FETCH_TRANSCRIPT', (e: any) => {
         respond({ error: `Extension bridge disconnected (${chrome.runtime.lastError.message}). Reload this page to reconnect.` });
         return;
       }
+      // The background handler always calls sendResponse with either {xml} or {error} —
+      // a bare undefined here means the service worker never ran the handler at all
+      // (e.g. it was asleep and didn't wake in time), which otherwise looked identical
+      // to a real "no captions" response and got silently misrouted to the backend.
+      if (!response) {
+        respond({ error: "Extension background script did not respond. Try reloading the extension in chrome://extensions, then reload this page." });
+        return;
+      }
       respond(response);
     });
   } catch (err: any) {

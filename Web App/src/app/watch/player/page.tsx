@@ -72,15 +72,18 @@ function PlayerContent() {
         const response = e.detail.response;
         if (response && response.xml) {
            parseXmlTranscript(response.xml);
-        } else if (response?.error?.includes("Extension bridge disconnected")) {
-           // A stale content script can't be revived from here — no point trying
-           // the (also-blocked) backend, tell the user the one thing that fixes it.
-           console.warn("Extension bridge disconnected:", response.error);
-           setTranscript([{ id: 0, start: 0, end: 9999, text: response.error }]);
+        } else if (response?.error) {
+           // The extension responded — trust its error over the backend's. The backend
+           // fetches from a Cloudflare IP with no YouTube session and reliably fails
+           // with an unrelated, more confusing error, so retrying there just replaces
+           // a specific answer ("captions disabled", "reload the extension") with a
+           // generic one.
+           console.warn("Extension reported a transcript error:", response.error);
+           setTranscript([{ id: 0, start: 0, end: 9999, text: `Error: ${response.error}` }]);
            setIsLoading(false);
         } else {
-           // Extension failed, fallback to backend
-           console.warn("Extension failed to fetch transcript:", response?.error);
+           // No response at all within the timeout — extension not installed/enabled.
+           console.warn("No response from extension, falling back to backend.");
            fetchBackendTranscript();
         }
       }
