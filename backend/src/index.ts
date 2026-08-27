@@ -16,6 +16,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+// NVIDIA's endpoint occasionally hangs instead of erroring out. Without a timeout that
+// stalls the whole Worker request (and the extension request waiting on it) far longer
+// than any UI should be left spinning.
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 8000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (request.method === "OPTIONS") {
@@ -44,7 +53,7 @@ export default {
 
         const apiKey = env.NVIDIA_API_KEY;
         if (!apiKey) throw new Error("NVIDIA_API_KEY not configured");
-        const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+        const res = await fetchWithTimeout("https://integrate.api.nvidia.com/v1/chat/completions", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
             body: JSON.stringify({
@@ -347,7 +356,7 @@ Requirements:
         let response;
         let text = "";
 
-        response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+        response = await fetchWithTimeout("https://integrate.api.nvidia.com/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -360,7 +369,7 @@ Requirements:
             top_p: 0.9,
             max_tokens: 4000
           })
-        });
+        }, 30000); // Longer generation needs more headroom than the word/sentence lookups
         if (!response.ok) {
           const err = await response.json().catch(() => ({})) as any;
           throw new Error(err.message || err.detail || `NVIDIA API Error: ${response.status}`);

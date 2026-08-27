@@ -61,19 +61,31 @@ Return ONLY a valid JSON object with exactly this structure:
       let textContent: string | null = null;
 
       {
-        const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.apiKey}` },
-          body: JSON.stringify({
-            model: "openai/gpt-oss-20b",
-            messages: [
-              { role: "system", content: "You are a German linguistics expert. Always respond with valid JSON only." },
-              { role: "user", content: prompt }
-            ],
-            temperature: 0.1,
-            max_tokens: 150,
-          })
-        });
+        // NVIDIA's endpoint occasionally hangs instead of erroring, which used to stall
+        // this whole request (and the extension's word-lookup) well past any reasonable
+        // wait. Give up on the AI disambiguation after 8s and fall back to the lexical
+        // ranker's pick rather than blocking the response.
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 8000);
+        let res: Response;
+        try {
+          res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.apiKey}` },
+            body: JSON.stringify({
+              model: "openai/gpt-oss-20b",
+              messages: [
+                { role: "system", content: "You are a German linguistics expert. Always respond with valid JSON only." },
+                { role: "user", content: prompt }
+              ],
+              temperature: 0.1,
+              max_tokens: 150,
+            }),
+            signal: controller.signal
+          });
+        } finally {
+          clearTimeout(timer);
+        }
         if (!res.ok) {
           console.error("NVIDIA Resolver Error:", await res.text());
           return null;
