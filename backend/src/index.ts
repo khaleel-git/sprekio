@@ -1,6 +1,7 @@
 import { PhraseDetector } from './dictionary/PhraseDetector';
 import { DictionaryEngine } from './dictionary/DictionaryEngine';
 import { ContextualRanking } from './dictionary/ContextualRanking';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 export interface Env {
   NVIDIA_API_KEY: string;
