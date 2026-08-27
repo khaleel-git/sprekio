@@ -60,67 +60,74 @@ function PlayerContent() {
     
     // Attempt 1: Fetch via Chrome Extension (bypasses datacenter IP blocks using user's browser)
     const reqId = Date.now().toString();
-    let extensionTimeout: NodeJS.Timeout;
+    let finalTimeout: NodeJS.Timeout;
     let dispatchInterval: NodeJS.Timeout;
     let settled = false;
+    // The background-bridge path (chrome.runtime → fetchTranscriptDirect) typically
+    // resolves within milliseconds, while the iframe relay has to wait on the native
+    // player's own caption request — which can take several seconds. Settling on
+    // whichever answers *first* let the fast-but-often-wrong background path lock in
+    // an "empty captions" error moments before the slower-but-correct iframe relay
+    // found the real transcript. Only a genuinely non-empty transcript settles things
+    // immediately; every error/empty result is held as a fallback and real content
+    // from any source can still win up until the final timeout.
+    let fallbackMessage: string | null = null;
 
-    const cleanup = () => {
+    const teardown = () => {
       settled = true;
-      clearTimeout(extensionTimeout);
+      clearTimeout(finalTimeout);
       clearInterval(dispatchInterval);
       window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
       window.removeEventListener('message', onIframeMessage);
     };
 
-    // Attempt 0 (fastest, most reliable): the embedded YouTube iframe itself relays a
-    // transcript directly via postMessage — see transcriptRelay.ts. It captures the
-    // *native player's own* signed caption request, which a blind background fetch
-    // can never reproduce (that's why Attempt 1 below still exists as a fallback but
-    // reliably fails with an empty body for videos that need that token).
+    const succeed = (xml: string) => {
+      if (settled) return;
+      teardown();
+      parseXmlTranscript(xml);
+    };
+
+    const fail = (message: string) => {
+      if (settled) return;
+      teardown();
+      setTranscript([{ id: 0, start: 0, end: 9999, text: `Error: ${message}` }]);
+      setIsLoading(false);
+    };
+
+    // Attempt 0 (slower to arrive, but the only one that reliably works): the embedded
+    // YouTube iframe itself relays a transcript via postMessage — see
+    // transcriptRelay.ts. It captures the *native player's own* signed caption
+    // request, which a blind background fetch (Attempt 1) can never reproduce, since
+    // modern caption URLs require a session-bound token only a real page request has.
     const onIframeMessage = (e: MessageEvent) => {
       if (e.origin !== "https://www.youtube.com") return;
       if (e.data?.type !== "SPREKIO_IFRAME_TRANSCRIPT" || e.data.videoId !== videoId) return;
-      if (settled) return;
-      if (typeof e.data.xml === "string") {
-        cleanup();
-        parseXmlTranscript(e.data.xml);
+      if (typeof e.data.xml === "string" && e.data.xml) {
+        succeed(e.data.xml);
       } else if (e.data.error) {
-        cleanup();
+        // Most trustworthy source we have — prefer it over whatever the background
+        // path already said, but still don't render it until the final timeout in
+        // case the background path (or a retry) still comes back with real content.
         console.warn("Embedded player reported a transcript error:", e.data.error);
-        setTranscript([{ id: 0, start: 0, end: 9999, text: `Error: ${e.data.error}` }]);
-        setIsLoading(false);
+        fallbackMessage = e.data.error;
       }
     };
     window.addEventListener('message', onIframeMessage);
 
     const onResult = (e: any) => {
-      if (settled) return;
-      if (e.detail.reqId === reqId) {
-        cleanup();
-
-        const response = e.detail.response;
-        if (response && typeof response.xml === "string") {
-           // A present-but-empty xml string is a legitimate "no captions for this
-           // language" answer, not a failure — parseXmlTranscript naturally renders
-           // that as zero transcript lines. Truthiness alone (the old check) treated
-           // "" as if the extension had never responded, at which point this actually
-           // successful attempt still got misrouted into the backend fallback.
-           parseXmlTranscript(response.xml);
-        } else if (response?.error) {
-           // The extension responded — trust its error over the backend's. The backend
-           // fetches from a Cloudflare IP with no YouTube session and reliably fails
-           // with an unrelated, more confusing error, so retrying there just replaces
-           // a specific answer ("captions disabled", "reload the extension") with a
-           // generic one.
-           console.warn("Extension reported a transcript error:", response.error);
-           setTranscript([{ id: 0, start: 0, end: 9999, text: `Error: ${response.error}` }]);
-           setIsLoading(false);
-        } else {
-           // No response at all within the timeout — extension not installed/enabled.
-           console.warn("No response from extension, falling back to backend.");
-           fetchBackendTranscript();
-        }
+      if (e.detail.reqId !== reqId) return;
+      const response = e.detail.response;
+      if (response && typeof response.xml === "string" && response.xml) {
+         succeed(response.xml);
+      } else if (response?.error) {
+         console.warn("Extension reported a transcript error:", response.error);
+         fallbackMessage = fallbackMessage || response.error;
       }
+      // An empty (but present) response.xml is deliberately treated the same as an
+      // error here rather than as "confirmed no captions" — we've seen this exact
+      // background path return an empty body for videos that do have captions, so
+      // it isn't proof of anything on its own; only the iframe relay's empty-with-no-
+      // request-observed case is trusted as a real "no captions" answer.
     };
 
     window.addEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
@@ -137,15 +144,20 @@ function PlayerContent() {
       detail: { videoId, reqId }
     }));
 
-    // If neither the iframe relay nor the extension bridge responds within 8s
-    // (the relay itself can take up to ~8s forcing CC and waiting on the native
-    // player), fall back to the backend.
-    extensionTimeout = setTimeout(() => {
+    // Give every path (the iframe relay can take up to ~8s forcing CC and waiting on
+    // the native player) a real chance before falling back. If nothing succeeded but
+    // we have a specific, trustworthy error by now, show that instead of burning more
+    // time on the backend, which has proven reliably unable to fetch captions at all.
+    finalTimeout = setTimeout(() => {
       if (settled) return;
-      cleanup();
-      console.warn("No transcript from iframe relay or extension, falling back to backend.");
-      fetchBackendTranscript();
-    }, 8000);
+      if (fallbackMessage) {
+        fail(fallbackMessage);
+      } else {
+        teardown();
+        console.warn("No transcript and no specific error from any source, falling back to backend.");
+        fetchBackendTranscript();
+      }
+    }, 9000);
 
     function parseXmlTranscript(xml: string) {
         const parser = new DOMParser();
@@ -191,7 +203,7 @@ function PlayerContent() {
         });
     }
 
-    return cleanup;
+    return teardown;
   }, [videoId]);
 
   // Sync player time and handle auto-pause
