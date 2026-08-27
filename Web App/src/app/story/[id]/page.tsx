@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { notFound } from "next/navigation";
-import { getStoryById, XP_PER_STORY } from "@/lib/stories";
+import { getStoryById, XP_PER_STORY, CEFR_GRADIENTS } from "@/lib/stories";
 import { useStore } from "@/lib/store";
 import StoryReader from "@/components/StoryReader";
 import QuizModal from "@/components/QuizModal";
 import LevelBadge from "@/components/LevelBadge";
+import { Card } from "@/components/ui/Card";
 import { Clock, BookOpen, CheckCircle2, Brain, ArrowLeft, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -14,18 +15,8 @@ import { use } from "react";
 
 export default function StoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  
-  // Try static first
-  let story = getStoryById(id);
-  
-  // If not static, try local storage (for generated stories)
-  if (!story && typeof window !== "undefined") {
-    try {
-      const saved = JSON.parse(localStorage.getItem("dl_generated_stories") || "[]");
-      story = saved.find((s: any) => s.id === id);
-    } catch (e) {}
-  }
 
+  const story = getStoryById(id);
   if (!story) notFound();
 
   const [showQuiz, setShowQuiz] = useState(false);
@@ -63,14 +54,14 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
       <div>
         <Link
           href="/"
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-ink/50 hover:text-ink mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to stories
         </Link>
 
         {/* Story header card */}
-        <div className={`bg-gradient-to-br ${story.color} rounded-2xl p-6 text-white`}>
+        <div className={cn("bg-gradient-to-br rounded-2xl p-6 text-white", CEFR_GRADIENTS[story.level])}>
           <div className="flex items-start gap-4">
             <div className="text-5xl">{story.imageEmoji}</div>
             <div className="flex-1 min-w-0">
@@ -124,7 +115,7 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+      <div className="flex gap-1 bg-black/5 rounded-xl p-1">
         {[
           { id: "read", label: "Read", icon: BookOpen },
           { id: "vocab", label: "Vocabulary", icon: Brain },
@@ -138,8 +129,8 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
               className={cn(
                 "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all",
                 activeTab === tab.id
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-surface-card text-ink shadow-sm"
+                  : "text-ink/50 hover:text-ink"
               )}
             >
               <Icon className="w-4 h-4" />
@@ -158,7 +149,7 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setShowQuiz(true)}
-              className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 active:scale-95 transition-all"
+              className="flex-1 flex items-center justify-center gap-2 bg-ink text-white py-3 rounded-xl font-semibold hover:bg-ink/85 active:scale-95 transition-all"
             >
               <Brain className="w-4 h-4" />
               Take Quiz
@@ -184,33 +175,31 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
       {activeTab === "vocab" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-gray-900">Key Vocabulary</h2>
+            <h2 className="font-bold text-ink">Key Vocabulary</h2>
             <button
               onClick={handleSaveAllVocab}
-              className="text-xs text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1"
+              className="text-xs text-brand font-medium hover:text-brand-dark flex items-center gap-1"
             >
               <Brain className="w-3.5 h-3.5" />
               Save all to deck
             </button>
           </div>
           {story.vocabulary.map((v, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+            <Card key={i} className="p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-bold text-gray-900">{v.word}</p>
-                  <p className="text-sm text-blue-600 font-medium">{v.translation}</p>
-                  {v.example && (
-                    <p className="text-xs text-gray-500 mt-1 italic">{v.example}</p>
-                  )}
+                  <p className="font-bold text-ink">{v.word}</p>
+                  <p className="text-sm text-brand-dark font-medium">{v.translation}</p>
+                  {v.example && <p className="text-xs text-ink/45 mt-1 italic">{v.example}</p>}
                 </div>
                 <button
                   onClick={() => addWordToDeck(v.word, v.translation, story.id, story.title, v.example)}
-                  className="shrink-0 text-xs text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-lg transition-colors"
+                  className="shrink-0 text-xs text-brand hover:text-brand-dark bg-brand-light hover:bg-brand/20 px-2 py-1 rounded-lg transition-colors"
                 >
                   + Save
                 </button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -218,17 +207,17 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
       {/* Grammar tab */}
       {activeTab === "grammar" && (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <h2 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-blue-500" />
+          <Card className="p-5">
+            <h2 className="font-bold text-ink mb-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-brand" />
               Grammar Focus
             </h2>
-            <p className="text-sm text-gray-700 leading-relaxed">{story.grammarFocus}</p>
-          </div>
+            <p className="text-sm text-ink/70 leading-relaxed">{story.grammarFocus}</p>
+          </Card>
 
           {/* Case color legend */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <h3 className="font-semibold text-gray-900 mb-3">Case Color Guide</h3>
+          <Card className="p-5">
+            <h3 className="font-semibold text-ink mb-3">Case Color Guide</h3>
             <div className="space-y-2">
               {[
                 { case: "Nominativ", color: "bg-red-400", desc: "Subject – who does the action", example: "Der Mann schläft. (der = Nominativ)" },
@@ -236,17 +225,17 @@ export default function StoryPage({ params }: { params: Promise<{ id: string }> 
                 { case: "Dativ", color: "bg-green-400", desc: "Indirect object – to/for whom", example: "Ich gebe dem Mann das Buch. (dem = Dativ)" },
                 { case: "Genitiv", color: "bg-purple-400", desc: "Possession – whose", example: "Das Buch des Mannes. (des = Genitiv)" },
               ].map((c) => (
-                <div key={c.case} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50">
+                <div key={c.case} className="flex items-start gap-3 p-3 rounded-xl bg-black/[0.03]">
                   <div className={`w-3 h-3 rounded-full mt-0.5 shrink-0 ${c.color}`} />
                   <div>
-                    <p className="font-semibold text-sm text-gray-800">{c.case}</p>
-                    <p className="text-xs text-gray-500">{c.desc}</p>
-                    <p className="text-xs text-gray-400 italic mt-0.5">{c.example}</p>
+                    <p className="font-semibold text-sm text-ink/80">{c.case}</p>
+                    <p className="text-xs text-ink/45">{c.desc}</p>
+                    <p className="text-xs text-ink/35 italic mt-0.5">{c.example}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       )}
 

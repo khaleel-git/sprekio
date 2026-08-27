@@ -253,7 +253,7 @@ function PlayerContent() {
   const currentLine = activeIndex >= 0 ? transcript[activeIndex] : null;
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-6 pb-24 md:pb-8 relative">
+    <div>
       <div className="flex flex-col lg:flex-row gap-6">
         
         {/* Left Column: Video */}
@@ -286,24 +286,24 @@ function PlayerContent() {
             )}
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Interactive Player</h1>
-          <p className="text-gray-500 mb-8">Hover over the video to see on-screen subtitles. Click any word in the transcript to translate it in context!</p>
+          <h1 className="font-display text-2xl font-semibold text-ink mb-2">Interactive Player</h1>
+          <p className="text-ink/50 mb-8">Hover over the video to see on-screen subtitles. Click any word in the transcript to translate it in context!</p>
         </div>
 
         {/* Right Column: Transcript */}
         <div className="w-full lg:w-[420px] flex-shrink-0 relative">
-          <div className="sticky top-20 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-120px)]">
-            <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between shrink-0">
-              <h2 className="font-bold text-gray-900">Transcript</h2>
-              
+          <div className="sticky top-20 bg-surface-card rounded-2xl border border-black/10 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-120px)]">
+            <div className="p-4 border-b border-black/5 bg-black/[0.02] flex items-center justify-between shrink-0">
+              <h2 className="font-bold text-ink">Transcript</h2>
+
               <div className="flex items-center gap-3">
-                <button 
+                <button
                   onClick={() => setAutoPause(!autoPause)}
                   className={cn(
                     "text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5",
-                    autoPause 
-                      ? "bg-violet-50 text-violet-700 border-violet-200 shadow-sm" 
-                      : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
+                    autoPause
+                      ? "bg-brand-light text-brand-dark border-brand/30 shadow-sm"
+                      : "bg-surface-card text-ink/50 border-black/10 hover:bg-black/[0.03]"
                   )}
                   title="Automatically pause at the end of each sentence"
                 >
@@ -312,15 +312,15 @@ function PlayerContent() {
                 </button>
               </div>
             </div>
-            
+
             <div ref={transcriptRef} className="flex-1 overflow-y-auto p-4 space-y-3 relative">
               {isLoading ? (
-                <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
+                <div className="h-full flex flex-col items-center justify-center text-ink/35 gap-3">
                    <Loader2 className="w-6 h-6 animate-spin" />
                    <p className="text-sm font-medium">Loading Transcript...</p>
                 </div>
               ) : transcript.length === 0 ? (
-                <div className="text-center text-gray-400 py-10">No German captions found for this video.</div>
+                <div className="text-center text-ink/35 py-10">No German captions found for this video.</div>
               ) : (
                 transcript.map((line, i) => {
                   const isActive = i === activeIndex;
@@ -329,17 +329,17 @@ function PlayerContent() {
                       key={line.id}
                       className={cn(
                         "p-4 rounded-xl transition-colors text-[16px] leading-loose relative group",
-                        isActive 
-                          ? "bg-blue-50/80 border border-blue-100 shadow-sm" 
-                          : "hover:bg-gray-50 border border-transparent"
+                        isActive
+                          ? "bg-brand-light/80 border border-brand/20 shadow-sm"
+                          : "hover:bg-black/[0.03] border border-transparent"
                       )}
                     >
                       {/* Play line button */}
-                      <button 
+                      <button
                         onClick={() => seekTo(line.start)}
                         className={cn(
-                          "absolute -left-2 top-4 -ml-2 p-1 rounded-full bg-white border border-gray-200 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 transition-all shadow-sm",
-                          isActive && "opacity-100 text-blue-500 border-blue-200"
+                          "absolute -left-2 top-4 -ml-2 p-1 rounded-full bg-surface-card border border-black/10 text-ink/35 opacity-0 group-hover:opacity-100 hover:text-brand transition-all shadow-sm",
+                          isActive && "opacity-100 text-brand border-brand/30"
                         )}
                       >
                         <PlayCircle className="w-4 h-4" />
@@ -351,8 +351,8 @@ function PlayerContent() {
                             key={wIdx}
                             onClick={(e) => handleWordClick(e, word, line.text)}
                             className={cn(
-                              "cursor-pointer rounded hover:bg-blue-200 transition-colors px-0.5",
-                              isActive ? "text-blue-900 font-medium" : "text-gray-700"
+                              "cursor-pointer rounded hover:bg-brand hover:text-white transition-colors px-0.5",
+                              isActive ? "text-brand-dark font-medium" : "text-ink/70"
                             )}
                           >
                             {word}{" "}
@@ -375,50 +375,50 @@ function PlayerContent() {
           {/* Invisible backdrop to catch clicks and close */}
           <div className="fixed inset-0 z-40" onClick={() => setDictWord(null)} />
           
-          <div 
-            className="fixed z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 w-80 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          <div
+            className="fixed z-50 bg-surface-card rounded-2xl shadow-2xl border border-black/10 w-80 overflow-hidden animate-fade-in"
             style={{
               // Position smartly to not overflow screen
               left: Math.min(dictWord.x - 160, window.innerWidth - 340 > 0 ? window.innerWidth - 340 : 10) + 'px',
               top: Math.min(dictWord.y, window.innerHeight - 300) + 'px'
             }}
           >
-            <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-start">
+            <div className="p-4 bg-black/[0.02] border-b border-black/5 flex justify-between items-start">
               <div>
-                <h3 className="text-xl font-bold text-gray-900">{dictWord.word}</h3>
+                <h3 className="text-xl font-display font-semibold text-ink">{dictWord.word}</h3>
                 {dictData?.lemma && dictData.lemma !== dictWord.word && (
-                  <p className="text-sm text-gray-500 font-medium">Lemma: {dictData.lemma}</p>
+                  <p className="text-sm text-ink/45 font-medium">Lemma: {dictData.lemma}</p>
                 )}
               </div>
-              <button onClick={() => setDictWord(null)} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
+              <button onClick={() => setDictWord(null)} className="p-1 hover:bg-black/5 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-ink/45" />
               </button>
             </div>
-            
+
             <div className="p-4">
               {isDictLoading ? (
                 <div className="flex items-center justify-center py-6">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                  <Loader2 className="w-6 h-6 animate-spin text-brand" />
                 </div>
               ) : dictData ? (
                 <div className="space-y-4">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 block">Translation</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-ink/35 mb-1 block">Translation</span>
                     {dictData.translations?.map((t, idx) => (
-                      <p key={idx} className={cn("font-medium", idx === 0 ? "text-lg text-blue-700" : "text-sm text-gray-600")}>
+                      <p key={idx} className={cn("font-medium", idx === 0 ? "text-lg text-brand-dark" : "text-sm text-ink/60")}>
                         {t.text}
                       </p>
                     ))}
                   </div>
-                  
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 items-center">
+
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-black/5 items-center">
                     {dictData.partOfSpeech && (
-                      <span className="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+                      <span className="text-xs font-medium bg-black/5 text-ink/70 px-2 py-1 rounded-md">
                         {dictData.partOfSpeech}
                       </span>
                     )}
                     {dictData.gender && (
-                      <span className="text-xs font-medium bg-violet-50 text-violet-700 border border-violet-100 px-2 py-1 rounded-md">
+                      <span className="text-xs font-medium bg-brand-light text-brand-dark border border-brand/20 px-2 py-1 rounded-md">
                         {dictData.gender}
                       </span>
                     )}
@@ -428,18 +428,18 @@ function PlayerContent() {
                       </span>
                     )}
                     <div className="ml-auto flex items-center gap-1.5">
-                      <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                      <span className="text-[10px] text-ink/35 font-medium uppercase tracking-wider">
                         {dictData.source === 'ai' ? '🤖 AI' : '📖 Dict'}{dictData.cached && ' ⚡'}
                       </span>
                       {dictData.confidence !== undefined && (
-                        <span className="text-[10px] text-gray-400">
+                        <span className="text-[10px] text-ink/35">
                           {dictData.confidence >= 0.9 ? '(High)' : dictData.confidence >= 0.7 ? '(Likely)' : '(Contextual)'}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <button className="w-full mt-2 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                  <button className="w-full mt-2 py-2.5 bg-ink hover:bg-ink/85 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
                     <BookmarkPlus className="w-4 h-4" /> Save to Vault
                   </button>
                 </div>
@@ -451,13 +451,13 @@ function PlayerContent() {
         </>
       )}
 
-    </main>
+    </div>
   );
 }
 
 export default function WatchPlayerPage() {
   return (
-    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>}>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-brand" /></div>}>
       <PlayerContent />
     </Suspense>
   );

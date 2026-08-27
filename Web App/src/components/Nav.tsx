@@ -3,25 +3,86 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { useStore, LEVEL_NAMES } from "@/lib/store";
+import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/useAuth";
+import { loginWithGoogle, logout } from "@/lib/firebase";
 import StreakWidget from "./StreakWidget";
-import { BookOpen, Brain, Sparkles, Users, User, PlayCircle, Archive, LayoutDashboard } from "lucide-react";
+import { BookOpen, Brain, User, PlayCircle, LayoutDashboard, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const mainNavItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Vocab Vault" },
-  { href: "/dashboard?tab=videos", icon: PlayCircle, label: "Watched Videos" },
-  { href: "/dashboard?tab=quiz", icon: Brain, label: "Quiz Arena" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
 ];
 
-const secondaryNavItems = [
+const learnNavItems = [
   { href: "/", icon: BookOpen, label: "Stories" },
+  { href: "/vocab", icon: Brain, label: "Vocab Review" },
   { href: "/watch", icon: PlayCircle, label: "YouTube Player" },
-  { href: "/vocab", icon: Brain, label: "SRS Review" },
-  { href: "/generate", icon: Sparkles, label: "Generate AI Stories" },
-  { href: "/community", icon: Users, label: "Community" },
   { href: "/profile", icon: User, label: "Profile" },
 ];
+
+// Five pages total now — all fit directly in the mobile bottom bar, no "More" overflow needed.
+const mobilePrimary = [
+  { href: "/", icon: BookOpen, label: "Stories" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/vocab", icon: Brain, label: "Review" },
+  { href: "/watch", icon: PlayCircle, label: "Watch" },
+  { href: "/profile", icon: User, label: "Profile" },
+];
+
+// /watch/player is a sub-route of /watch and should still highlight the "Watch" link.
+function isActive(pathname: string, href: string) {
+  return pathname === href || (href === "/watch" && pathname.startsWith("/watch"));
+}
+
+function AuthBlock({ compact }: { compact?: boolean }) {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className={cn("bg-black/5 rounded-xl animate-pulse", compact ? "w-8 h-8 rounded-full" : "h-11")} />;
+
+  if (!user) {
+    return (
+      <button
+        onClick={() => loginWithGoogle()}
+        className={cn(
+          "flex items-center justify-center gap-2 text-sm font-semibold rounded-xl border border-brand text-brand bg-brand-light hover:bg-brand hover:text-white transition-colors",
+          compact ? "w-8 h-8 rounded-full p-0" : "w-full py-2.5"
+        )}
+        title="Sign in with Google"
+      >
+        {compact ? <User className="w-4 h-4" /> : "Sign in with Google"}
+      </button>
+    );
+  }
+
+  if (compact) {
+    return user.photoURL ? (
+      // eslint-disable-next-line @next/next/no-img-element -- static export has no image loader; a 32px avatar doesn't need one anyway
+      <img src={user.photoURL} alt={user.displayName || "Account"} width={32} height={32} className="rounded-full" />
+    ) : (
+      <div className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">
+        {(user.displayName || "?")[0]}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2.5 px-1">
+      {user.photoURL ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={user.photoURL} alt={user.displayName || "Account"} width={32} height={32} className="rounded-full shrink-0" />
+      ) : (
+        <div className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold shrink-0">
+          {(user.displayName || "?")[0]}
+        </div>
+      )}
+      <span className="text-sm font-semibold text-ink truncate flex-1">{user.displayName}</span>
+      <button onClick={() => logout()} title="Sign out" className="text-ink/40 hover:text-ink shrink-0">
+        <LogOut className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
 
 export default function Nav() {
   const pathname = usePathname();
@@ -31,42 +92,34 @@ export default function Nav() {
     loadFromStorage();
   }, [loadFromStorage]);
 
-  const levelName = LEVEL_NAMES[Math.min(progress.level - 1, LEVEL_NAMES.length - 1)];
-
   return (
     <>
       {/* Desktop Sidebar Nav */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-40">
+      <aside className="hidden md:flex flex-col w-64 bg-surface-card border-r border-black/5 fixed inset-y-0 left-0 z-40">
         <div className="p-6 pb-2">
-          <Link href="/" className="flex items-center gap-2 mb-8">
-            <span className="text-blue-600 font-bold text-2xl tracking-tighter">DE Sprekio</span>
+          <Link href="/" className="flex items-center gap-2 mb-6">
+            <span className="w-2 h-2 rounded-full bg-brand" />
+            <span className="font-display text-ink font-semibold text-2xl tracking-tight">Sprekio</span>
           </Link>
-          <div className="mb-4">
-            <StreakWidget
-              streak={progress.streak}
-              xp={progress.xp}
-              level={progress.level}
-              levelName={levelName}
-            />
-          </div>
+          <StreakWidget streak={progress.streak} xp={progress.xp} />
         </div>
 
         <nav className="flex-1 px-4 space-y-8 overflow-y-auto mt-2">
           <div>
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-3">Dashboard</div>
+            <div className="text-xs font-bold text-ink/40 uppercase tracking-wider mb-3 px-3">Dashboard</div>
             <div className="space-y-1">
               {mainNavItems.map((item) => {
                 const Icon = item.icon;
-                const active = pathname === item.href || (item.href === '/watch' && pathname.startsWith('/watch'));
+                const active = isActive(pathname, item.href);
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors",
                       active
-                        ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-100"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        ? "bg-brand-light text-brand-dark border border-brand/20"
+                        : "text-ink/60 hover:text-ink hover:bg-black/5"
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -78,20 +131,20 @@ export default function Nav() {
           </div>
 
           <div>
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-3">Learn</div>
+            <div className="text-xs font-bold text-ink/40 uppercase tracking-wider mb-3 px-3">Learn</div>
             <div className="space-y-1">
-              {secondaryNavItems.map((item) => {
+              {learnNavItems.map((item) => {
                 const Icon = item.icon;
-                const active = pathname === item.href;
+                const active = isActive(pathname, item.href);
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
                       active
-                        ? "bg-gray-100 text-gray-900 shadow-sm border border-gray-200"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        ? "bg-black/5 text-ink"
+                        : "text-ink/60 hover:text-ink hover:bg-black/5"
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -102,36 +155,39 @@ export default function Nav() {
             </div>
           </div>
         </nav>
+
+        <div className="p-4 border-t border-black/5">
+          <AuthBlock />
+        </div>
       </aside>
 
       {/* Mobile top bar */}
-      <header className="md:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
-        <div className="px-4 h-12 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-blue-600 font-bold text-lg tracking-tighter">DE Sprekio</span>
+      <header className="md:hidden bg-surface-card border-b border-black/5 sticky top-0 z-40">
+        <div className="px-4 h-14 flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-1.5 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand" />
+            <span className="font-display text-ink font-semibold text-lg tracking-tight">Sprekio</span>
           </Link>
-          <StreakWidget
-            streak={progress.streak}
-            xp={progress.xp}
-            level={progress.level}
-            levelName={levelName}
-          />
+          <div className="flex items-center gap-2 min-w-0">
+            <StreakWidget streak={progress.streak} xp={progress.xp} />
+            <AuthBlock compact />
+          </div>
         </div>
       </header>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 z-40 overflow-x-auto">
-        <div className="flex w-full min-w-max px-2">
-          {[...mainNavItems, ...secondaryNavItems].map((item) => {
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-surface-card border-t border-black/5 z-40">
+        <div className="flex w-full">
+          {mobilePrimary.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active = isActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center py-2 px-3 gap-1 text-[10px] font-medium transition-colors",
-                  active ? "text-blue-600" : "text-gray-400"
+                  "flex-1 flex flex-col items-center justify-center py-2 gap-1 text-[10px] font-medium transition-colors",
+                  active ? "text-brand" : "text-ink/40"
                 )}
               >
                 <Icon className={cn("w-5 h-5", active && "scale-110 transition-transform")} />

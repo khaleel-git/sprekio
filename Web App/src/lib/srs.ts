@@ -6,8 +6,11 @@ export interface VocabCard {
   word: string;
   translation: string;
   example?: string;
-  storyId: string;
-  storyTitle: string;
+  // Only used for display in the locally-stored (guest) deck — the scheduling functions
+  // below never read them, so a Firestore-backed vocab word (identified by video, not
+  // story) can reuse this same interface without needing placeholder values.
+  storyId?: string;
+  storyTitle?: string;
   // SM-2 fields
   easeFactor: number;       // default 2.5
   interval: number;         // days until next review

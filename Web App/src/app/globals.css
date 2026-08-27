@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — Tailwind v4 reads theme customization from this @theme block, not
+ * from tailwind.config.ts (that file required an explicit `@config` import to do
+ * anything under v4, which this project never had — its custom fontFamily/animation
+ * entries were silently dead; verified by grepping the built CSS for `fadeIn` and
+ * finding zero matches). tailwind.config.ts has been removed as unused.
+ *
+ * Palette extends the Chrome extension's white/orange identity to the web app so the
+ * whole product (extension + site + dashboard) reads as one brand instead of each page
+ * inventing its own gradient.
+ */
+@theme {
+  --color-brand: #f97316;
+  --color-brand-dark: #c2410c;
+  --color-brand-light: #fff7ed;
+  --color-ink: #17120e;
+  --color-surface: #fffaf5;
+  --color-surface-card: #ffffff;
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-bounce-subtle: bounce-subtle 0.6s ease-out;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes bounce-subtle {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

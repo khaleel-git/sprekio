@@ -75,6 +75,17 @@ export const CEFR_COLORS: Record<CEFRLevel, string> = {
   C2: "bg-rose-100 text-rose-800 border-rose-200",
 };
 
+// Story-card header gradients, keyed by CEFR level rather than a per-story random color —
+// so scanning the grid tells a learner something real (easy → hard) instead of decoration.
+export const CEFR_GRADIENTS: Record<CEFRLevel, string> = {
+  A1: "from-green-400 to-emerald-500",
+  A2: "from-emerald-500 to-teal-600",
+  B1: "from-teal-500 to-blue-600",
+  B2: "from-blue-600 to-indigo-700",
+  C1: "from-indigo-600 to-purple-700",
+  C2: "from-purple-700 to-rose-700",
+};
+
 export const CEFR_DESCRIPTIONS: Record<CEFRLevel, string> = {
   A1: "Beginner",
   A2: "Elementary",

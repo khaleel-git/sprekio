@@ -12,19 +12,6 @@ export interface UserProgress {
   lastActiveDate: string | null;        // ISO date
   level: number;                        // 1–10
   upvotedStories: string[];
-  communityStories: CommunityStory[];
-}
-
-export interface CommunityStory {
-  id: string;
-  title: string;
-  titleEn: string;
-  level: string;
-  topic: string;
-  author: string;
-  content: string;
-  upvotes: number;
-  createdAt: string;
 }
 
 interface AppStore {
@@ -38,8 +25,6 @@ interface AppStore {
   reviewVocabCard: (cardId: string, quality: ReviewQuality) => void;
   removeVocabCard: (cardId: string) => void;
   upvoteStory: (storyId: string) => void;
-  submitCommunityStory: (story: Omit<CommunityStory, "id" | "upvotes" | "createdAt">) => void;
-  upvoteCommunityStory: (storyId: string) => void;
   loadFromStorage: () => void;
   saveToStorage: () => void;
 }
@@ -59,14 +44,16 @@ export const LEVEL_NAMES = [
   "Polyglott",       // 10
 ];
 
-function getLevelFromXP(xp: number): number {
+export function getLevelFromXP(xp: number): number {
   for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
     if (xp >= LEVEL_THRESHOLDS[i]) return i + 1;
   }
   return 1;
 }
 
-function checkStreak(progress: UserProgress): UserProgress {
+// Generic over just the fields it touches so the Firestore-backed CloudProgress shape
+// (src/lib/profile.ts) can reuse this too.
+export function checkStreak<T extends { streak: number; lastActiveDate: string | null }>(progress: T): T {
   const today = new Date().toDateString();
   const last = progress.lastActiveDate ? new Date(progress.lastActiveDate).toDateString() : null;
   const yesterday = new Date(Date.now() - 86400000).toDateString();
@@ -88,7 +75,6 @@ const DEFAULT_PROGRESS: UserProgress = {
   lastActiveDate: null,
   level: 1,
   upvotedStories: [],
-  communityStories: [],
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -192,37 +178,6 @@ export const useStore = create<AppStore>((set, get) => ({
         },
       };
     });
-    get().saveToStorage();
-  },
-
-  submitCommunityStory: (story) => {
-    set((state) => ({
-      progress: {
-        ...state.progress,
-        communityStories: [
-          ...state.progress.communityStories,
-          {
-            ...story,
-            id: `community-${Date.now()}`,
-            upvotes: 0,
-            createdAt: new Date().toISOString(),
-          },
-        ],
-        xp: state.progress.xp + 50,
-      },
-    }));
-    get().saveToStorage();
-  },
-
-  upvoteCommunityStory: (storyId) => {
-    set((state) => ({
-      progress: {
-        ...state.progress,
-        communityStories: state.progress.communityStories.map((s) =>
-          s.id === storyId ? { ...s, upvotes: s.upvotes + 1 } : s
-        ),
-      },
-    }));
     get().saveToStorage();
   },
 }));

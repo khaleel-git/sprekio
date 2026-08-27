@@ -1,33 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/useAuth";
 import { useStore } from "@/lib/store";
-import { getDueCards, getNewCards, getLearnedCards } from "@/lib/srs";
+import { fetchVocabWords, reviewVocabWord, FirestoreVocabWord } from "@/lib/vocab";
+import { getOrCreateProfile, addXp, CloudProgress } from "@/lib/profile";
+import { getDueCards, getNewCards, getLearnedCards, VocabCard as VocabCardType, ReviewQuality } from "@/lib/srs";
+import { deleteVocabularyWord } from "@/lib/firebase";
 import VocabCardComponent from "@/components/VocabCard";
-import { Brain, BookOpen, Layers, CheckCircle2 } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Brain, Layers, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 
 export default function VocabPage() {
-  const { vocabDeck, reviewVocabCard, progress } = useStore();
+  const { user, loading: authLoading } = useAuth();
+  const { vocabDeck, reviewVocabCard, removeVocabCard } = useStore();
+
+  const [cloudWords, setCloudWords] = useState<FirestoreVocabWord[]>([]);
+  const [cloudProfile, setCloudProfile] = useState<CloudProgress | null>(null);
+  const [cloudLoading, setCloudLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setCloudLoading(false);
+      return;
+    }
+    setCloudLoading(true);
+    Promise.all([fetchVocabWords(user.uid), getOrCreateProfile(user.uid)]).then(([words, profile]) => {
+      setCloudWords(words);
+      setCloudProfile(profile);
+      setCloudLoading(false);
+    });
+  }, [user]);
+
+  const deck: VocabCardType[] = user ? cloudWords : vocabDeck;
+
   const [sessionIndex, setSessionIndex] = useState(0);
   const [mode, setMode] = useState<"due" | "all" | null>(null);
   const [sessionDone, setSessionDone] = useState(false);
 
-  const dueCards = getDueCards(vocabDeck);
-  const newCards = getNewCards(vocabDeck);
-  const learnedCards = getLearnedCards(vocabDeck);
+  const dueCards = getDueCards(deck);
+  const newCards = getNewCards(deck);
+  const learnedCards = getLearnedCards(deck);
 
-  const sessionCards = mode === "due" ? dueCards : mode === "all" ? vocabDeck : [];
+  const sessionCards = mode === "due" ? dueCards : mode === "all" ? deck : [];
   const currentCard = sessionCards[sessionIndex];
 
-  const handleReview = (quality: 0 | 1 | 2 | 3 | 4 | 5) => {
+  const handleReview = async (quality: ReviewQuality) => {
     if (!currentCard) return;
-    reviewVocabCard(currentCard.id, quality);
-    if (sessionIndex + 1 >= sessionCards.length) {
-      setSessionDone(true);
+
+    if (user) {
+      const updated = await reviewVocabWord(user.uid, currentCard as FirestoreVocabWord, quality);
+      setCloudWords((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+      if (cloudProfile) {
+        const updatedProfile = await addXp(user.uid, cloudProfile, 10);
+        setCloudProfile(updatedProfile);
+      }
     } else {
-      setTimeout(() => setSessionIndex((i) => i + 1), 500);
+      reviewVocabCard(currentCard.id, quality);
+    }
+
+    if (sessionIndex + 1 >= sessionCards.length) setSessionDone(true);
+    else setTimeout(() => setSessionIndex((i) => i + 1), 500);
+  };
+
+  const handleRemove = async (card: VocabCardType) => {
+    if (user) {
+      await deleteVocabularyWord(user.uid, card.id);
+      setCloudWords((prev) => prev.filter((w) => w.id !== card.id));
+    } else {
+      removeVocabCard(card.id);
     }
   };
 
@@ -43,31 +86,43 @@ export default function VocabPage() {
     setSessionIndex(0);
   };
 
+  if (authLoading || cloudLoading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand" />
+      </div>
+    );
+  }
+
   // ── Session view ─────────────────────────────────────────────────────────
   if (mode && !sessionDone) {
     return (
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <button onClick={endSession} className="text-sm text-gray-500 hover:text-gray-800">
+          <button onClick={endSession} className="text-sm text-ink/50 hover:text-ink">
             ← Exit session
           </button>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-ink/50">
             {sessionIndex + 1} / {sessionCards.length}
           </span>
         </div>
 
-        {/* Progress bar */}
-        <div className="bg-gray-100 rounded-full h-2">
+        <div className="bg-black/5 rounded-full h-2">
           <div
-            className="bg-blue-500 rounded-full h-2 transition-all"
+            className="bg-brand rounded-full h-2 transition-all"
             style={{ width: `${(sessionIndex / sessionCards.length) * 100}%` }}
           />
         </div>
 
         {currentCard ? (
-          <VocabCardComponent card={currentCard} onReview={handleReview} />
+          <VocabCardComponent
+            card={currentCard}
+            onReview={handleReview}
+            onRemove={() => handleRemove(currentCard)}
+            sourceLabel={currentCard.storyTitle || (currentCard as FirestoreVocabWord).videoTitle}
+          />
         ) : (
-          <div className="text-center py-12 text-gray-400">Loading...</div>
+          <div className="text-center py-12 text-ink/30">Loading...</div>
         )}
       </div>
     );
@@ -78,69 +133,67 @@ export default function VocabPage() {
     return (
       <div className="text-center py-16 space-y-4 animate-fade-in">
         <div className="text-6xl">🎉</div>
-        <h2 className="text-2xl font-bold text-gray-900">Session Complete!</h2>
-        <p className="text-gray-500">
+        <h2 className="font-display text-2xl font-semibold text-ink">Session Complete!</h2>
+        <p className="text-ink/50">
           You reviewed {sessionCards.length} card{sessionCards.length !== 1 ? "s" : ""}
         </p>
-        <p className="text-sm text-blue-600 font-medium">+{sessionCards.length * 10} XP earned</p>
-        <div className="flex gap-3 justify-center mt-6">
-          <button
-            onClick={endSession}
-            className="px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
-          >
-            Back to Vocab
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Dashboard ─────────────────────────────────────────────────────────────
-  if (vocabDeck.length === 0) {
-    return (
-      <div className="text-center py-20 space-y-4">
-        <div className="text-5xl">📚</div>
-        <h2 className="text-xl font-bold text-gray-900">Your vocab deck is empty</h2>
-        <p className="text-gray-500 text-sm max-w-xs mx-auto">
-          While reading stories, tap any highlighted word and click{" "}
-          <span className="font-medium">&quot;Save to Vocab Deck&quot;</span> to add it here.
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700"
+        <p className="text-sm text-brand font-semibold">+{sessionCards.length * 10} XP earned</p>
+        <button
+          onClick={endSession}
+          className="px-6 py-3 rounded-xl bg-brand text-white font-semibold hover:bg-brand-dark mt-2"
         >
-          <BookOpen className="w-4 h-4" />
-          Browse Stories
-        </Link>
+          Back to Vocab
+        </button>
       </div>
     );
   }
 
+  // ── Empty state ───────────────────────────────────────────────────────────
+  if (deck.length === 0) {
+    return (
+      <EmptyState
+        icon={Brain}
+        title="Your vocab deck is empty"
+        description={
+          user
+            ? "Save words while watching YouTube with the Sprekio extension and they'll show up here for review."
+            : "While reading stories, tap any highlighted word and save it to your deck to add it here."
+        }
+        action={{ label: "Browse Stories", href: "/" }}
+      />
+    );
+  }
+
+  // ── Overview ─────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-5 text-white">
-        <div className="flex items-center gap-3 mb-4">
-          <Brain className="w-6 h-6" />
-          <h1 className="text-xl font-bold">Vocabulary Deck</h1>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold">{dueCards.length}</div>
-            <div className="text-xs text-purple-200">Due today</div>
-          </div>
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold">{newCards.length}</div>
-            <div className="text-xs text-purple-200">New cards</div>
-          </div>
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold">{learnedCards.length}</div>
-            <div className="text-xs text-purple-200">Learned</div>
-          </div>
-        </div>
+      <div>
+        <h1 className="font-display text-2xl md:text-3xl font-semibold text-ink flex items-center gap-2">
+          <Brain className="w-6 h-6 text-brand" />
+          Vocabulary Review
+        </h1>
+        <p className="text-ink/50 text-sm mt-1">
+          {user ? "Synced with your saved words from the extension." : "Stored locally on this device — sign in to sync across devices."}
+        </p>
       </div>
 
-      {/* Start review buttons */}
+      <Card className="p-5">
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-brand-light rounded-xl p-3 text-center">
+            <div className="text-2xl font-bold text-brand-dark">{dueCards.length}</div>
+            <div className="text-xs text-brand-dark/60">Due today</div>
+          </div>
+          <div className="bg-black/[0.03] rounded-xl p-3 text-center">
+            <div className="text-2xl font-bold text-ink">{newCards.length}</div>
+            <div className="text-xs text-ink/40">New cards</div>
+          </div>
+          <div className="bg-black/[0.03] rounded-xl p-3 text-center">
+            <div className="text-2xl font-bold text-ink">{learnedCards.length}</div>
+            <div className="text-xs text-ink/40">Learned</div>
+          </div>
+        </div>
+      </Card>
+
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => startSession("due")}
@@ -148,44 +201,43 @@ export default function VocabPage() {
           className={cn(
             "flex flex-col items-center gap-2 p-5 rounded-2xl border-2 font-semibold transition-all",
             dueCards.length > 0
-              ? "border-orange-400 bg-orange-50 text-orange-700 hover:bg-orange-100 active:scale-95"
-              : "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed"
+              ? "border-brand/40 bg-brand-light text-brand-dark hover:bg-brand/10 active:scale-95"
+              : "border-black/5 bg-black/[0.02] text-ink/25 cursor-not-allowed"
           )}
         >
           <Layers className="w-6 h-6" />
           <span className="text-sm">Review Due</span>
-          <span className="text-xs font-normal text-orange-500">{dueCards.length} cards</span>
+          <span className="text-xs font-normal opacity-70">{dueCards.length} cards</span>
         </button>
         <button
           onClick={() => startSession("all")}
-          className="flex flex-col items-center gap-2 p-5 rounded-2xl border-2 border-blue-400 bg-blue-50 text-blue-700 hover:bg-blue-100 active:scale-95 font-semibold transition-all"
+          className="flex flex-col items-center gap-2 p-5 rounded-2xl border-2 border-ink/15 bg-black/[0.02] text-ink hover:bg-black/5 active:scale-95 font-semibold transition-all"
         >
           <Brain className="w-6 h-6" />
           <span className="text-sm">Review All</span>
-          <span className="text-xs font-normal text-blue-500">{vocabDeck.length} cards</span>
+          <span className="text-xs font-normal opacity-60">{deck.length} cards</span>
         </button>
       </div>
 
-      {/* Card list */}
       <div>
-        <h2 className="font-bold text-gray-900 mb-3">All cards ({vocabDeck.length})</h2>
+        <h2 className="font-bold text-ink mb-3">All cards ({deck.length})</h2>
         <div className="space-y-2">
-          {vocabDeck.map((card) => {
+          {deck.map((card) => {
             const isDue = getDueCards([card]).length > 0;
             return (
               <div
                 key={card.id}
-                className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm"
+                className="bg-surface-card rounded-xl border border-black/5 px-4 py-3 flex items-center justify-between shadow-sm"
               >
-                <div>
-                  <span className="font-medium text-gray-900">{card.word}</span>
-                  <span className="text-gray-400 mx-2">·</span>
-                  <span className="text-sm text-blue-600">{card.translation}</span>
+                <div className="min-w-0">
+                  <span className="font-medium text-ink">{card.word}</span>
+                  <span className="text-ink/25 mx-2">·</span>
+                  <span className="text-sm text-brand-dark">{card.translation}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">{card.repetitions} reviews</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-ink/35">{card.repetitions} reviews</span>
                   {isDue ? (
-                    <span className="w-2 h-2 rounded-full bg-orange-400" title="Due for review" />
+                    <span className="w-2 h-2 rounded-full bg-brand" title="Due for review" />
                   ) : (
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
                   )}
