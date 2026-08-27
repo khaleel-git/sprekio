@@ -38,6 +38,7 @@ const SprekioOverlay: React.FC = () => {
   const interceptedTranscripts = useRef<{url: string, text: string, status: number, headers: any[]}[]>([]);
   const sentenceTranslationCache = useRef<Record<string, string>>({});
   const sentenceTranslateTimeout = useRef<number | null>(null);
+  const liveTextRef = useRef("");
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
@@ -214,13 +215,13 @@ const SprekioOverlay: React.FC = () => {
                // If no translation needed, just return the cached text directly!
                try {
                   const forceJson = intercepted.url.includes('fmt=json3') || isJson;
-                  return forceJson ? JSON.parse(intercepted.text) : parseTranscriptXml(intercepted.text);
+                  return { data: forceJson ? JSON.parse(intercepted.text) : parseTranscriptXml(intercepted.text), isJson: forceJson };
                } catch(e) {
                   console.error("[Sprekio] Error parsing intercepted text:", e);
                }
              }
           }
-          
+
           const forceJsonParse = fetchUrl.includes('fmt=json3') || isJson;
 
           try {
@@ -228,19 +229,19 @@ const SprekioOverlay: React.FC = () => {
             const text = await localRes.text();
             console.log(`[Sprekio] Isolated World Fetch - Status: ${localRes.status}, Content-Type: ${localRes.headers.get('content-type')}, Redirected: ${localRes.redirected}, URL: ${localRes.url}, Text (200): ${text.substring(0, 200)}`);
             if (localRes.ok && text) {
-              return forceJsonParse ? JSON.parse(text) : parseTranscriptXml(text);
+              return { data: forceJsonParse ? JSON.parse(text) : parseTranscriptXml(text), isJson: forceJsonParse };
             }
           } catch (e) {
             console.error(`[Sprekio] Isolated World Fetch Exception:`, e);
           }
-          
+
           try {
             const mainRes = await new Promise<any>((resolve) => {
               chrome.runtime.sendMessage({ action: "fetchInMainWorld", url: fetchUrl }, resolve);
             });
             console.log(`[Sprekio] Main World Fetch - Response:`, mainRes);
             if (mainRes && !mainRes.error && mainRes.text) {
-               return forceJsonParse ? JSON.parse(mainRes.text) : parseTranscriptXml(mainRes.text);
+               return { data: forceJsonParse ? JSON.parse(mainRes.text) : parseTranscriptXml(mainRes.text), isJson: forceJsonParse };
             }
           } catch(e) {
             console.error(`[Sprekio] Main World Fetch Exception:`, e);
@@ -251,17 +252,23 @@ const SprekioOverlay: React.FC = () => {
           });
           console.log(`[Sprekio] Background Service Fetch - Response:`, res);
           if (res && res.error) throw new Error(res.error);
-          return forceJsonParse ? JSON.parse(res.text) : parseTranscriptXml(res.text || "");
+          return { data: forceJsonParse ? JSON.parse(res.text) : parseTranscriptXml(res.text || ""), isJson: forceJsonParse };
         };
 
         try {
-          // Try JSON3 first
-          return { data: await tryFetch(baseUrl + "&fmt=json3", true), type: 'json' };
+          // Try JSON3 first. The actual parsed shape (isJson) may differ from what was
+          // requested if a cached/rewritten URL forced a different format — trust it, not
+          // the request intent, or normalizeEvents will crash on a shape mismatch.
+          const result = await tryFetch(baseUrl + "&fmt=json3", true);
+          if (!result) throw new Error("No data returned");
+          return { data: result.data, type: result.isJson ? 'json' : 'xml' };
         } catch (e) {
           console.warn("JSON3 fetch failed, trying XML...", e);
           try {
             // Try standard XML
-            return { data: await tryFetch(baseUrl, false), type: 'xml' };
+            const result = await tryFetch(baseUrl, false);
+            if (!result) throw new Error("No data returned");
+            return { data: result.data, type: result.isJson ? 'json' : 'xml' };
           } catch (err) {
             console.error("Both JSON3 and XML fetches failed", err);
             
@@ -760,6 +767,8 @@ const SprekioOverlay: React.FC = () => {
 
   // Translate full sentence when liveText changes
   useEffect(() => {
+    liveTextRef.current = liveText;
+
     if (sentenceTranslateTimeout.current) {
       clearTimeout(sentenceTranslateTimeout.current);
       sentenceTranslateTimeout.current = null;
@@ -816,19 +825,36 @@ const SprekioOverlay: React.FC = () => {
 
     setIsTranslating(true);
     const textToTranslate = liveText;
-    sentenceTranslateTimeout.current = window.setTimeout(() => {
-      chrome.runtime.sendMessage(
-        { action: "translateSentence", text: textToTranslate, provider },
-        (response) => {
-          void chrome.runtime.lastError;
-          if (liveText !== textToTranslate) return; // stale response, subtitle already advanced
-          const translation = response?.translation || "";
-          sentenceTranslationCache.current[textToTranslate] = translation;
-          setTranslatedText(translation);
-          setIsTranslating(false);
-        }
-      );
-    }, 400);
+
+    const sendTranslateRequest = (retryCount: number) => {
+      try {
+        chrome.runtime.sendMessage(
+          { action: "translateSentence", text: textToTranslate, provider },
+          (response) => {
+            // MV3 service workers can be asleep, dropping the message. Retry once after 400ms.
+            if (chrome.runtime.lastError || !response) {
+              if (liveTextRef.current !== textToTranslate) return; // subtitle already advanced
+              if (retryCount < 1) {
+                setTimeout(() => sendTranslateRequest(retryCount + 1), 400);
+              } else {
+                setIsTranslating(false);
+              }
+              return;
+            }
+            if (liveTextRef.current !== textToTranslate) return; // stale response, subtitle already advanced
+            const translation = response.translation || "";
+            sentenceTranslationCache.current[textToTranslate] = translation;
+            setTranslatedText(translation);
+            setIsTranslating(false);
+          }
+        );
+      } catch (e) {
+        // Extension context invalidated after reload — stop showing the loading state.
+        setIsTranslating(false);
+      }
+    };
+
+    sentenceTranslateTimeout.current = window.setTimeout(() => sendTranslateRequest(0), 400);
   }, [liveText, isEnabled, activeTranscriptIndex, transcript]);
 
   // 2. Hover Handlers
