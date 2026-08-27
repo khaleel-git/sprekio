@@ -29,6 +29,7 @@ const SprekioOverlay: React.FC = () => {
   const [captionsUnavailable, setCaptionsUnavailable] = useState(false);
   
   const [liveText, setLiveText] = useState("");
+  const [activeWordIndex, setActiveWordIndex] = useState(-1);
   const [translatedText, setTranslatedText] = useState("");
   const [hoveredWord, setHoveredWord] = useState<{ word: string, rect: DOMRect } | null>(null);
   const [wordDetails, setWordDetails] = useState<any | null>(null);
@@ -37,6 +38,7 @@ const SprekioOverlay: React.FC = () => {
   const transcriptRef = useRef<HTMLDivElement>(null);
   const hideTimeout = useRef<number | null>(null);
   const wordCache = useRef<Record<string, any>>({});
+  const activeWordIndexRef = useRef(-1);
   const lastPausedIndex = useRef(-1);
   const resumeGuardIndex = useRef(-1);
   const prevTimeRef = useRef(0);
@@ -406,6 +408,8 @@ const SprekioOverlay: React.FC = () => {
       setLiveText("");
       setActiveTranscriptIndex(-1);
       currentLineIndexRef.current = -1;
+      setActiveWordIndex(-1);
+      activeWordIndexRef.current = -1;
       setIsFetchingTranscript(false);
       setCaptionsUnavailable(false);
       interceptedTranscripts.current = [];
@@ -670,6 +674,20 @@ const SprekioOverlay: React.FC = () => {
             if (activeElem && transcriptRef.current) {
               activeElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
+          }
+
+          // Karaoke-style "currently spoken" word, estimated from progress through the cue
+          if (currentIndex !== -1) {
+            const line = transcript[currentIndex];
+            const progress = Math.min(1, Math.max(0, (t - line.start) / ((line.end - line.start) || 1)));
+            const wordIdx = estimateActiveWordIndex(line.deText, progress);
+            if (activeWordIndexRef.current !== wordIdx) {
+              activeWordIndexRef.current = wordIdx;
+              setActiveWordIndex(wordIdx);
+            }
+          } else if (activeWordIndexRef.current !== -1) {
+            activeWordIndexRef.current = -1;
+            setActiveWordIndex(-1);
           }
         }
 
@@ -970,6 +988,22 @@ const SprekioOverlay: React.FC = () => {
     return copy;
   };
 
+  // We only have per-cue (line-level) timestamps, not real per-word ASR timing, so the
+  // "currently spoken" word is an estimate: split the line into words and advance through
+  // them proportionally to elapsed time, weighted by each word's character length.
+  const estimateActiveWordIndex = (text: string, progress: number): number => {
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length === 0) return -1;
+    const totalChars = words.reduce((sum, w) => sum + w.length, 0) || 1;
+    const target = progress * totalChars;
+    let cumulative = 0;
+    for (let i = 0; i < words.length; i++) {
+      cumulative += words[i].length;
+      if (target <= cumulative) return i;
+    }
+    return words.length - 1;
+  };
+
   const startQuiz = () => {
     const shuffledWords = shuffle(videoWords);
     const questions = shuffledWords.map(word => {
@@ -989,24 +1023,36 @@ const SprekioOverlay: React.FC = () => {
 
   const currentQuizQuestion = quizOrder[quizIndex] || null;
 
-  const renderTokens = (text: string) => text.split(/(\s+|[.,!?;:"'”„“()[\]])/).map((token, i) => {
-    if (!token.trim() || /^[.,!?;:"'”„“()[\]]+$/.test(token)) {
-      return <span key={i}>{token}</span>;
-    }
-    return (
-      <span 
-        key={i}
-        className="sprekio-subtitle-interactive"
-        onMouseEnter={(e) => handleWordEnter(token, e)}
-        onMouseLeave={handleWordLeave}
-        style={{ cursor: 'pointer', padding: '0 2px', borderRadius: '4px', transition: 'background-color 0.2s, color 0.2s', pointerEvents: 'auto', color: 'inherit' }}
-        onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f97316'; (e.target as HTMLElement).style.color = '#ffffff'; }}
-        onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = 'transparent'; (e.target as HTMLElement).style.color = 'inherit'; }}
-      >
-        {token}
-      </span>
-    );
-  });
+  const renderTokens = (text: string) => {
+    let wordCounter = -1;
+    return text.split(/(\s+|[.,!?;:"'”„“()[\]])/).map((token, i) => {
+      if (!token.trim() || /^[.,!?;:"'”„“()[\]]+$/.test(token)) {
+        return <span key={i}>{token}</span>;
+      }
+      wordCounter++;
+      const isSaved = savedWordsSet.has(token.toLowerCase());
+      const isSpeaking = wordCounter === activeWordIndex;
+      const idleBg = isSaved ? 'rgba(249,115,22,0.22)' : 'transparent';
+      return (
+        <span
+          key={i}
+          className="sprekio-subtitle-interactive"
+          onMouseEnter={(e) => handleWordEnter(token, e)}
+          onMouseLeave={handleWordLeave}
+          style={{
+            cursor: 'pointer', padding: '0 2px', borderRadius: '4px',
+            transition: 'background-color 0.2s, color 0.2s, box-shadow 0.15s',
+            pointerEvents: 'auto', color: 'inherit', backgroundColor: idleBg,
+            boxShadow: isSpeaking ? 'inset 0 -2px 0 0 #f97316' : 'none'
+          }}
+          onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f97316'; (e.target as HTMLElement).style.color = '#ffffff'; }}
+          onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = idleBg; (e.target as HTMLElement).style.color = 'inherit'; }}
+        >
+          {token}
+        </span>
+      );
+    });
+  };
 
   const tooltipHalfWidth = Math.min(260, (window.innerWidth - 20) / 2);
   const tooltipCenter = hoveredWord
