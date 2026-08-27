@@ -62,13 +62,42 @@ function PlayerContent() {
     const reqId = Date.now().toString();
     let extensionTimeout: NodeJS.Timeout;
     let dispatchInterval: NodeJS.Timeout;
-    
+    let settled = false;
+
+    const cleanup = () => {
+      settled = true;
+      clearTimeout(extensionTimeout);
+      clearInterval(dispatchInterval);
+      window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
+      window.removeEventListener('message', onIframeMessage);
+    };
+
+    // Attempt 0 (fastest, most reliable): the embedded YouTube iframe itself relays a
+    // transcript directly via postMessage — see transcriptRelay.ts. It captures the
+    // *native player's own* signed caption request, which a blind background fetch
+    // can never reproduce (that's why Attempt 1 below still exists as a fallback but
+    // reliably fails with an empty body for videos that need that token).
+    const onIframeMessage = (e: MessageEvent) => {
+      if (e.origin !== "https://www.youtube.com") return;
+      if (e.data?.type !== "SPREKIO_IFRAME_TRANSCRIPT" || e.data.videoId !== videoId) return;
+      if (settled) return;
+      if (typeof e.data.xml === "string") {
+        cleanup();
+        parseXmlTranscript(e.data.xml);
+      } else if (e.data.error) {
+        cleanup();
+        console.warn("Embedded player reported a transcript error:", e.data.error);
+        setTranscript([{ id: 0, start: 0, end: 9999, text: `Error: ${e.data.error}` }]);
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener('message', onIframeMessage);
+
     const onResult = (e: any) => {
+      if (settled) return;
       if (e.detail.reqId === reqId) {
-        clearTimeout(extensionTimeout);
-        clearInterval(dispatchInterval);
-        window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
-        
+        cleanup();
+
         const response = e.detail.response;
         if (response && typeof response.xml === "string") {
            // A present-but-empty xml string is a legitimate "no captions for this
@@ -93,29 +122,31 @@ function PlayerContent() {
         }
       }
     };
-    
+
     window.addEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
-    
+
     // Dispatch to extension repeatedly in case it hasn't loaded yet (race condition)
     dispatchInterval = setInterval(() => {
       window.dispatchEvent(new CustomEvent('SPREKIO_FETCH_TRANSCRIPT', {
         detail: { videoId, reqId }
       }));
     }, 300);
-    
+
     // Initial dispatch
     window.dispatchEvent(new CustomEvent('SPREKIO_FETCH_TRANSCRIPT', {
       detail: { videoId, reqId }
     }));
-    
-    // If extension is not installed or takes > 5s, fallback to backend
+
+    // If neither the iframe relay nor the extension bridge responds within 8s
+    // (the relay itself can take up to ~8s forcing CC and waiting on the native
+    // player), fall back to the backend.
     extensionTimeout = setTimeout(() => {
-      clearInterval(dispatchInterval);
-      window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
-      console.warn("Chrome Extension not detected or timed out, falling back to backend API.");
+      if (settled) return;
+      cleanup();
+      console.warn("No transcript from iframe relay or extension, falling back to backend.");
       fetchBackendTranscript();
-    }, 5000);
-    
+    }, 8000);
+
     function parseXmlTranscript(xml: string) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(xml, "text/xml");
@@ -160,6 +191,7 @@ function PlayerContent() {
         });
     }
 
+    return cleanup;
   }, [videoId]);
 
   // Sync player time and handle auto-pause

@@ -15,7 +15,8 @@
     {
       "matches": ["https://www.youtube.com/*"],
       "js": ["src/content/earlyBuffer.ts"],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true
     },
     {
       "matches": ["https://www.youtube.com/*"],
@@ -29,7 +30,13 @@
       "matches": ["https://www.youtube.com/*"],
       "js": ["src/content/interceptor.ts"],
       "world": "MAIN",
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["src/content/transcriptRelay.ts"],
+      "all_frames": true
     }
   ],
   "permissions": [
