@@ -88,7 +88,7 @@ export default {
     // =========================================================================
     if (url.pathname === "/api/translate-word" && request.method === "POST") {
       try {
-        const { word, contextSentence, apiKey } = await request.json() as any;
+        const { word, contextSentence, apiKey, skipAi } = await request.json() as any;
         
         const engine = new DictionaryEngine(env.DICTIONARY_DB);
         const result = await engine.resolveSurface(word);
@@ -120,7 +120,12 @@ export default {
         const aiKey = env.NVIDIA_API_KEY || apiKey;
 
         // Phase 3D: AI Disambiguation
-        if (ranking.decision === "needs_ai" && contextSentence && aiKey) {
+        // Most lemmas carry 2+ dictionary senses with tied (unpopulated) frequency data,
+        // so ranking alone can't pick a winner and used to *always* block here waiting on
+        // NVIDIA (several seconds). The client now asks for the fast, D1-only answer first
+        // (skipAi) and shows it immediately, then makes a second request without skipAi to
+        // get the AI-disambiguated answer and silently upgrade the popup if it disagrees.
+        if (ranking.decision === "needs_ai" && contextSentence && aiKey && !skipAi) {
            if (env.AI_ENABLED !== "true" && env.AI_ENABLED !== true) {
              console.log(`[Sprekio] AI Fallback skipped for '${word}' due to AI_ENABLED=false.`);
            } else {
@@ -153,13 +158,17 @@ export default {
            event: 'telemetry_lookup',
            surface: word,
            lemma: result.lemma.text,
-           resolution: finalResolution === 'needs_ai' ? 'ai' : 'contextual',
+           resolution: finalResolution === 'needs_ai' ? (aiReason ? 'ai' : 'ambiguous') : 'contextual',
            aiCacheHit,
            phraseMatched: !!phraseMatch
         }));
 
-        const isAiResolution = finalResolution === 'needs_ai';
-        const resolutionLabel = isAiResolution ? (aiCacheHit ? 'ai_cache' : 'ai') : 'contextual';
+        // finalResolution stays 'needs_ai' whether or not AI actually ran (skipped, timed
+        // out, or disabled) — aiReason is only set once AI genuinely returned a pick, so
+        // use that to tell "AI answered" apart from "still just our best dictionary guess".
+        const isAiResolution = finalResolution === 'needs_ai' && !!aiReason;
+        const isAmbiguousUnresolved = finalResolution === 'needs_ai' && !aiReason;
+        const resolutionLabel = isAiResolution ? (aiCacheHit ? 'ai_cache' : 'ai') : (isAmbiguousUnresolved ? 'ambiguous' : 'contextual');
 
         const finalResult = {
           surface: result.surface,
@@ -190,7 +199,8 @@ export default {
           source: 'dictionary',
           cached: false,
           contextUsed: contextSentence ? true : false,
-          phraseMatch
+          phraseMatch,
+          final: !isAmbiguousUnresolved
         };
 
         return new Response(JSON.stringify({ status: 'found', result: finalResult }), { 

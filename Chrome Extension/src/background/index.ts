@@ -19,7 +19,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 
 
   if (request.action === "translate") {
-    handleTranslation(request.word, request.contextSentence, request.provider).then(sendResponse);
+    handleTranslation(request.word, request.contextSentence, request.provider, request.skipAi).then(sendResponse);
     return true; // Keep message channel open for async response
   }
 
@@ -244,13 +244,16 @@ async function handleSentenceTranslation(text: string, provider?: string) {
   }
 }
 
-async function handleTranslation(word: string, contextSentence: string, provider?: string) {
+async function handleTranslation(word: string, contextSentence: string, provider?: string, skipAi?: boolean) {
   try {
+    // skipAi=true asks for the D1-only lexical answer (near-instant — no NVIDIA call).
+    // Give that path a short timeout since it should never legitimately take long; the
+    // full/AI-disambiguation follow-up call keeps the longer 12s budget.
     const response = await fetchWithTimeout(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-word`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word, contextSentence, provider: provider || "nvidia" })
-    });
+      body: JSON.stringify({ word, contextSentence, provider: provider || "nvidia", skipAi: !!skipAi })
+    }, skipAi ? 5000 : 12000);
 
     const result = await response.json();
     
