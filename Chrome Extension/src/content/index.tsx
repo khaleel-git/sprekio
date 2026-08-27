@@ -440,6 +440,23 @@ const SprekioOverlay: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Find YouTube's own secondary (right-hand) column to inject the transcript
+  // sidebar into, so it sits beside the player in the page layout instead of
+  // overlaying the video itself.
+  const [sidebarContainer, setSidebarContainer] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const secondary = document.querySelector('#secondary-inner') || document.querySelector('#secondary');
+      if (secondary && !document.getElementById('sprekio-sidebar-portal')) {
+        const portalDiv = document.createElement('div');
+        portalDiv.id = 'sprekio-sidebar-portal';
+        secondary.prepend(portalDiv); // Above the recommended-videos list
+        setSidebarContainer(portalDiv);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Sync settings with chrome.storage.local
   useEffect(() => {
     try {
@@ -1222,20 +1239,19 @@ const SprekioOverlay: React.FC = () => {
         controlsContainer
         )}
         
-        {isEnabled && showSidebar && (
+        {isEnabled && showSidebar && sidebarContainer && createPortal(
           <div style={{
-            position: 'absolute', top: 0, right: 0, bottom: 0, width: '350px',
-            backgroundColor: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(10px)',
-            borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
-            display: 'flex', flexDirection: 'column', zIndex: 100,
-            color: 'white', pointerEvents: 'auto', overflow: 'hidden'
+            backgroundColor: '#ffffff', border: '1px solid #e6e6e6',
+            borderRadius: '12px', marginBottom: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            maxHeight: 'min(70vh, 640px)', color: '#17120e', fontFamily: 'Roboto, Arial, sans-serif'
           }}>
-            <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>Transcript</h3>
-              <button onClick={() => setShowSidebar(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>Transcript</h3>
+              <button onClick={() => setShowSidebar(false)} style={{ background: 'none', border: 'none', color: '#6b5d54', cursor: 'pointer', fontSize: '18px', lineHeight: 1 }}>✕</button>
             </div>
-            
-            <div ref={transcriptRef} style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            <div ref={transcriptRef} style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
               {isFetchingTranscript && transcript.length === 0 ? (
                 <div style={{ textAlign: 'center', color: '#9ca3af', marginTop: '20px' }}>Loading transcript...</div>
               ) : transcript.length === 0 ? (
@@ -1244,7 +1260,7 @@ const SprekioOverlay: React.FC = () => {
                 transcript.map((line, i) => {
                   const isActive = i === activeTranscriptIndex;
                   return (
-                    <div 
+                    <div
                       key={i}
                       id={`transcript-line-${i}`}
                       onClick={() => {
@@ -1252,19 +1268,19 @@ const SprekioOverlay: React.FC = () => {
                         if (video) video.currentTime = line.start;
                       }}
                       style={{
-                        padding: '12px', borderRadius: '8px', cursor: 'pointer',
-                        backgroundColor: isActive ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
-                        border: isActive ? '1px solid rgba(59, 130, 246, 0.5)' : '1px solid transparent',
-                        transition: 'all 0.2s'
+                        padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
+                        borderLeft: isActive ? '3px solid #f97316' : '3px solid transparent',
+                        backgroundColor: isActive ? '#fff1e4' : 'transparent',
+                        transition: 'background-color 0.15s'
                       }}
-                      onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; }}
+                      onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = '#f7f0e8'; }}
                       onMouseOut={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: isActive ? 'white' : '#e5e7eb', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: isActive ? '#c2410c' : '#17120e', marginBottom: '2px' }}>
                         {line.deText}
                       </div>
                       {line.enText && (
-                        <div style={{ fontSize: '14px', color: isActive ? '#93c5fd' : '#9ca3af' }}>
+                        <div style={{ fontSize: '12px', color: '#6b5d54' }}>
                           {line.enText}
                         </div>
                       )}
@@ -1273,7 +1289,8 @@ const SprekioOverlay: React.FC = () => {
                 })
               )}
             </div>
-          </div>
+          </div>,
+          sidebarContainer
         )}
       </>
   );
