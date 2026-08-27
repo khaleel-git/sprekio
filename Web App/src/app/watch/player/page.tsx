@@ -87,6 +87,22 @@ function PlayerContent() {
       parseXmlTranscript(xml);
     };
 
+    // The iframe relay pre-normalizes both caption formats it might intercept
+    // (json3 and two XML variants) into a plain {text, start, duration}[] (ms) —
+    // see transcriptRelay.ts — so this path never needs to guess a format itself.
+    const succeedWithLines = (lines: { text: string; start: number; duration: number }[]) => {
+      if (settled) return;
+      teardown();
+      const parsed: TranscriptLine[] = lines.map((l, i) => ({
+        id: i,
+        start: l.start / 1000,
+        end: (l.start + l.duration) / 1000,
+        text: l.text,
+      }));
+      setTranscript(parsed);
+      setIsLoading(false);
+    };
+
     const fail = (message: string) => {
       if (settled) return;
       teardown();
@@ -102,8 +118,8 @@ function PlayerContent() {
     const onIframeMessage = (e: MessageEvent) => {
       if (e.origin !== "https://www.youtube.com") return;
       if (e.data?.type !== "SPREKIO_IFRAME_TRANSCRIPT" || e.data.videoId !== videoId) return;
-      if (typeof e.data.xml === "string" && e.data.xml) {
-        succeed(e.data.xml);
+      if (Array.isArray(e.data.lines) && e.data.lines.length > 0) {
+        succeedWithLines(e.data.lines);
       } else if (e.data.error) {
         // Most trustworthy source we have — prefer it over whatever the background
         // path already said, but still don't render it until the final timeout in
@@ -144,10 +160,13 @@ function PlayerContent() {
       detail: { videoId, reqId }
     }));
 
-    // Give every path (the iframe relay can take up to ~8s forcing CC and waiting on
-    // the native player) a real chance before falling back. If nothing succeeded but
-    // we have a specific, trustworthy error by now, show that instead of burning more
-    // time on the backend, which has proven reliably unable to fetch captions at all.
+    // Give every path a real chance before falling back. The iframe relay alone can
+    // take up to ~23s (3s hunting for a CC button that often doesn't exist in this
+    // embed context, plus up to 20s polling for the native player's own caption
+    // request — measured live, its first attempt is frequently aborted and only a
+    // retry succeeds, sometimes 10+ seconds in). If nothing succeeded but we have a
+    // specific, trustworthy error by then, show that instead of burning more time on
+    // the backend, which has proven reliably unable to fetch captions at all.
     finalTimeout = setTimeout(() => {
       if (settled) return;
       if (fallbackMessage) {
@@ -157,7 +176,7 @@ function PlayerContent() {
         console.warn("No transcript and no specific error from any source, falling back to backend.");
         fetchBackendTranscript();
       }
-    }, 9000);
+    }, 24000);
 
     function parseXmlTranscript(xml: string) {
         const parser = new DOMParser();
