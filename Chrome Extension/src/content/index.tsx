@@ -1050,11 +1050,17 @@ const SprekioOverlay: React.FC = () => {
   // estimate for lines that only have a whole-cue duration (e.g. XML source, or
   // a native, human-authored track with no per-segment breakdown).
   const getActiveWordIndex = (line: { deText: string, start: number, end: number, deWordTimings?: { text: string, startMs: number }[] }, tSeconds: number): number => {
-    if (line.deWordTimings && line.deWordTimings.length > 0) {
+    const timings = line.deWordTimings;
+    // Some tracks (e.g. auto-translated captions) only carry one timestamp for the
+    // whole cue, with every word inheriting it — that's not real per-word timing, it's
+    // indistinguishable from having none, and using it jumps straight to the last word
+    // and freezes there. Only trust it once several genuinely distinct timestamps exist.
+    const hasRealWordTiming = timings && timings.length > 0 && new Set(timings.map(w => w.startMs)).size >= Math.min(3, timings.length);
+    if (hasRealWordTiming && timings) {
       const tMs = tSeconds * 1000;
       let idx = -1;
-      for (let i = 0; i < line.deWordTimings.length; i++) {
-        if (line.deWordTimings[i].startMs <= tMs) idx = i;
+      for (let i = 0; i < timings.length; i++) {
+        if (timings[i].startMs <= tMs) idx = i;
         else break;
       }
       return idx === -1 ? 0 : idx;
