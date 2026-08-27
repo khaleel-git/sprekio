@@ -21,6 +21,10 @@ export interface SprekioWordResult {
 }
 
 const MEMORY_CACHE = new Map<string, SprekioWordResult>();
+// Lightweight surface-word -> part-of-speech cache for grammar-coloring the subtitle
+// text at render time. Deliberately separate from MEMORY_CACHE, whose keys embed the
+// full sentence context and aren't retrievable by plain word alone.
+const POS_CACHE = new Map<string, string>();
 
 export class VocabularyEngine {
   private static dbPromise: Promise<IDBDatabase> | null = null;
@@ -97,6 +101,16 @@ export class VocabularyEngine {
     return true; // Prefetch everything so hovers are always instant
   }
 
+  private static cachePartOfSpeech(result: SprekioWordResult | undefined | null): void {
+    if (result?.surface && result.partOfSpeech) {
+      POS_CACHE.set(result.surface.toLowerCase(), result.partOfSpeech);
+    }
+  }
+
+  public static getPartOfSpeechSync(word: string): string | undefined {
+    return POS_CACHE.get(word.toLowerCase());
+  }
+
   public static async lookup(
     surface: string, 
     contextSentence: string, 
@@ -163,6 +177,7 @@ export class VocabularyEngine {
               MEMORY_CACHE.set(contextKey, res);
               await this.saveToCache("contextCache", contextKey, res);
             }
+            this.cachePartOfSpeech(res);
             resolve(res);
           }
         );
@@ -234,7 +249,8 @@ export class VocabularyEngine {
       for (let result of response.results) {
          result.source = "dictionary";
          result.cached = true;
-         
+         this.cachePartOfSpeech(result);
+
          const isFinal = result.final;
          if (isFinal) {
              const key = result.resolution === "lexical" ? this.getLexicalKey(result.surface) : this.getContextKey(result.surface, fullSentence);

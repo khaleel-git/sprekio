@@ -10,6 +10,23 @@ export interface SprekioTranslation {
 }
 import { VocabularyEngine } from './vocabulary';
 
+// Grammar-coloring accent per part of speech, shown as an underline under each word.
+// Distinct from the app's white/orange chrome — orange is reserved for hover, saved
+// words, and the currently-spoken word, so it's deliberately not reused here.
+const POS_COLORS: Record<string, string> = {
+  noun: '#3b82f6',
+  verb: '#ef4444',
+  adj: '#22c55e',
+  adv: '#a855f7',
+  pron: '#14b8a6',
+  prep: '#ec4899',
+  conj: '#64748b',
+  det: '#06b6d4',
+  num: '#6366f1',
+  intj: '#84cc16',
+  phrase: '#78716c',
+};
+
 const SprekioOverlay: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState(false); // Default false, will sync from storage
   const [autoPause, setAutoPause] = useState(false);
@@ -18,6 +35,12 @@ const SprekioOverlay: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'transcript' | 'vocab' | 'quiz'>('transcript');
   const [subtitleStyle, setSubtitleStyle] = useState<'solid' | 'transparent'>('solid');
+  const [grammarColors, setGrammarColors] = useState(true);
+  // Bumped after a prefetch resolves, purely to re-render the subtitle line so newly
+  // cached part-of-speech data can be picked up by renderTokens (VocabularyEngine's
+  // cache is read synchronously, not through React state).
+  const [posCacheTick, setPosCacheTick] = useState(0);
+  void posCacheTick; // read implicitly: bumping it forces the re-render renderTokens needs
   const [savedWords, setSavedWords] = useState<any[]>([]);
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
@@ -488,7 +511,7 @@ const SprekioOverlay: React.FC = () => {
   // Sync settings with chrome.storage.local
   useEffect(() => {
     try {
-      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_subtitleStyle'], (result) => {
+      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_subtitleStyle', 'sprekio_grammarColors'], (result) => {
         if (result.sprekio_isEnabled !== undefined) setIsEnabled(result.sprekio_isEnabled as boolean);
         else setIsEnabled(true); // Default to true if never set
 
@@ -496,6 +519,7 @@ const SprekioOverlay: React.FC = () => {
         if (result.sprekio_subtitleStyle === 'transparent' || result.sprekio_subtitleStyle === 'solid') {
           setSubtitleStyle(result.sprekio_subtitleStyle);
         }
+        if (result.sprekio_grammarColors !== undefined) setGrammarColors(result.sprekio_grammarColors as boolean);
 
         setHasLoadedSettings(true);
       });
@@ -511,13 +535,14 @@ const SprekioOverlay: React.FC = () => {
           sprekio_isEnabled: isEnabled,
           sprekio_autoPause: autoPause,
           sprekio_provider: provider,
-          sprekio_subtitleStyle: subtitleStyle
+          sprekio_subtitleStyle: subtitleStyle,
+          sprekio_grammarColors: grammarColors
         });
       } catch (e) {
         console.error("Sprekio: Error saving storage. Please refresh the page.", e);
       }
     }
-  }, [isEnabled, autoPause, provider, subtitleStyle, hasLoadedSettings]);
+  }, [isEnabled, autoPause, provider, subtitleStyle, grammarColors, hasLoadedSettings]);
 
   // Check auth on mount
   useEffect(() => {
@@ -678,7 +703,7 @@ const SprekioOverlay: React.FC = () => {
               // Prefetch the current subtitle and the next 15 upcoming subtitles 
               // so they are fully cached in the local DB before the user ever sees them.
               const upcoming = transcript.slice(currentIndex, currentIndex + 15).map(t => ({ text: t.deText }));
-              VocabularyEngine.prefetch(upcoming);
+              VocabularyEngine.prefetch(upcoming).then(() => setPosCacheTick(v => v + 1));
             } else {
               setLiveText("");
             }
@@ -1068,16 +1093,20 @@ const SprekioOverlay: React.FC = () => {
       const isSpeaking = wordCounter === activeWordIndex;
       const idleBg = isSpeaking ? '#f97316' : (isSaved ? 'rgba(249,115,22,0.22)' : 'transparent');
       const idleColor = isSpeaking ? '#ffffff' : 'inherit';
+      const pos = grammarColors ? VocabularyEngine.getPartOfSpeechSync(token) : undefined;
+      const posColor = pos ? POS_COLORS[pos] : undefined;
       return (
         <span
           key={i}
           className="sprekio-subtitle-interactive"
+          title={pos}
           onMouseEnter={(e) => handleWordEnter(token, e)}
           onMouseLeave={handleWordLeave}
           style={{
-            cursor: 'pointer', padding: '0 2px', borderRadius: '4px',
+            cursor: 'pointer', padding: '0 2px 2px', borderRadius: '4px',
             transition: 'background-color 0.2s, color 0.2s',
-            pointerEvents: 'auto', color: idleColor, backgroundColor: idleBg
+            pointerEvents: 'auto', color: idleColor, backgroundColor: idleBg,
+            borderBottom: posColor ? `2px solid ${posColor}` : '2px solid transparent'
           }}
           onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f97316'; (e.target as HTMLElement).style.color = '#ffffff'; }}
           onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = idleBg; (e.target as HTMLElement).style.color = idleColor; }}
@@ -1392,6 +1421,30 @@ const SprekioOverlay: React.FC = () => {
                 onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
               >
                 {subtitleStyle === 'solid' ? '◻ Solid' : '◫ Glass'}
+              </button>
+            )}
+
+            {isEnabled && (
+              <button
+                onClick={() => setGrammarColors(!grammarColors)}
+                title="Underline words by part of speech (noun, verb, adjective...)"
+                style={{
+                  backgroundColor: grammarColors ? '#f97316' : 'transparent',
+                  color: grammarColors ? 'white' : '#eee',
+                  border: '1px solid',
+                  borderColor: grammarColors ? '#f97316' : '#eee',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: 0.9
+                }}
+                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
+                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
+              >
+                Grammar
               </button>
             )}
         </div>,
