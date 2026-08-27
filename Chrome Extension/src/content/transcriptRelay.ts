@@ -21,7 +21,10 @@ if (window.self !== window.top) {
     "http://localhost:3000",
   ];
 
-  const videoId = new URLSearchParams(window.location.search).get("v");
+  // The embedded player (react-youtube/IFrame API) loads /embed/<videoId>?params —
+  // the video id is in the path, not a ?v= query param like a normal watch page.
+  const embedMatch = window.location.pathname.match(/\/embed\/([^/?]+)/);
+  const videoId = embedMatch?.[1] || new URLSearchParams(window.location.search).get("v");
   console.log("[Sprekio Relay] Running inside iframe for videoId:", videoId);
 
   const send = (payload: Record<string, unknown>) => {
