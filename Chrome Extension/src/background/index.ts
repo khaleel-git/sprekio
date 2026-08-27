@@ -143,10 +143,24 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           url += "&tlang=" + request.forceLang;
         }
         
-        const xmlRes = await fetch(url);
+        // A service worker's fetch carries none of a real tab's page context, and
+        // YouTube's caption CDN has been observed silently returning an empty 200
+        // body (not an HTTP error) for requests that don't look like they came from
+        // an actual youtube.com page. A Referer matching the video is the cheapest
+        // way to look like one; treating an empty body as success previously let it
+        // masquerade as "no response" one layer up instead of a real, visible error.
+        const xmlRes = await fetch(url, {
+          headers: { "Referer": `https://www.youtube.com/watch?v=${request.videoId}` }
+        });
+        if (!xmlRes.ok) {
+          throw new Error(`Caption track fetch failed: HTTP ${xmlRes.status}`);
+        }
         const xml = await xmlRes.text();
+        if (!xml) {
+          throw new Error("Caption track returned empty (YouTube may be rejecting this request from the extension).");
+        }
         sendResponse({ xml });
-        
+
       } catch (error: any) {
         console.error("fetchTranscriptDirect error:", error);
         sendResponse({ error: error.message || String(error) });

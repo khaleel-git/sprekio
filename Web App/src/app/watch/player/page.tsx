@@ -70,7 +70,12 @@ function PlayerContent() {
         window.removeEventListener('SPREKIO_TRANSCRIPT_RESULT', onResult);
         
         const response = e.detail.response;
-        if (response && response.xml) {
+        if (response && typeof response.xml === "string") {
+           // A present-but-empty xml string is a legitimate "no captions for this
+           // language" answer, not a failure — parseXmlTranscript naturally renders
+           // that as zero transcript lines. Truthiness alone (the old check) treated
+           // "" as if the extension had never responded, at which point this actually
+           // successful attempt still got misrouted into the backend fallback.
            parseXmlTranscript(response.xml);
         } else if (response?.error) {
            // The extension responded — trust its error over the backend's. The backend
