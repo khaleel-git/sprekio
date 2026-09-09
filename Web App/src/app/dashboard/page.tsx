@@ -207,7 +207,12 @@ function VocabularyVault({
           <div key={group.videoId || "none"}>
             {/* Video header — the source video these words were saved from */}
             {group.videoId ? (
-              <div className="flex items-center gap-3 mb-3">
+              <a 
+                href={`https://www.youtube.com/watch?v=${group.videoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity group/video"
+              >
                 <div className="w-20 h-12 rounded-lg overflow-hidden bg-black/5 shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image loader */}
                   <img
@@ -217,12 +222,12 @@ function VocabularyVault({
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-ink truncate">
+                  <h3 className="text-sm font-semibold text-ink truncate group-hover/video:text-brand transition-colors">
                     {group.videoTitle}
                   </h3>
                   <p className="text-xs text-ink/40">{group.words.length} word{group.words.length !== 1 ? "s" : ""} saved</p>
                 </div>
-              </div>
+              </a>
             ) : (
               <h3 className="text-sm font-semibold text-ink/50 mb-3">Other words</h3>
             )}
@@ -327,24 +332,32 @@ function VideoTracker({ words }: { words: FirestoreVocabWord[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {videos.map((v) => (
-        <Card key={v.id} className="overflow-hidden flex">
-          <div className="w-32 md:w-40 shrink-0 bg-black/5">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image loader */}
-            <img
-              src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
-              alt={v.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="p-4 flex flex-col justify-center min-w-0">
-            <h2 className="text-sm font-semibold text-ink leading-tight mb-2 line-clamp-2">
-              {v.title}
-            </h2>
-            <Badge tone="neutral" className="self-start">
-              {v.count} word{v.count > 1 ? "s" : ""} learned
-            </Badge>
-          </div>
-        </Card>
+        <a 
+          key={v.id} 
+          href={`https://www.youtube.com/watch?v=${v.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block group/tracker hover:-translate-y-0.5 transition-transform"
+        >
+          <Card className="overflow-hidden flex h-full border-2 border-transparent group-hover/tracker:border-brand/20 group-hover/tracker:shadow-md transition-all">
+            <div className="w-32 md:w-40 shrink-0 bg-black/5">
+              {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image loader */}
+              <img
+                src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
+                alt={v.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-4 flex flex-col justify-center min-w-0">
+              <h2 className="text-sm font-semibold text-ink leading-tight mb-2 line-clamp-2 group-hover/tracker:text-brand transition-colors">
+                {v.title}
+              </h2>
+              <Badge tone="neutral" className="self-start">
+                {v.count} word{v.count > 1 ? "s" : ""} learned
+              </Badge>
+            </div>
+          </Card>
+        </a>
       ))}
     </div>
   );
