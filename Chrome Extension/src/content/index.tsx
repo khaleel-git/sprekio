@@ -1170,8 +1170,8 @@ const SprekioOverlay: React.FC = () => {
             textDecorationThickness: '2.5px',
             textUnderlineOffset: '3px'
           }}
-          onMouseOver={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f97316'; (e.target as HTMLElement).style.color = '#ffffff'; }}
-          onMouseOut={(e) => { (e.target as HTMLElement).style.backgroundColor = idleBg; (e.target as HTMLElement).style.color = idleColor; }}
+          onMouseOver={(e) => { /* Hover highlight disabled */ }}
+          onMouseOut={(e) => { /* Hover highlight disabled */ }}
         >
           {token}
         </span>
