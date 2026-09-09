@@ -79,7 +79,7 @@ const SprekioOverlay: React.FC = () => {
   const [captionsUnavailable, setCaptionsUnavailable] = useState(false);
   
   const [liveText, setLiveText] = useState("");
-  const [, setActiveWordIndex] = useState(-1);
+  const [activeWordIndex, setActiveWordIndex] = useState(-1);
   const [translatedText, setTranslatedText] = useState("");
   const [hoveredWord, setHoveredWord] = useState<{ word: string, rect: DOMRect } | null>(null);
   const [wordDetails, setWordDetails] = useState<any | null>(null);
@@ -1170,8 +1170,8 @@ const SprekioOverlay: React.FC = () => {
             textDecorationThickness: '2.5px',
             textUnderlineOffset: '3px'
           }}
-          onMouseOver={() => { /* Hover highlight disabled */ }}
-          onMouseOut={() => { /* Hover highlight disabled */ }}
+          onMouseOver={(e) => { /* Hover highlight disabled */ }}
+          onMouseOut={(e) => { /* Hover highlight disabled */ }}
         >
           {token}
         </span>
