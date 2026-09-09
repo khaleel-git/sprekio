@@ -1147,7 +1147,7 @@ const SprekioOverlay: React.FC = () => {
       }
       wordCounter++;
       const isSaved = savedWordsSet.has(token.toLowerCase());
-      const isSpeaking = wordCounter === activeWordIndex;
+      const isSpeaking = false; // wordCounter === activeWordIndex; // Disabled word highlighter for now
       const idleBg = isSpeaking ? '#f97316' : (isSaved ? 'rgba(249,115,22,0.22)' : 'transparent');
       const idleColor = isSpeaking ? '#ffffff' : 'inherit';
       const pos = grammarColors ? VocabularyEngine.getPartOfSpeechSync(token) : undefined;
