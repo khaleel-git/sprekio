@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Play, Pause, Square, Volume2, VolumeX, ChevronDown, ChevronUp } from "lucide-react";
 import { speak, stopSpeaking, pauseSpeaking, resumeSpeaking, getGermanVoices, TTSVoice } from "@/lib/tts";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,13 @@ interface AudioPlayerProps {
 
 export default function AudioPlayer({ paragraphs, className, onProgress }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const stopRequested = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
   const [paused, setPaused] = useState(false);
   const [currentParagraph, setCurrentParagraph] = useState(-1);
   const [speed, setSpeed] = useState(0.9);
@@ -36,9 +43,11 @@ export default function AudioPlayer({ paragraphs, className, onProgress }: Audio
   const playAll = async () => {
     setIsPlaying(true);
     setPaused(false);
+    stopRequested.current = false;
     
     try {
       for (let i = 0; i < paragraphs.length; i++) {
+        if (stopRequested.current) break;
         setCurrentParagraph(i);
         if (onProgress) onProgress(i, 0, 0);
         
@@ -49,6 +58,7 @@ export default function AudioPlayer({ paragraphs, className, onProgress }: Audio
             if (onProgress) onProgress(i, charIndex, charLength);
           }
         });
+        if (stopRequested.current) break;
       }
     } catch (e) {
       if (!(e instanceof Error) || e.message !== "Stopped explicitly") {
@@ -75,6 +85,7 @@ export default function AudioPlayer({ paragraphs, className, onProgress }: Audio
   };
 
   const handleStop = () => {
+    stopRequested.current = true;
     stopSpeaking();
     setIsPlaying(false);
     setPaused(false);

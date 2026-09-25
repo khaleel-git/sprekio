@@ -17,6 +17,8 @@ export interface TTSVoice {
 
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 let isExplicitlyStopped = false;
+let globalPauseStart = 0;
+let globalTotalPausedTime = 0;
 
 // The browser's native onboundary event is unreliable across browsers/voices — some
 // fire per-word, some per-sentence, some not at all — which made the read-along
@@ -52,6 +54,8 @@ export function speak(text: string, options: TTSOptions = {}): Promise<void> {
     // Stop any current speech
     stopSpeaking();
     isExplicitlyStopped = false;
+    globalTotalPausedTime = 0;
+    globalPauseStart = 0;
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = options.lang || "de-DE";
@@ -106,8 +110,17 @@ export function speak(text: string, options: TTSOptions = {}): Promise<void> {
       const startTime = performance.now();
       estimateTimer = setInterval(() => {
         const now = performance.now();
+        if (isPaused()) {
+            if (!globalPauseStart) globalPauseStart = now;
+            return;
+        }
+        if (globalPauseStart) {
+            globalTotalPausedTime += (now - globalPauseStart);
+            globalPauseStart = 0;
+        }
         if (now - lastRealEventAt < 250) return;
-        const wordIndex = Math.min(spans.length - 1, Math.floor((now - startTime) / msPerWord));
+        const effectiveElapsed = now - startTime - globalTotalPausedTime;
+        const wordIndex = Math.min(spans.length - 1, Math.max(0, Math.floor(effectiveElapsed / msPerWord)));
         const span = spans[wordIndex];
         if (span) options.onBoundary!(span.charIndex, span.charLength);
       }, 90);
