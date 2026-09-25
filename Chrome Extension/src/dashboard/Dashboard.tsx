@@ -34,6 +34,7 @@ export default function Dashboard() {
   }, []);
 
   const playAudio = (text: string) => {
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'de-DE';
     window.speechSynthesis.speak(utterance);

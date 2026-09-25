@@ -1330,6 +1330,7 @@ const SprekioOverlay: React.FC = () => {
             <button 
               onClick={() => {
                 if ('speechSynthesis' in window) {
+                  window.speechSynthesis.cancel();
                   const utterance = new SpeechSynthesisUtterance(hoveredWord.word);
                   utterance.lang = 'de-DE';
                   window.speechSynthesis.speak(utterance);

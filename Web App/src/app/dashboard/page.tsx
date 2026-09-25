@@ -14,6 +14,7 @@ import { StatPill } from "@/components/ui/StatPill";
 import {
   Volume2, Trash2, Inbox, Video, Target, LayoutDashboard, Layers,
 } from "lucide-react";
+import { speak } from "@/lib/tts";
 import { cn } from "@/lib/utils";
 
 type Tab = "vault" | "videos" | "quiz";
@@ -49,9 +50,9 @@ function DashboardContent() {
   }, [user]);
 
   const playAudio = (text: string) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "de-DE";
-    window.speechSynthesis.speak(utterance);
+    speak(text).catch((e) => {
+      console.warn("Audio playback failed:", e);
+    });
   };
 
   const dueCount = getDueCards(words).length;
