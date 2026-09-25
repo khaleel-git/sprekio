@@ -4,6 +4,7 @@ import { ContextualRanking } from './dictionary/ContextualRanking';
 
 export interface Env {
   NVIDIA_API_KEY: string;
+  GEMINI_API_KEY: string;
   DICTIONARY_DB: D1Database;
   AI_ENABLED: string;
   DEFAULT_AI_PROVIDER: string;
@@ -37,7 +38,7 @@ export default {
     // =========================================================================
     if (url.pathname === "/api/translate-sentence" && request.method === "POST") {
       try {
-        const { text } = await request.json() as { text: string };
+        const { text, provider = "nvidia" } = await request.json() as { text: string, provider?: string };
         if (!text) {
           return new Response(JSON.stringify({ error: "Missing text" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
@@ -47,30 +48,47 @@ export default {
         }
 
         const prompt = `Translate the following German text to English. Return ONLY the English translation, no quotes, no explanation:\n\n${text}`;
-
         let translatedText = "";
 
-        const apiKey = env.NVIDIA_API_KEY;
-        if (!apiKey) throw new Error("NVIDIA_API_KEY not configured");
-        const res = await fetchWithTimeout("https://integrate.api.nvidia.com/v1/chat/completions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-            body: JSON.stringify({
-              model: "openai/gpt-oss-20b",
-              messages: [{ role: "user", content: prompt }],
-              temperature: 0.1,
-              max_tokens: 200,
-            })
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({})) as any;
-          const errorMessage = String(err.message || err.detail || `NVIDIA error: ${res.status}`);
-          throw new Error(errorMessage);
+        if (provider === "gemini") {
+          const apiKey = env.GEMINI_API_KEY;
+          if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
+          const res = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.1, maxOutputTokens: 200 }
+              })
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({})) as any;
+            throw new Error(err.error?.message || err.message || `Gemini error: ${res.status}`);
+          }
+          const data = await res.json() as any;
+          translatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        } else {
+          // NVIDIA
+          const apiKey = env.NVIDIA_API_KEY;
+          if (!apiKey) throw new Error("NVIDIA_API_KEY not configured");
+          const res = await fetchWithTimeout("https://integrate.api.nvidia.com/v1/chat/completions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+              body: JSON.stringify({
+                model: "meta/llama-3.3-70b-instruct",
+                messages: [{ role: "user", content: prompt }],
+                temperature: 0.1,
+                max_tokens: 200,
+              })
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({})) as any;
+            throw new Error(err.message || err.detail || `NVIDIA error: ${res.status}`);
+          }
+          const data = await res.json() as any;
+          translatedText = data.choices?.[0]?.message?.content?.trim() || "";
         }
-        const data = await res.json() as any;
-        translatedText = data.choices?.[0]?.message?.content?.trim() || "";
 
-        // Keep the response shape expected by the extension.
         return new Response(JSON.stringify({
           candidates: [{ content: { parts: [{ text: translatedText }] }, finishReason: "STOP" }]
         }), {
@@ -230,9 +248,9 @@ export default {
 
     if (url.pathname === "/api/generate" && request.method === "POST") {
       try {
-        const { topic, level, dialect, wordCount, apiKey, provider = "nvidia" } = await request.json();
+        const { topic, level, dialect, wordCount, apiKey, provider = "nvidia" } = await request.json() as any;
 
-        const TARGET_API_KEY = env.NVIDIA_API_KEY || apiKey;
+        const TARGET_API_KEY = (provider === "gemini" ? env.GEMINI_API_KEY : env.NVIDIA_API_KEY) || apiKey;
         
         if (!TARGET_API_KEY) {
           return new Response(JSON.stringify({ error: `${provider.toUpperCase()}_API_KEY is not configured in Cloudflare Environment Variables, and no key was provided.` }), {
@@ -312,26 +330,43 @@ Requirements:
         let response;
         let text = "";
 
-        response = await fetchWithTimeout("https://integrate.api.nvidia.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${TARGET_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "openai/gpt-oss-120b",
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.7,
-            top_p: 0.9,
-            max_tokens: 4000
-          })
-        }, 30000); // Longer generation needs more headroom than the word/sentence lookups
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({})) as any;
-          throw new Error(err.message || err.detail || `NVIDIA API Error: ${response.status}`);
+        if (provider === "gemini") {
+          response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${TARGET_API_KEY}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 4000, responseMimeType: "application/json" }
+            })
+          }, 30000);
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({})) as any;
+            throw new Error(err.error?.message || err.message || `Gemini API Error: ${response.status}`);
+          }
+          const data = await response.json() as any;
+          text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        } else {
+          response = await fetchWithTimeout("https://integrate.api.nvidia.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${TARGET_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: "meta/llama-3.3-70b-instruct",
+              messages: [{ role: "user", content: prompt }],
+              temperature: 0.7,
+              top_p: 0.9,
+              max_tokens: 4000
+            })
+          }, 30000);
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({})) as any;
+            throw new Error(err.message || err.detail || `NVIDIA API Error: ${response.status}`);
+          }
+          const data = await response.json() as any;
+          text = data.choices?.[0]?.message?.content || "";
         }
-        const data = await response.json() as any;
-        text = data.choices?.[0]?.message?.content || "";
 
         if (!text) {
           throw new Error("No content returned from AI");

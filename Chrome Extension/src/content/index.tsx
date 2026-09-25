@@ -54,7 +54,7 @@ const isNonSpeechMarker = (text: string): boolean => {
 const SprekioOverlay: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState(false); // Default false, will sync from storage
   const [autoPause, setAutoPause] = useState(false);
-  const provider = "nvidia";
+  const [provider, setProvider] = useState("youtube");
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'transcript' | 'vocab' | 'quiz'>('transcript');
@@ -62,7 +62,12 @@ const SprekioOverlay: React.FC = () => {
   const [grammarColors, setGrammarColors] = useState(false);
   const [showGrammarLegend, setShowGrammarLegend] = useState(false);
   const [grammarLegendAnchor, setGrammarLegendAnchor] = useState<{ left: number, bottom: number } | null>(null);
-  const [translationEnabled, setTranslationEnabled] = useState(true);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [settingsAnchor, setSettingsAnchor] = useState<{ right: number, bottom: number } | null>(null);
+  const [translationEnabled, setTranslationEnabled] = useState(false);
+  const [ccVertical, setCcVertical] = useState<'top' | 'center' | 'bottom'>('bottom');
+  const [ccHorizontal, setCcHorizontal] = useState<'left' | 'center' | 'right'>('center');
+  const [ccSize, setCcSize] = useState<'small' | 'medium' | 'large'>('medium');
   // Bumped after a prefetch resolves, purely to re-render the subtitle line so newly
   // cached part-of-speech data can be picked up by renderTokens (VocabularyEngine's
   // cache is read synchronously, not through React state).
@@ -87,6 +92,7 @@ const SprekioOverlay: React.FC = () => {
   
   const transcriptRef = useRef<HTMLDivElement>(null);
   const hideTimeout = useRef<number | null>(null);
+  const enterTimeout = useRef<number | null>(null);
   const wordCache = useRef<Record<string, any>>({});
   const activeWordIndexRef = useRef(-1);
   const lastPausedIndex = useRef(-1);
@@ -538,7 +544,7 @@ const SprekioOverlay: React.FC = () => {
   // Sync settings with chrome.storage.local
   useEffect(() => {
     try {
-      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_subtitleStyle', 'sprekio_grammarColors', 'sprekio_translationEnabled'], (result) => {
+      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_provider', 'sprekio_subtitleStyle', 'sprekio_grammarColors', 'sprekio_translationEnabled', 'sprekio_ccVertical', 'sprekio_ccHorizontal', 'sprekio_ccSize'], (result) => {
         if (result.sprekio_isEnabled !== undefined) setIsEnabled(result.sprekio_isEnabled as boolean);
         else setIsEnabled(true); // Default to true if never set
 
@@ -548,6 +554,11 @@ const SprekioOverlay: React.FC = () => {
         }
         if (result.sprekio_grammarColors !== undefined) setGrammarColors(result.sprekio_grammarColors as boolean);
         if (result.sprekio_translationEnabled !== undefined) setTranslationEnabled(result.sprekio_translationEnabled as boolean);
+        
+        if (result.sprekio_provider !== undefined) setProvider(result.sprekio_provider as any);
+        if (result.sprekio_ccVertical !== undefined) setCcVertical(result.sprekio_ccVertical as any);
+        if (result.sprekio_ccHorizontal !== undefined) setCcHorizontal(result.sprekio_ccHorizontal as any);
+        if (result.sprekio_ccSize !== undefined) setCcSize(result.sprekio_ccSize as any);
 
         setHasLoadedSettings(true);
       });
@@ -565,13 +576,16 @@ const SprekioOverlay: React.FC = () => {
           sprekio_provider: provider,
           sprekio_subtitleStyle: subtitleStyle,
           sprekio_grammarColors: grammarColors,
-          sprekio_translationEnabled: translationEnabled
+          sprekio_translationEnabled: translationEnabled,
+          sprekio_ccVertical: ccVertical,
+          sprekio_ccHorizontal: ccHorizontal,
+          sprekio_ccSize: ccSize
         });
       } catch (e) {
         console.error("Sprekio: Error saving storage. Please refresh the page.", e);
       }
     }
-  }, [isEnabled, autoPause, provider, subtitleStyle, grammarColors, translationEnabled, hasLoadedSettings]);
+  }, [isEnabled, autoPause, provider, subtitleStyle, grammarColors, translationEnabled, ccVertical, ccHorizontal, ccSize, hasLoadedSettings]);
 
   // Dismiss the grammar-color legend on an outside click, like any other popover
   useEffect(() => {
@@ -959,6 +973,12 @@ const SprekioOverlay: React.FC = () => {
 
     // No official English subtitle track available (e.g. transcript fetch failed and
     // we're relying on the DOM-scraper fallback) — fall back to AI sentence translation.
+    if (provider === "youtube") {
+      setTranslatedText(""); // Failed to fetch or match native track, leave blank
+      setIsTranslating(false);
+      return;
+    }
+
     const cached = sentenceTranslationCache.current[liveText];
     if (cached) {
       setTranslatedText(cached);
@@ -978,7 +998,7 @@ const SprekioOverlay: React.FC = () => {
             if (chrome.runtime.lastError || !response) {
               if (liveTextRef.current !== textToTranslate) return; // subtitle already advanced
               if (retryCount < 1) {
-                setTimeout(() => sendTranslateRequest(retryCount + 1), 400);
+                setTimeout(() => sendTranslateRequest(retryCount + 1), 200);
               } else {
                 setIsTranslating(false);
               }
@@ -997,20 +1017,18 @@ const SprekioOverlay: React.FC = () => {
       }
     };
 
-    sentenceTranslateTimeout.current = window.setTimeout(() => sendTranslateRequest(0), 400);
-  }, [liveText, isEnabled, translationEnabled, activeTranscriptIndex, transcript]);
+    sentenceTranslateTimeout.current = window.setTimeout(() => sendTranslateRequest(0), 20);
+  }, [liveText, isEnabled, translationEnabled, activeTranscriptIndex, transcript, provider]);
 
   // 2. Hover Handlers
-  const handleWordEnter = async (word: string, e: React.MouseEvent) => {
+  const handleWordEnter = (word: string, e: React.MouseEvent) => {
     if (hideTimeout.current) clearTimeout(hideTimeout.current);
-    
-    const video = document.querySelector('video');
-    if (video && !video.paused) {
-      video.pause();
-    }
+    if (enterTimeout.current) clearTimeout(enterTimeout.current);
 
     const rect = (e.target as HTMLElement).getBoundingClientRect();
-    setHoveredWord({ word, rect });
+    
+    enterTimeout.current = window.setTimeout(async () => {
+      setHoveredWord({ word, rect });
     
     const cacheKey = `${word.toLowerCase()}_${liveText}`;
     if (wordCache.current[cacheKey]) {
@@ -1052,9 +1070,11 @@ const SprekioOverlay: React.FC = () => {
       }
       return current;
     });
+    }, 150);
   };
 
   const handleWordLeave = () => {
+    if (enterTimeout.current) clearTimeout(enterTimeout.current);
     hideTimeout.current = window.setTimeout(() => {
       setHoveredWord(null);
       setWordDetails(null);
@@ -1188,6 +1208,21 @@ const SprekioOverlay: React.FC = () => {
     window.innerWidth - tooltipHalfWidth - 10
   );
 
+  let tooltipVerticalStyle: React.CSSProperties = {};
+  let bridgeStyle: React.CSSProperties = { position: 'absolute', left: '-10%', width: '120%', height: '30px', backgroundColor: 'transparent' };
+  
+  if (hoveredWord) {
+    if (hoveredWord.rect.top < 350) {
+      // Open downwards
+      tooltipVerticalStyle = { top: hoveredWord.rect.bottom + 15 };
+      bridgeStyle.top = '-25px';
+    } else {
+      // Open upwards
+      tooltipVerticalStyle = { bottom: window.innerHeight - hoveredWord.rect.top + 15 };
+      bridgeStyle.bottom = '-25px';
+    }
+  }
+
   return (
     <>
       {isEnabled && (
@@ -1211,9 +1246,15 @@ const SprekioOverlay: React.FC = () => {
             : { background: '#f97316', color: '#ffffff' };
           return (
             <div style={{
-              position: 'absolute', bottom: '10%', left: '0', right: '0',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 9999,
-              pointerEvents: 'none', padding: '0 10px'
+              position: 'absolute',
+              top: ccVertical === 'top' ? '10%' : ccVertical === 'center' ? '50%' : 'auto',
+              bottom: ccVertical === 'bottom' ? '10%' : 'auto',
+              transform: ccVertical === 'center' ? 'translateY(-50%)' : 'none',
+              left: '0', right: '0',
+              display: 'flex', flexDirection: 'column', 
+              alignItems: ccHorizontal === 'left' ? 'flex-start' : ccHorizontal === 'right' ? 'flex-end' : 'center',
+              gap: '6px', zIndex: 9999,
+              pointerEvents: 'none', padding: '0 40px'
             }}>
               <div className="sprekio-subtitle-box" style={{
                 ...targetStyle,
@@ -1224,7 +1265,8 @@ const SprekioOverlay: React.FC = () => {
                 transition: 'background-color 0.2s, border-color 0.2s'
               }}>
                 <h2 className="sprekio-subtitle-text" style={{
-                  fontSize: '22px', fontWeight: '700', color: 'inherit',
+                  fontSize: ccSize === 'small' ? '16px' : ccSize === 'large' ? '32px' : '22px',
+                  fontWeight: '700', color: 'inherit',
                   lineHeight: '1.3', margin: 0
                 }}>
                   {visibleLines.map((line, lineIndex) => (
@@ -1238,13 +1280,14 @@ const SprekioOverlay: React.FC = () => {
               {translationEnabled && (translatedText || isTranslating) && (
                 <div style={{
                   ...translationStyle,
-                  padding: '6px 16px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                  padding: '5px 14px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
                   pointerEvents: 'none', width: 'max-content', maxWidth: 'calc(100% - 20px)',
                   margin: '0 10px', boxSizing: 'border-box', transition: 'background-color 0.2s, border-color 0.2s'
                 }}>
                   <p className="sprekio-subtitle-translation" style={{
-                    fontSize: '18px', fontWeight: '600', margin: 0, color: 'inherit',
-                    opacity: isTranslating ? 0.5 : 1, transition: 'opacity 0.3s ease-in-out'
+                    fontSize: ccSize === 'small' ? '15px' : ccSize === 'large' ? '24px' : '19px',
+                    fontWeight: '600', margin: 0, color: 'inherit', letterSpacing: '0.2px',
+                    opacity: isTranslating ? 0.6 : 1, transition: 'opacity 0.3s ease-in-out'
                   }}>
                     {isTranslating && !translatedText ? '...' : translatedText}
                   </p>
@@ -1265,15 +1308,15 @@ const SprekioOverlay: React.FC = () => {
             padding: '20px', width: 'min(520px, calc(100vw - 20px))', maxWidth: 'calc(100vw - 20px)',
             maxHeight: 'calc(100vh - 20px)', overflowY: 'auto', overflowX: 'hidden',
             boxSizing: 'border-box', pointerEvents: 'auto',
-            bottom: window.innerHeight - hoveredWord.rect.top + 15,
+            ...tooltipVerticalStyle,
             left: tooltipLeft,
             transform: 'translateX(-50%)'
           }}
-          onMouseEnter={() => { if (hideTimeout.current) clearTimeout(hideTimeout.current); }}
+          onMouseEnter={() => { if (hideTimeout.current) clearTimeout(hideTimeout.current); if (enterTimeout.current) clearTimeout(enterTimeout.current); }}
           onMouseLeave={handleWordLeave}
         >
           {/* Invisible bridge to prevent hover loss when moving mouse from word to tooltip */}
-          <div style={{ position: 'absolute', bottom: '-25px', left: '-10%', width: '120%', height: '30px', backgroundColor: 'transparent' }} />
+          <div style={bridgeStyle} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', minWidth: 0 }}>
             <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{hoveredWord.word}</div>
@@ -1411,7 +1454,7 @@ const SprekioOverlay: React.FC = () => {
 
       {/* Floating Controls inside YouTube Player Bar */}
       {controlsContainer && createPortal(
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '0 8px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '0 8px', position: 'relative' }}>
           <button
             onClick={() => setIsEnabled(!isEnabled)}
             title="Toggle Sprekio (Language Lab)"
@@ -1433,16 +1476,23 @@ const SprekioOverlay: React.FC = () => {
           >
             🇩🇪 {isEnabled ? 'ON' : 'OFF'}
           </button>
-
+          
           {isEnabled && (
             <button
-              onClick={() => setAutoPause(!autoPause)}
-              title="Auto-Pause after every sentence"
+              onClick={(e) => {
+                if (showSettingsMenu) {
+                  setShowSettingsMenu(false);
+                } else {
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setSettingsAnchor({ right: window.innerWidth - rect.right, bottom: window.innerHeight - rect.top + 10 });
+                  setShowSettingsMenu(true);
+                }
+              }}
+              title="Sprekio Settings"
               style={{
-                backgroundColor: autoPause ? '#10b981' : 'transparent',
-                color: autoPause ? 'white' : '#eee',
-                border: '1px solid',
-                borderColor: autoPause ? '#10b981' : '#eee',
+                backgroundColor: showSettingsMenu ? '#4b5563' : 'transparent',
+                color: '#eee',
+                border: '1px solid #eee',
                 borderRadius: '4px',
                 padding: '4px 8px',
                 fontWeight: 'bold',
@@ -1454,140 +1504,73 @@ const SprekioOverlay: React.FC = () => {
               onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
               onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
             >
-              {autoPause ? 'AP ON' : 'AP OFF'}
+              ⚙️ Settings
             </button>
           )}
 
-            {isEnabled && (
-              <button
-                onClick={() => setShowSidebar(!showSidebar)}
-                title="Toggle Transcript Sidebar"
-                style={{
-                  backgroundColor: showSidebar ? '#10b981' : 'transparent',
-                  color: showSidebar ? 'white' : '#eee',
-                  border: '1px solid',
-                  borderColor: showSidebar ? '#10b981' : '#eee',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  opacity: 0.9
-                }}
-                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
-                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
-              >
-                📝 Sidebar
-              </button>
-            )}
-
-            {isEnabled && (
-              <button
-                onClick={() => setSubtitleStyle(subtitleStyle === 'solid' ? 'transparent' : 'solid')}
-                title="Subtitle style: solid boxes or glass on the video"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: '#eee',
-                  border: '1px solid #eee',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  opacity: 0.9
-                }}
-                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
-                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
-              >
-                {subtitleStyle === 'solid' ? '◻ Solid' : '◫ Glass'}
-              </button>
-            )}
-
-            {isEnabled && (
-              <button
-                onClick={() => {
-                  const next = !grammarColors;
-                  setGrammarColors(next);
-                  if (!next) setShowGrammarLegend(false);
-                }}
-                title="Underline words by part of speech (noun, verb, adjective...)"
-                style={{
-                  backgroundColor: grammarColors ? '#f97316' : 'transparent',
-                  color: grammarColors ? 'white' : '#eee',
-                  border: '1px solid',
-                  borderColor: grammarColors ? '#f97316' : '#eee',
-                  borderRadius: grammarColors ? '4px 0 0 4px' : '4px',
-                  padding: '4px 8px',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  opacity: 0.9
-                }}
-                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
-                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
-              >
-                Grammar
-              </button>
-            )}
-
-            {isEnabled && grammarColors && (
-              <button
-                onClick={(e) => {
-                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  setGrammarLegendAnchor({ left: rect.left, bottom: window.innerHeight - rect.top + 8 });
-                  setShowGrammarLegend(v => !v);
-                }}
-                title="What do the colors mean?"
-                className="sprekio-grammar-legend-btn"
-                style={{
-                  backgroundColor: showGrammarLegend ? '#c2410c' : '#f97316',
-                  color: 'white',
-                  border: '1px solid #f97316',
-                  borderLeft: '1px solid rgba(255,255,255,0.4)',
-                  borderRadius: '0 4px 4px 0',
-                  padding: '4px 7px',
-                  fontWeight: 'bold',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  opacity: 0.9,
-                  marginLeft: '-1px'
-                }}
-                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
-                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
-              >
-                ⓘ
-              </button>
-            )}
-
-            {isEnabled && (
-              <button
-                onClick={() => setTranslationEnabled(!translationEnabled)}
-                title="Show English translation, or just the German captions with word highlighting"
-                style={{
-                  backgroundColor: translationEnabled ? '#f97316' : 'transparent',
-                  color: translationEnabled ? 'white' : '#eee',
-                  border: '1px solid',
-                  borderColor: translationEnabled ? '#f97316' : '#eee',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  opacity: 0.9
-                }}
-                onMouseOver={(e) => (e.target as HTMLElement).style.opacity = '1'}
-                onMouseOut={(e) => (e.target as HTMLElement).style.opacity = '0.9'}
-              >
-                {translationEnabled ? '🌐 Translation' : '🇩🇪 CC Only'}
-              </button>
-            )}
-        </div>,
+                  </div>,
         controlsContainer
+      )}
+
+        {isEnabled && showSettingsMenu && settingsAnchor && createPortal(
+          <div style={{
+            position: 'fixed', bottom: settingsAnchor.bottom, right: settingsAnchor.right, 
+            backgroundColor: '#282828', border: '1px solid #3f3f3f', borderRadius: '8px',
+            padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px',
+            minWidth: '160px', boxShadow: '0 4px 16px rgba(0,0,0,0.5)', color: 'white',
+            zIndex: 2147483647
+          }}>
+            <div style={{fontSize: '13px', fontWeight: 'bold', borderBottom: '1px solid #3f3f3f', paddingBottom: '6px', display: 'flex', justifyContent: 'space-between'}}>
+              Sprekio Settings
+              <button onClick={() => setShowSettingsMenu(false)} style={{background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', padding: 0}}>✕</button>
+            </div>
+            
+            <button onClick={() => setAutoPause(!autoPause)} style={{ backgroundColor: autoPause ? '#10b981' : 'transparent', color: autoPause ? 'white' : '#eee', border: '1px solid', borderColor: autoPause ? '#10b981' : '#eee', borderRadius: '4px', padding: '4px 8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', width: '100%' }}>
+              {autoPause ? 'Auto-Pause: ON' : 'Auto-Pause: OFF'}
+            </button>
+
+            <button onClick={() => setTranslationEnabled(!translationEnabled)} style={{ backgroundColor: 'transparent', color: '#eee', border: '1px solid #eee', borderRadius: '4px', padding: '4px 8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', width: '100%' }}>
+              {translationEnabled ? '🌐 Translation: ON' : '🇩🇪 Translation: OFF'}
+            </button>
+
+            <button onClick={() => setSubtitleStyle(subtitleStyle === 'solid' ? 'transparent' : 'solid')} style={{ backgroundColor: 'transparent', color: '#eee', border: '1px solid #eee', borderRadius: '4px', padding: '4px 8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', width: '100%' }}>
+              Style: {subtitleStyle === 'solid' ? '◻ Solid' : '◫ Glass'}
+            </button>
+
+            <button onClick={(e) => { const next = !grammarColors; setGrammarColors(next); if (!next) setShowGrammarLegend(false); else { setShowGrammarLegend(true); const rect = (e.target as HTMLElement).getBoundingClientRect(); setGrammarLegendAnchor({ left: rect.left, bottom: window.innerHeight - rect.top + 10 }); } }} style={{ backgroundColor: grammarColors ? '#eab308' : 'transparent', color: grammarColors ? '#17120e' : '#eee', border: '1px solid', borderColor: grammarColors ? '#eab308' : '#eee', borderRadius: '4px', padding: '4px 8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', width: '100%' }}>
+              {grammarColors ? '🎨 Grammar Colors: ON' : '🎨 Grammar Colors: OFF'}
+            </button>
+
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px'}}>
+              <span style={{fontWeight: 'bold'}}>AI Provider:</span>
+              <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ backgroundColor: '#3f3f3f', color: '#eee', border: '1px solid #555', borderRadius: '4px', padding: '3px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}>
+                <option value="youtube">YouTube (Native)</option>
+                <option value="nvidia">Nvidia</option>
+                <option value="gemini">Gemini</option>
+              </select>
+            </div>
+
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px'}}>
+              <span style={{fontWeight: 'bold'}}>Position:</span>
+              <select value={ccVertical + '-' + ccHorizontal} onChange={(e) => { const [v, h] = e.target.value.split('-'); setCcVertical(v as any); setCcHorizontal(h as any); }} style={{ backgroundColor: '#3f3f3f', color: '#eee', border: '1px solid #555', borderRadius: '4px', padding: '3px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}>
+                <option value="top-left">Top L</option><option value="top-center">Top C</option><option value="top-right">Top R</option>
+                <option value="center-left">Mid L</option><option value="center-center">Mid C</option><option value="center-right">Mid R</option>
+                <option value="bottom-left">Bot L</option><option value="bottom-center">Bot C</option><option value="bottom-right">Bot R</option>
+              </select>
+            </div>
+            
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px'}}>
+              <span style={{fontWeight: 'bold'}}>Size:</span>
+              <select value={ccSize} onChange={(e) => setCcSize(e.target.value as any)} style={{ backgroundColor: '#3f3f3f', color: '#eee', border: '1px solid #555', borderRadius: '4px', padding: '3px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}>
+                <option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option>
+              </select>
+            </div>
+
+            <button onClick={() => setShowSidebar(!showSidebar)} style={{ backgroundColor: showSidebar ? '#8b5cf6' : 'transparent', color: showSidebar ? 'white' : '#eee', border: '1px solid', borderColor: showSidebar ? '#8b5cf6' : '#eee', borderRadius: '4px', padding: '4px 8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', width: '100%', marginTop: '4px' }}>
+              {showSidebar ? '📝 Sidebar (Open)' : '📝 Open Sidebar'}
+            </button>
+          </div>,
+          document.body
         )}
 
         {isEnabled && grammarColors && showGrammarLegend && grammarLegendAnchor && createPortal(
