@@ -1557,6 +1557,20 @@ const SprekioOverlay: React.FC = () => {
               </select>
             </div>
 
+            {provider === 'gemini' && (
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', marginTop: '4px', marginBottom: '4px'}}>
+                <span style={{fontWeight: 'bold', color: '#f59e0b'}}>Gemini Key:</span>
+                <input type="password" value={geminiKey} onChange={(e) => setGeminiKey(e.target.value)} placeholder="Paste Key" style={{ backgroundColor: '#3f3f3f', color: '#eee', border: '1px solid #555', borderRadius: '4px', padding: '3px 6px', fontSize: '12px', width: '110px', outline: 'none' }} />
+              </div>
+            )}
+
+            {provider === 'nvidia' && (
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', marginTop: '4px', marginBottom: '4px'}}>
+                <span style={{fontWeight: 'bold', color: '#10b981'}}>Nvidia Key:</span>
+                <input type="password" value={nvidiaKey} onChange={(e) => setNvidiaKey(e.target.value)} placeholder="Paste Key" style={{ backgroundColor: '#3f3f3f', color: '#eee', border: '1px solid #555', borderRadius: '4px', padding: '3px 6px', fontSize: '12px', width: '110px', outline: 'none' }} />
+              </div>
+            )}
+
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px'}}>
               <span style={{fontWeight: 'bold'}}>Position:</span>
               <select value={ccVertical + '-' + ccHorizontal} onChange={(e) => { const [v, h] = e.target.value.split('-'); setCcVertical(v as any); setCcHorizontal(h as any); }} style={{ backgroundColor: '#3f3f3f', color: '#eee', border: '1px solid #555', borderRadius: '4px', padding: '3px', fontSize: '12px', cursor: 'pointer', outline: 'none' }}>
