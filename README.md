@@ -1,4 +1,4 @@
-# Sprekio 🌍
+# Sprekio 🇩🇪
 
 **Sprekio** is a powerful, privacy-first Chrome Extension that transforms YouTube into an immersive language-learning environment. Whether you are a beginner or looking to achieve fluency, Sprekio provides dual subtitles, instant hover dictionaries, and AI-powered translations to help you master languages naturally while watching your favorite videos.
 
