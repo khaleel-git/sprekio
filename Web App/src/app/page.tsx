@@ -84,6 +84,60 @@ export default function HomePage() {
         </div>
       </div>
 
+      
+      {/* Installation Guide */}
+      <div className="bg-surface-card border border-black/10 rounded-2xl p-6 md:p-8">
+        <h2 className="font-display text-2xl font-semibold mb-2">How to Install Sprekio</h2>
+        <p className="text-ink/70 mb-6 text-sm md:text-base">
+          Sprekio is a privacy-first Chrome Extension. It works completely locally without needing an account or login! Just build it and add your own AI API keys.
+        </p>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold shrink-0">1</div>
+              <div>
+                <h3 className="font-semibold">Build the Extension</h3>
+                <p className="text-sm text-ink/60 mt-1">Open your terminal and run:</p>
+                <code className="block bg-ink/5 p-2 rounded text-xs mt-2 font-mono">
+                  cd "Chrome Extension"<br/>
+                  npm install<br/>
+                  npm run build
+                </code>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold shrink-0">2</div>
+              <div>
+                <h3 className="font-semibold">Load into Chrome</h3>
+                <p className="text-sm text-ink/60 mt-1">
+                  Go to <code>chrome://extensions/</code>, enable <strong>Developer mode</strong>, click <strong>Load unpacked</strong>, and select the <code>dist</code> folder inside the Chrome Extension directory.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold shrink-0">3</div>
+              <div>
+                <h3 className="font-semibold">Bring Your Own Key</h3>
+                <p className="text-sm text-ink/60 mt-1">
+                  Go to any German YouTube video, click the Sprekio Settings Gear (⚙️) on the player, and enter your own <strong>Gemini</strong> or <strong>Nvidia</strong> API Key to unlock AI translation.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold shrink-0">✓</div>
+              <div>
+                <h3 className="font-semibold">No Login Required</h3>
+                <p className="text-sm text-ink/60 mt-1">
+                  Sprekio stores your vocabulary and reading progress entirely in your browser. You can start using it immediately—no account creation necessary!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Search & Filters */}
       <div className="space-y-3">
         <div className="relative">

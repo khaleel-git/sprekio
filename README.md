@@ -26,30 +26,9 @@ Built with **React, Vite, Tailwind CSS** on the frontend, and powered by a **Clo
 
 ## 🚀 Installation & Setup
 
-### 1. Backend Setup (Cloudflare Workers)
+### Local Installation
 
-The backend handles vocabulary storage and AI translation requests.
-
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Set up the D1 Database:
-   ```bash
-   npx wrangler d1 create sprekio-dictionary
-   ```
-   *Note: Update the `database_id` in `wrangler.toml` with the ID provided by the command.*
-4. **Bring Your Own Key (BYOK)**: API keys are securely stored locally in the extension. Users must enter their own Google Gemini or Nvidia API Key directly into the Sprekio Settings Gear on YouTube.
-5. Deploy the worker:
-   ```bash
-   npx wrangler deploy
-   ```
-
-### 2. Frontend Setup (Chrome Extension)
+Since this extension requires your personal API keys (Bring Your Own Key), you install it locally directly into your Chrome browser.
 
 1. Navigate to the extension directory:
    ```bash
@@ -69,6 +48,8 @@ The backend handles vocabulary storage and AI translation requests.
    - Click **"Load unpacked"** and select the `dist` folder located inside the `Chrome Extension` directory (`Chrome Extension/dist`).
 
 ---
+
+**Bring Your Own Key (BYOK):** Sprekio requires you to provide your own API keys for AI translation. You must add your own Google Gemini or Nvidia API key into the Sprekio settings on YouTube to enable AI translation features.
 
 ## 🛠️ Usage
 
