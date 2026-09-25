@@ -68,6 +68,8 @@ const SprekioOverlay: React.FC = () => {
   const [ccVertical, setCcVertical] = useState<'top' | 'center' | 'bottom'>('bottom');
   const [ccHorizontal, setCcHorizontal] = useState<'left' | 'center' | 'right'>('center');
   const [ccSize, setCcSize] = useState<'small' | 'medium' | 'large'>('medium');
+  const [geminiKey, setGeminiKey] = useState('');
+  const [nvidiaKey, setNvidiaKey] = useState('');
   // Bumped after a prefetch resolves, purely to re-render the subtitle line so newly
   // cached part-of-speech data can be picked up by renderTokens (VocabularyEngine's
   // cache is read synchronously, not through React state).
@@ -544,7 +546,7 @@ const SprekioOverlay: React.FC = () => {
   // Sync settings with chrome.storage.local
   useEffect(() => {
     try {
-      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_provider', 'sprekio_subtitleStyle', 'sprekio_grammarColors', 'sprekio_translationEnabled', 'sprekio_ccVertical', 'sprekio_ccHorizontal', 'sprekio_ccSize'], (result) => {
+      chrome.storage.local.get(['sprekio_isEnabled', 'sprekio_autoPause', 'sprekio_provider', 'sprekio_subtitleStyle', 'sprekio_grammarColors', 'sprekio_translationEnabled', 'sprekio_ccVertical', 'sprekio_ccHorizontal', 'sprekio_ccSize', 'sprekio_geminiKey', 'sprekio_nvidiaKey'], (result) => {
         if (result.sprekio_isEnabled !== undefined) setIsEnabled(result.sprekio_isEnabled as boolean);
         else setIsEnabled(true); // Default to true if never set
 
@@ -559,6 +561,8 @@ const SprekioOverlay: React.FC = () => {
         if (result.sprekio_ccVertical !== undefined) setCcVertical(result.sprekio_ccVertical as any);
         if (result.sprekio_ccHorizontal !== undefined) setCcHorizontal(result.sprekio_ccHorizontal as any);
         if (result.sprekio_ccSize !== undefined) setCcSize(result.sprekio_ccSize as any);
+        if (result.sprekio_geminiKey !== undefined) setGeminiKey(result.sprekio_geminiKey as string);
+        if (result.sprekio_nvidiaKey !== undefined) setNvidiaKey(result.sprekio_nvidiaKey as string);
 
         setHasLoadedSettings(true);
       });
@@ -579,13 +583,15 @@ const SprekioOverlay: React.FC = () => {
           sprekio_translationEnabled: translationEnabled,
           sprekio_ccVertical: ccVertical,
           sprekio_ccHorizontal: ccHorizontal,
-          sprekio_ccSize: ccSize
+          sprekio_ccSize: ccSize,
+          sprekio_geminiKey: geminiKey,
+          sprekio_nvidiaKey: nvidiaKey
         });
       } catch (e) {
         console.error("Sprekio: Error saving storage. Please refresh the page.", e);
       }
     }
-  }, [isEnabled, autoPause, provider, subtitleStyle, grammarColors, translationEnabled, ccVertical, ccHorizontal, ccSize, hasLoadedSettings]);
+  }, [isEnabled, autoPause, provider, subtitleStyle, grammarColors, translationEnabled, ccVertical, ccHorizontal, ccSize, geminiKey, nvidiaKey, hasLoadedSettings]);
 
   // Dismiss the grammar-color legend on an outside click, like any other popover
   useEffect(() => {
@@ -991,8 +997,9 @@ const SprekioOverlay: React.FC = () => {
 
     const sendTranslateRequest = (retryCount: number) => {
       try {
+        const apiKey = provider === 'gemini' ? geminiKey : nvidiaKey;
         chrome.runtime.sendMessage(
-          { action: "translateSentence", text: textToTranslate, provider },
+          { action: "translateSentence", text: textToTranslate, provider, apiKey },
           (response) => {
             // MV3 service workers can be asleep, dropping the message. Retry once after 400ms.
             if (chrome.runtime.lastError || !response) {
@@ -1018,7 +1025,7 @@ const SprekioOverlay: React.FC = () => {
     };
 
     sentenceTranslateTimeout.current = window.setTimeout(() => sendTranslateRequest(0), 20);
-  }, [liveText, isEnabled, translationEnabled, activeTranscriptIndex, transcript, provider]);
+  }, [liveText, isEnabled, translationEnabled, activeTranscriptIndex, transcript, provider, geminiKey, nvidiaKey]);
 
   // 2. Hover Handlers
   const handleWordEnter = (word: string, e: React.MouseEvent) => {

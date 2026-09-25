@@ -38,7 +38,7 @@ export default {
     // =========================================================================
     if (url.pathname === "/api/translate-sentence" && request.method === "POST") {
       try {
-        const { text, provider = "nvidia" } = await request.json() as { text: string, provider?: string };
+        const { text, provider = "nvidia", apiKey } = await request.json() as { text: string, provider?: string, apiKey?: string };
         if (!text) {
           return new Response(JSON.stringify({ error: "Missing text" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
@@ -51,8 +51,7 @@ export default {
         let translatedText = "";
 
         if (provider === "gemini") {
-          const apiKey = env.GEMINI_API_KEY;
-          if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
+          if (!apiKey) throw new Error("Please enter your Gemini API Key in the Sprekio settings.");
           const res = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -69,8 +68,7 @@ export default {
           translatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
         } else {
           // NVIDIA
-          const apiKey = env.NVIDIA_API_KEY;
-          if (!apiKey) throw new Error("NVIDIA_API_KEY not configured");
+          if (!apiKey) throw new Error("Please enter your Nvidia API Key in the Sprekio settings.");
           const res = await fetchWithTimeout("https://integrate.api.nvidia.com/v1/chat/completions", {
               method: "POST",
               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -250,10 +248,10 @@ export default {
       try {
         const { topic, level, dialect, wordCount, apiKey, provider = "nvidia" } = await request.json() as any;
 
-        const TARGET_API_KEY = (provider === "gemini" ? env.GEMINI_API_KEY : env.NVIDIA_API_KEY) || apiKey;
+        const TARGET_API_KEY = apiKey;
         
         if (!TARGET_API_KEY) {
-          return new Response(JSON.stringify({ error: `${provider.toUpperCase()}_API_KEY is not configured in Cloudflare Environment Variables, and no key was provided.` }), {
+          return new Response(JSON.stringify({ error: `Please enter your ${provider} API Key in the Sprekio settings.` }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });

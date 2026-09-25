@@ -43,11 +43,7 @@ The backend handles vocabulary storage and AI translation requests.
    npx wrangler d1 create sprekio-dictionary
    ```
    *Note: Update the `database_id` in `wrangler.toml` with the ID provided by the command.*
-4. Configure your AI API Keys as Cloudflare Secrets:
-   ```bash
-   npx wrangler secret put GEMINI_API_KEY
-   npx wrangler secret put NVIDIA_API_KEY
-   ```
+4. **Bring Your Own Key (BYOK)**: API keys are securely stored locally in the extension. Users must enter their own Google Gemini or Nvidia API Key directly into the Sprekio Settings Gear on YouTube.
 5. Deploy the worker:
    ```bash
    npx wrangler deploy

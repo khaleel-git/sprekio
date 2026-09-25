@@ -172,7 +172,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     return true;
   }
   if (request.action === "translateSentence") {
-    handleSentenceTranslation(request.text, request.provider).then(sendResponse);
+    handleSentenceTranslation(request.text, request.provider, request.apiKey).then(sendResponse);
     return true;
   }
   if (request.action === "deleteWord") {
@@ -230,12 +230,12 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   }
 });
 
-async function handleSentenceTranslation(text: string, provider?: string) {
+async function handleSentenceTranslation(text: string, provider?: string, apiKey?: string) {
   try {
     const response = await fetchWithTimeout(`https://sprekio-backend.khaleel-eu.workers.dev/api/translate-sentence`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, provider: provider || "nvidia" })
+      body: JSON.stringify({ text, provider: provider || "nvidia", apiKey })
     });
 
     const result = await response.json();
