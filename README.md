@@ -1,67 +1,56 @@
 # Sprekio 🌍
 
-Sprekio is a powerful Chrome Extension that transforms YouTube into an immersive language-learning environment. It provides dual subtitles, instant word definitions via hover, vocabulary saving, and AI-powered translations to help you master languages naturally while watching videos.
-
-Built with **React, Vite, Tailwind CSS** on the frontend, and powered by a **Cloudflare Workers** backend utilizing **D1 Databases** and **AI models** (Google Gemini & Nvidia Llama).
+**Sprekio** is a powerful, privacy-first Chrome Extension that transforms YouTube into an immersive language-learning environment. Whether you are a beginner or looking to achieve fluency, Sprekio provides dual subtitles, instant hover dictionaries, and AI-powered translations to help you master languages naturally while watching your favorite videos.
 
 ---
 
 ## ✨ Features
 
 - **Dual Subtitles:** Watch videos with native German subtitles and English translations side-by-side.
-- **Zero-Latency Native Translation:** Leverages YouTube's native auto-translate for instant, free translations.
-- **AI Fallback Translation:** Seamlessly falls back to Google Gemini (3.8 Flash) or Nvidia AI for perfectly accurate translations when native tracks are unavailable.
-- **Hover Dictionary:** Hover over any word to pause the video and instantly get its definition, gender, and part-of-speech.
-- **Vocabulary Manager & Quizzes:** Save tricky words to your personal vocabulary list and test your knowledge with auto-generated quizzes.
-- **Customizable UI:** Adjust subtitle positions, sizes, styling (solid/glassmorphism), and auto-pause behavior directly from the on-screen settings menu.
+- **Zero-Latency Native Translation:** Leverages YouTube's native auto-translate for instant, free translations without needing an API key.
+- **AI Fallback Translation (BYOK):** Bring your own API key to seamlessly fall back to **Google Gemini** or **Nvidia Llama 3** for perfectly accurate, context-aware translations when native tracks are unavailable.
+- **Hover Dictionary:** Hover over any word to instantly pause the video and reveal its definition, gender, and part-of-speech.
+- **Vocabulary Manager:** Save tricky words directly to your personal vocabulary list for future review.
+- **Customizable UI:** Easily adjust subtitle positions, text sizes, background styles (solid/glassmorphism), and auto-pause behavior directly from the YouTube player.
 
 ---
 
-## 📂 Project Structure
+## 🚀 Installation Guide
 
-- `/Chrome Extension`: The frontend Chrome Extension (Manifest V3, React, CRXJS).
-- `/backend`: The Cloudflare Worker API (Hono, D1 Database, AI fetching logic).
+Sprekio runs entirely in your browser. Since it utilizes a **Bring Your Own Key (BYOK)** model for AI features, you simply build the extension and install it locally.
 
----
+### 1. Build the Extension
 
-## 🚀 Installation & Setup
+Open your terminal, navigate to the extension folder, and build the project:
 
-### Local Installation
+```bash
+cd "Chrome Extension"
+npm install
+npm run build
+```
 
-Since this extension requires your personal API keys (Bring Your Own Key), you install it locally directly into your Chrome browser.
+### 2. Load into Chrome
 
-1. Navigate to the extension directory:
-   ```bash
-   cd "Chrome Extension"
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Build the extension for production:
-   ```bash
-   npm run build
-   ```
-4. Load the extension into Chrome:
-   - Open Google Chrome and go to `chrome://extensions/`
-   - Turn on **"Developer mode"** in the top right corner.
-   - Click **"Load unpacked"** and select the `dist` folder located inside the `Chrome Extension` directory (`Chrome Extension/dist`).
+1. Open Google Chrome and navigate to `chrome://extensions/`.
+2. Toggle **Developer mode** ON in the top right corner.
+3. Click **Load unpacked** in the top left.
+4. Select the `dist` folder located inside the `Chrome Extension` directory (`Chrome Extension/dist`).
 
 ---
 
-**Bring Your Own Key (BYOK):** Sprekio requires you to provide your own API keys for AI translation. You must add your own Google Gemini or Nvidia API key into the Sprekio settings on YouTube to enable AI translation features.
+## 🛠️ Configuration & Usage
 
-## 🛠️ Usage
+1. **Start Watching:** Navigate to any German YouTube video (or your target language).
+2. **Enable Captions:** Ensure YouTube's Closed Captions (CC) are turned **ON**.
+3. **Configure AI Settings:** Click the new **Sprekio Settings Gear (⚙️)** added to the YouTube player controls. 
+4. **Add Your API Key:** If you want to use advanced AI translations instead of YouTube's native engine, select **Gemini** or **Nvidia** from the AI Provider dropdown and securely paste your personal API key into the input field. 
+5. **Learn:** Hover over any word in the subtitles to see its definition, and use the gear menu to customize your learning layout!
 
-1. Go to any German YouTube video (or your target language).
-2. Ensure YouTube's Closed Captions (CC) are turned **ON**.
-3. A new **Sprekio Settings Gear (⚙️)** will appear in the YouTube player controls.
-4. Click the gear to customize your AI Provider, translation toggles, and subtitle appearance.
-5. Hover over any word in the subtitles to see its definition and add it to your Vocab list!
+*Note: Your API keys are securely stored in your local Chrome browser storage and are never saved or exposed to external servers outside of direct translation requests.*
 
 ---
 
 ## 📝 Technologies Used
-- **Frontend:** React 19, Vite, Tailwind CSS v4, CRXJS Vite Plugin
-- **Backend:** Cloudflare Workers, Hono, Cloudflare D1 (SQLite)
-- **AI Models:** Google Gemini (gemini-3.8-flash) / Nvidia Llama 3
+
+- **Frontend Extension:** React 19, Vite, Tailwind CSS v4, CRXJS Vite Plugin
+- **Dictionary & Sync Backend:** Cloudflare Workers, Hono, Cloudflare D1 (SQLite)
